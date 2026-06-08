@@ -66,6 +66,8 @@ label.fl{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:8p
 .linkbtn{display:inline-block;margin-top:8px;border:none;background:none;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;padding:4px 0}
 .msitem{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .msitem .listrow{margin-bottom:8px}
+.msitem.done100{opacity:.55;background:#f1f3f6}
+.vmsbox.done100{opacity:.6;background:#f4f6f8}
 .msprog{display:flex;align-items:center;gap:8px}
 .msprog .msplabel{font-size:12px;font-weight:700;color:var(--sub);flex:0 0 auto}
 .msprog .pctin{flex:0 0 70px;text-align:right;padding:6px 8px}
@@ -426,7 +428,7 @@ function renderSheetEdit(){
   <div class="card">
     <h2>経過目標</h2>
     <div id="msList">
-    ${D.milestones.map((m,i)=>`<div class="msitem">
+    ${D.milestones.map((m,i)=>`<div class="msitem ${(m.pct||0)>=100?'done100':''}">
       <div class="listrow">
         <input type="text" class="small" placeholder="期日" data-oi="milestones.${i}.date" value="${esc(m.date)}">
         ${ta(m.text,`milestones.${i}.text`,'placeholder="内容"')}
@@ -548,7 +550,7 @@ function renderSheetView(){
       ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
     <div class="vsec"><h3>経過目標</h3>
-      <div class="vms">${D.milestones.map(m=>`<div class="vmsbox"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}
+      <div class="vms">${D.milestones.map(m=>`<div class="vmsbox ${(m.pct||0)>=100?'done100':''}"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
     </div>
     <div class="vsec"><h3>週間期日行動</h3>
@@ -597,8 +599,10 @@ function bindSheet(root){
       setPath(el.dataset.oi,v);
       if(el.classList.contains("pctin")){
         const pv=Math.max(0,Math.min(100,+el.value||0));
-        const bar=el.closest(".msprog").querySelector(".progress>div");
+        const item=el.closest(".msitem");
+        const bar=item&&item.querySelector(".msprog .progress>div");
         if(bar) bar.style.width=pv+"%";
+        if(item) item.classList.toggle("done100", pv>=100);
       }
       if(el.tagName==="TEXTAREA") fit(el);
       save();
@@ -872,7 +876,7 @@ function printSheet(){
     <div class="goal">${esc(D.goal)}</div>${pre(D.goalNote)}
     ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map(src=>`<img src="${src}">`).join("")}</div>`:""}</div>
   <div class="sec"><div class="sttl">経過目標</div>
-    <div class="ms">${D.milestones.map(m=>`<div class="msbox"><div class="msd">${esc(m.date)}　達成${m.pct||0}%</div>${pre(m.text)}<div class="pbar"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div></div>`).join("")}</div></div>
+    <div class="ms">${D.milestones.map(m=>`<div class="msbox ${(m.pct||0)>=100?'done100':''}"><div class="msd">${esc(m.date)}　達成${m.pct||0}%</div>${pre(m.text)}<div class="pbar"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div></div>`).join("")}</div></div>
   <div class="sec"><div class="sttl">週間期日行動（発生期日順）</div>
     ${D.deadlines.map(dl=>`<div class="dl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join("")}</div>
   <div class="sec"><div class="sttl">目的・目標の4観点</div>
@@ -920,6 +924,7 @@ function printSheet(){
   .msd{font-weight:700;color:#1a3a6b;border-bottom:.5pt solid #ccd5e2;margin-bottom:.6mm}
   .pbar{height:2.4mm;background:#e3e9f2;border-radius:1.2mm;overflow:hidden;margin-top:1mm}
   .pbar>div{height:100%;background:#2563c4;border-radius:1.2mm}
+  .msbox.done100{opacity:.55;background:#f1f3f6}
   .cols{display:grid;grid-template-columns:1.25fr 1fr;gap:1.8mm}
   ol{padding-left:4.5mm;font-size:7.5pt}
   ol li{margin-bottom:.6mm}
