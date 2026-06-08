@@ -42,9 +42,14 @@ textarea:focus,input:focus{outline:2px solid var(--blue);outline-offset:-1px;bac
 label.fl{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:8px 0 3px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.quad{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
 .quad .qtitle{width:100%;border:none;background:var(--blue-l);color:var(--navy);font-weight:700;
-  font-size:13px;border-radius:8px 8px 0 0;padding:7px 10px}
-.quad textarea{border-radius:0 0 8px 8px;border-top:none}
+  font-size:13px;border-radius:0;padding:7px 10px}
+.qbody{padding:8px 10px}
+.qrow{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px}
+.qrow .qnum{flex:0 0 22px;text-align:right;font-weight:700;color:var(--navy);font-size:13px;padding-top:8px}
+.qrow textarea{flex:1}
+.qbody .add{margin-top:2px;font-size:12.5px;padding:5px 12px}
 .zone{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .zone .ztag{flex:0 0 92px;text-align:center;font-size:12px;font-weight:700;border-radius:6px;padding:6px 4px}
 .z0 .ztag{background:#fff3e0;color:#e65100}.z1 .ztag{background:#ede7f6;color:#4527a0}
@@ -222,6 +227,17 @@ let D;
 try{ D = JSON.parse(localStorage.getItem(LS_KEY)) || structuredClone(DEFAULT_DATA); }
 catch(e){ D = structuredClone(DEFAULT_DATA); }
 if(!Array.isArray(D.goalImages)) D.goalImages=[]; // 旧データ互換
+// 4観点：旧text形式→数字付き箇条書き(items配列)へ移行
+(function(){
+  function stripNum(s){return s.replace(/^\s*(?:[0-9０-９]+\s*[．.、)）]|[①-⑩]\s*|[一二三四五六七八九十]+\s*[．.、])\s*/,"");}
+  (D.quad||[]).forEach(function(q){
+    if(!Array.isArray(q.items)){
+      q.items=String(q.text||"").split("\n").map(stripNum).filter(function(x){return x.trim()!=="";});
+      if(q.items.length===0) q.items=[""];
+      delete q.text;
+    }
+  });
+})();
 if(!Array.isArray(D.supports)) D.supports=[{who:"",what:""}];
 
 let saveTimer=null;
@@ -313,7 +329,14 @@ function renderSheet(){
     <div class="grid2">
       ${D.quad.map((q,i)=>`<div class="quad">
         <input type="text" class="qtitle" data-oi="quad.${i}.title" value="${esc(q.title)}">
-        ${ta(q.text,`quad.${i}.text`)}
+        <div class="qbody">
+          ${q.items.map((it,j)=>`<div class="qrow">
+            <span class="qnum">${j+1}.</span>
+            ${ta(it,`quad.${i}.items.${j}`)}
+            <button class="del" data-act="delQuad" data-i="${i}" data-j="${j}" title="削除">✕</button>
+          </div>`).join("")}
+          <button class="add" data-act="addQuad" data-i="${i}">＋ 項目を追加</button>
+        </div>
       </div>`).join("")}
     </div>
   </div>
@@ -409,7 +432,14 @@ function bindSheet(root){
   root.querySelectorAll("[data-act]").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const i=+btn.dataset.i;
+      const j=+btn.dataset.j;
       switch(btn.dataset.act){
+        case "addQuad": D.quad[i].items.push(""); break;
+        case "delQuad":
+          if(!confirm("この項目を削除しますか？")) return;
+          D.quad[i].items.splice(j,1);
+          if(D.quad[i].items.length===0) D.quad[i].items.push("");
+          break;
         case "addMs": D.milestones.push({date:"",text:""}); break;
         case "delMs": if(confirm("この経過目標を削除しますか？")) D.milestones.splice(i,1); else return; break;
         case "addRt": D.routines.push({id:D.nextRoutineId++,text:""}); break;
@@ -664,7 +694,7 @@ function printSheet(){
   <div class="sec"><div class="sttl">奉仕活動</div>
     <div class="srow"><b>（家族）</b>${esc(D.service.family)}　<b>（社会）</b>${esc(D.service.society)}</div></div>
   <div class="sec"><div class="sttl">目的・目標の4観点</div>
-    <div class="quads">${D.quad.map(q=>`<div class="qd"><div class="qt">${esc(q.title)}</div>${pre(q.text)}</div>`).join("")}</div></div>
+    <div class="quads">${D.quad.map(q=>`<div class="qd"><div class="qt">${esc(q.title)}</div><ol class="qol">${q.items.map(it=>`<li>${esc(it)}</li>`).join("")}</ol></div>`).join("")}</div></div>
   <div class="sec goalsec"><div class="sttl red">達成目標</div>
     <div class="goal">${esc(D.goal)}</div>${pre(D.goalNote)}
     ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map(src=>`<img src="${src}">`).join("")}</div>`:""}</div>
@@ -705,6 +735,8 @@ function printSheet(){
   .quads{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm}
   .qd{border:.5pt solid #8a98ad;border-radius:1mm;font-size:7pt;line-height:1.4}
   .qd .pre{padding:1mm 1.5mm}
+  .qol{margin:0;padding:1mm 1.5mm 1mm 5mm}
+  .qol li{margin-bottom:.4mm}
   .qt{background:#2563c4;color:#fff;font-weight:700;font-size:7.5pt;padding:.7mm 1.5mm;border-radius:1mm 1mm 0 0}
   .goalsec{border:1.2pt solid #d32f2f}
   .goal{font-size:10pt;font-weight:700;color:#b71c1c;margin-bottom:1mm}
