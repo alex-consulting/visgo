@@ -59,6 +59,11 @@ label.fl{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:8p
 .listrow .num{flex:0 0 26px;height:34px;display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:700;color:var(--sub)}
 .listrow input[type=text].small{flex:0 0 110px}
+.listrow input[type=date].small{flex:0 0 150px}
+.subtabs{display:flex;gap:6px;margin-bottom:12px}
+.subtabs button{border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:8px;padding:6px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
+.subtabs button.act{background:var(--blue);color:#fff;border-color:var(--blue)}
+.vdlh{font-weight:700;color:var(--sub);font-size:12px;margin:10px 0 4px}
 .del{flex:0 0 32px;height:34px;border:none;background:none;color:#c63;font-size:17px;cursor:pointer;border-radius:8px}
 .del:hover{background:var(--red-l)}
 .add{border:1.5px dashed var(--blue);color:var(--blue);background:none;border-radius:8px;
@@ -312,6 +317,18 @@ function fmtDate(v){
   const [y,mo,da]=d.split("-");
   return `${y}.${+mo}.${+da}`;
 }
+// 週間期日行動の日付（年なし"6/15"等も許容）→ YYYY-MM-DD
+function toDateInputMD(v){
+  if(!v) return "";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  const m=String(v).match(/^(\d{1,2})\s*[\/\-月.]\s*(\d{1,2})/);
+  if(m){ const y=new Date().getFullYear(); return `${y}-${String(m[1]).padStart(2,"0")}-${String(m[2]).padStart(2,"0")}`; }
+  return "";
+}
+function fmtMD(v){
+  const d=toDateInputMD(v); if(!d) return v||"";
+  const p=d.split("-"); return `${+p[1]}/${+p[2]}`;
+}
 function fit(t){t.style.height="auto";t.style.height=(t.scrollHeight+2)+"px";}
 function fitAll(root){root.querySelectorAll("textarea").forEach(fit);}
 
@@ -331,6 +348,7 @@ function ta(value,oninput,attrs){
   return `<textarea rows="1" ${attrs||""} data-oi="${oninput}">${esc(value)}</textarea>`;
 }
 let sheetMode = (D.meta.name||D.goal) ? "view" : "edit";
+let dlTab="todo"; // 週間期日行動の未完了/完了サブタブ
 function renderSheet(){ if(sheetMode==="edit") renderSheetEdit(); else renderSheetView(); }
 function setSheetMode(m){ sheetMode=m; renderSheet(); window.scrollTo(0,0); if(m==="view") toast("保存しました"); }
 function renderSheetEdit(){
@@ -412,13 +430,17 @@ function renderSheetEdit(){
   </div>
   <div class="card">
     <h2>週間期日行動（発生期日順）</h2>
-    ${D.deadlines.map((dl,i)=>`<div class="listrow">
+    <div class="subtabs">
+      <button class="${dlTab==='todo'?'act':''}" onclick="dlTab='todo';renderSheet()">未完了 (${D.deadlines.filter(d=>!d.done).length})</button>
+      <button class="${dlTab==='done'?'act':''}" onclick="dlTab='done';renderSheet()">完了 (${D.deadlines.filter(d=>d.done).length})</button>
+    </div>
+    ${D.deadlines.map((dl,i)=>({dl,i})).filter(o=>dlTab==='done'?o.dl.done:!o.dl.done).map(({dl,i})=>`<div class="listrow">
       <input type="checkbox" class="chk" data-oi="deadlines.${i}.done" ${dl.done?"checked":""}>
-      <input type="text" class="small" placeholder="月日（例: 6/15）" data-oi="deadlines.${i}.month" value="${esc(dl.month)}">
+      <input type="date" class="small" data-oi="deadlines.${i}.month" value="${esc(toDateInputMD(dl.month))}">
       ${ta(dl.text,`deadlines.${i}.text`,dl.done?'class="ddone"':"")}
       <button class="del" data-act="delDl" data-i="${i}" title="削除">✕</button>
-    </div>`).join("")}
-    <button class="add" data-act="addDl">＋ 期日行動を追加</button>
+    </div>`).join("")||`<p class="hint">${dlTab==='done'?'完了した項目はまだありません':'未完了の項目はありません'}</p>`}
+    ${dlTab==='todo'?`<button class="add" data-act="addDl">＋ 期日行動を追加</button>`:""}
   </div>
   <div class="card">
     <h2>目標達成のための支援</h2>
@@ -503,7 +525,9 @@ function renderSheetView(){
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
     </div>
     <div class="vsec"><h3>週間期日行動</h3>
-      ${D.deadlines.filter(d=>d.text.trim()||d.month).map(dl=>`<div class="vdl">${dl.done?"☑":"☐"} <b>${esc(dl.month)}</b> ${esc(dl.text)}</div>`).join("")||"<p class='vempty'>—</p>"}
+      ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
+        const blk=(arr,label)=>arr.length?`<div class="vdlh">${label}</div>${arr.map(dl=>`<div class="vdl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join("")}`:"";
+        return (blk(todo,"未完了")+blk(done,"完了"))||"<p class='vempty'>—</p>";})()}
     </div>
     <div class="vsec"><h3>目標達成のための支援</h3>
       <table class="vtab"><tr><th>支援者</th><th>支援内容</th></tr>
@@ -815,7 +839,7 @@ function printSheet(){
     <div class="sec"><div class="sttl">ルーティン行動（重要度が高い順）</div>
       <ol>${D.routines.map(r=>`<li>${esc(r.text)}</li>`).join("")}</ol></div>
     <div class="sec"><div class="sttl">週間期日行動（発生期日順）</div>
-      ${D.deadlines.map(dl=>`<div class="dl">${dl.done?"☑":"☐"} <b>${esc(dl.month)}</b> ${esc(dl.text)}</div>`).join("")}</div>
+      ${D.deadlines.map(dl=>`<div class="dl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join("")}</div>
   </div>
   <table class="meta"><tr><th style="text-align:center">支援者</th><th style="text-align:center;background:#e8f0fc;color:#1a3a6b">支援内容</th></tr>
     ${D.supports.map(s=>`<tr><td style="width:30%;font-weight:700">${esc(s.who)}</td><td>${esc(s.what)}</td></tr>`).join("")}</table>
