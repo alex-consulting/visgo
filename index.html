@@ -69,6 +69,46 @@ table.an th,table.an td{border:1px solid var(--line);padding:6px;font-size:13.5p
 table.an th{background:var(--blue-l);color:var(--navy);font-size:12.5px;white-space:nowrap}
 table.an td:first-child{background:#f6f8fb;font-weight:700;font-size:12.5px;white-space:nowrap;width:74px}
 table.an textarea{border:none;background:transparent;padding:2px;min-height:42px}
+/* ---- sheet edit/view bar ---- */
+.sheetbar{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.btn-save{border:none;background:var(--blue);color:#fff;border-radius:8px;padding:9px 22px;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+.btn-save:active{background:#1d50a0}
+.btn-edit{border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;padding:9px 24px;font-size:14.5px;font-weight:700;cursor:pointer}
+/* ---- read-only view ---- */
+.vsheet{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;max-width:920px;margin:0 auto}
+@media(max-width:700px){.vsheet{padding:16px 14px}}
+.vhead{border-bottom:3px solid var(--navy);padding-bottom:10px;margin-bottom:18px}
+.vhead h1{font-size:20px;color:var(--navy);margin:0 0 8px}
+.vmeta{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13.5px}
+.vmeta b{color:var(--sub);font-weight:700;margin-right:5px;font-size:12px}
+.vsec{margin-bottom:22px}
+.vsec h3{font-size:14px;color:#fff;background:var(--navy);display:inline-block;padding:4px 14px;border-radius:6px;margin:0 0 10px}
+.vsec p{margin:4px 0;line-height:1.7}
+.vsec p b{color:var(--navy)}
+.vempty{color:#aab4c2}
+.vgoal{border:2px solid var(--red);border-radius:12px;padding:16px 18px;margin-bottom:22px;background:linear-gradient(180deg,#fff,var(--red-l))}
+.vgoal-label{display:inline-block;background:var(--red);color:#fff;font-weight:700;font-size:12px;padding:3px 12px;border-radius:5px;margin-bottom:8px}
+.vgoal-main{font-size:18px;font-weight:700;color:#b71c1c;line-height:1.6}
+.vgoal-note{margin-top:8px;font-size:13.5px;line-height:1.7}
+.vgoal .gimgs{margin-top:12px}
+.vgoal .gimgs img{height:120px;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
+.vquads{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.vquads{grid-template-columns:1fr}}
+.vquad{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.vquad-t{background:var(--blue-l);color:var(--navy);font-weight:700;font-size:13.5px;padding:8px 12px}
+.vquad ol{margin:0;padding:10px 12px 10px 30px}
+.vquad li{margin-bottom:6px;line-height:1.6}
+.vtab{width:100%;border-collapse:collapse;font-size:13.5px}
+.vtab th,.vtab td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+.vtab tr th:first-child{background:#f4f7fb;color:var(--navy);white-space:nowrap;width:1%}
+.vtab3 tr:first-child th{background:var(--blue-l);color:var(--navy);text-align:center}
+.vms{display:flex;gap:12px;flex-wrap:wrap}
+.vmsbox{flex:1;min-width:180px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;line-height:1.6}
+.vmsd{font-weight:700;color:var(--navy);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:6px}
+.vrt{margin:0;padding-left:24px}
+.vrt li{margin-bottom:6px;line-height:1.6}
+.vdl{margin-bottom:6px;line-height:1.7}
+.vdl b{color:var(--navy);margin:0 4px}
 /* ---- OW64 ---- */
 .owbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .owbar .seg{display:flex;border:1px solid var(--blue);border-radius:8px;overflow:hidden}
@@ -290,11 +330,15 @@ function showTab(name){
 function ta(value,oninput,attrs){
   return `<textarea rows="1" ${attrs||""} data-oi="${oninput}">${esc(value)}</textarea>`;
 }
-function renderSheet(){
+let sheetMode = (D.meta.name||D.goal) ? "view" : "edit";
+function renderSheet(){ if(sheetMode==="edit") renderSheetEdit(); else renderSheetView(); }
+function setSheetMode(m){ sheetMode=m; renderSheet(); window.scrollTo(0,0); if(m==="view") toast("保存しました"); }
+function renderSheetEdit(){
   const root=document.getElementById("tab-sheet");
   const a=D.analysis;
   root.innerHTML=`
-  <div style="text-align:right;margin-bottom:10px">
+  <div class="sheetbar">
+    <button class="btn-save" onclick="setSheetMode('view')">✓ 保存して表示</button>
     <button class="add" onclick="printSheet()">🖨 A4印刷 / PDF出力</button>
   </div>
   <div class="card">
@@ -412,6 +456,71 @@ function renderSheet(){
   </div>`;
   bindSheet(root);
   fitAll(root);
+}
+function renderSheetView(){
+  const root=document.getElementById("tab-sheet");
+  const a=D.analysis;
+  const nl2br=s=>esc(s).replace(/\n/g,"<br>");
+  const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
+  root.innerHTML=`
+  <div class="sheetbar">
+    <button class="btn-edit" onclick="setSheetMode('edit')">✎ 編集する</button>
+    <button class="add" onclick="printSheet()">🖨 A4印刷 / PDF出力</button>
+  </div>
+  <div class="vsheet">
+    <div class="vhead">
+      <h1>原田式 長期目的・目標設定用紙</h1>
+      <div class="vmeta">
+        <span><b>氏名</b>${esc(D.meta.name)||"—"}</span>
+        <span><b>記入日</b>${esc(fmtDate(D.meta.writeDate))||"—"}</span>
+        <span><b>目標達成日</b>${esc(fmtDate(D.meta.targetDate))||"—"}</span>
+        <span><b>更新日</b>${esc(fmtDate(D.meta.updateDate))||"—"}</span>
+      </div>
+    </div>
+    <div class="vsec"><h3>奉仕活動</h3>
+      <p><b>家族：</b>${nl2br(D.service.family)||"—"}</p>
+      <p><b>社会：</b>${nl2br(D.service.society)||"—"}</p>
+    </div>
+    <div class="vgoal">
+      <div class="vgoal-label">達成目標</div>
+      <div class="vgoal-main">${nl2br(D.goal)||"—"}</div>
+      ${D.goalNote?`<div class="vgoal-note">${nl2br(D.goalNote)}</div>`:""}
+      ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
+    </div>
+    <div class="vsec"><h3>目的・目標の4観点</h3>
+      <div class="vquads">
+        ${D.quad.map(q=>`<div class="vquad"><div class="vquad-t">${esc(q.title)}</div>
+          <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
+      </div>
+    </div>
+    <div class="vsec"><h3>ゾーン目標</h3>
+      <table class="vtab">${zoneNames.map((z,i)=>`<tr><th>${z}</th><td>${esc(D.zones[i])||"—"}</td></tr>`).join("")}</table>
+    </div>
+    <div class="vsec"><h3>経過目標</h3>
+      <div class="vms">${D.milestones.map(m=>`<div class="vmsbox"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}</div>`).join("")}</div>
+    </div>
+    <div class="vsec"><h3>ルーティン行動（重要度が高い順）</h3>
+      <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
+    </div>
+    <div class="vsec"><h3>週間期日行動</h3>
+      ${D.deadlines.filter(d=>d.text.trim()||d.month).map(dl=>`<div class="vdl">${dl.done?"☑":"☐"} <b>${esc(dl.month)}</b> ${esc(dl.text)}</div>`).join("")||"<p class='vempty'>—</p>"}
+    </div>
+    <div class="vsec"><h3>目標達成のための支援</h3>
+      <table class="vtab"><tr><th>支援者</th><th>支援内容</th></tr>
+        ${D.supports.filter(s=>s.who||s.what).map(s=>`<tr><td>${esc(s.who)}</td><td>${esc(s.what)}</td></tr>`).join("")||"<tr><td class='vempty'>—</td><td></td></tr>"}</table>
+    </div>
+    <div class="vsec"><h3>成功・強み／失敗・弱みの分析</h3>
+      <table class="vtab vtab3"><tr><th></th><th>成功・強み</th><th>失敗・弱み</th></tr>
+        ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.success[i])}</td><td>${nl2br(a.failure[i])}</td></tr>`).join("")}</table>
+    </div>
+    <div class="vsec"><h3>予想される問題点と解決策</h3>
+      <table class="vtab vtab3"><tr><th></th><th>予想される問題点</th><th>解決策</th></tr>
+        ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.problem[i])}</td><td>${nl2br(a.solution[i])}</td></tr>`).join("")}</table>
+    </div>
+  </div>`;
+  root.querySelectorAll("[data-gzoom]").forEach(img=>{
+    img.onclick=()=>{ document.getElementById("lightboxImg").src=img.src; document.getElementById("lightbox").classList.add("show"); };
+  });
 }
 function setPath(path,val){
   const keys=path.split(".");
