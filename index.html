@@ -472,12 +472,6 @@ function renderSheetEdit(){
     </div>
   </div>
   <div class="card">
-    <h2>ゾーン目標</h2>
-    ${["最高の目標","中間の目標","絶対できる目標","今回の目標"].map((z,i)=>`
-      <div class="zone z${i}"><span class="ztag">${z}</span>
-      <input type="text" data-oi="zones.${i}" value="${esc(D.zones[i])}"></div>`).join("")}
-  </div>
-  <div class="card">
     <h2>ルーティン行動（重要度が高い順）</h2>
     ${D.routines.map((r,i)=>`<div class="listrow">
       <span class="num">${i+1}</span>
@@ -569,9 +563,6 @@ function renderSheetView(){
         ${D.quad.map(q=>`<div class="vquad"><div class="vquad-t">${esc(q.title)}</div>
           <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
       </div>
-    </div>
-    <div class="vsec"><h3>ゾーン目標</h3>
-      <table class="vtab">${zoneNames.map((z,i)=>`<tr><th>${z}</th><td>${esc(D.zones[i])||"—"}</td></tr>`).join("")}</table>
     </div>
     <div class="vsec"><h3>ルーティン行動（重要度が高い順）</h3>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
@@ -886,8 +877,6 @@ function printSheet(){
     ${D.deadlines.map(dl=>`<div class="dl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join("")}</div>
   <div class="sec"><div class="sttl">目的・目標の4観点</div>
     <div class="quads">${D.quad.map(q=>`<div class="qd"><div class="qt">${esc(q.title)}</div><ol class="qol">${q.items.map(it=>`<li>${esc(it)}</li>`).join("")}</ol></div>`).join("")}</div></div>
-  <div class="sec"><div class="sttl">ゾーン目標</div>
-    <table class="ztab">${zoneNames.map((z,i)=>`<tr><th>${z}</th><td>${esc(D.zones[i])}</td></tr>`).join("")}</table></div>
   <div class="sec"><div class="sttl">ルーティン行動（重要度が高い順）</div>
     <ol>${D.routines.map(r=>`<li>${esc(r.text)}</li>`).join("")}</ol></div>
   <table class="meta"><tr><th style="text-align:center">支援者</th><th style="text-align:center;background:#e8f0fc;color:#1a3a6b">支援内容</th></tr>
