@@ -63,6 +63,7 @@ label.fl{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:8p
 .subtabs{display:flex;gap:6px;margin-bottom:12px}
 .subtabs button{border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:8px;padding:6px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
 .subtabs button.act{background:var(--blue);color:#fff;border-color:var(--blue)}
+.linkbtn{display:inline-block;margin-top:8px;border:none;background:none;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;padding:4px 0}
 .msitem{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .msitem .listrow{margin-bottom:8px}
 .msprog{display:flex;align-items:center;gap:8px}
@@ -443,17 +444,15 @@ function renderSheetEdit(){
   </div>
   <div class="card">
     <h2>週間期日行動（発生期日順）</h2>
-    <div class="subtabs">
-      <button class="${dlTab==='todo'?'act':''}" onclick="dlTab='todo';renderSheet()">未完了 (${D.deadlines.filter(d=>!d.done).length})</button>
-      <button class="${dlTab==='done'?'act':''}" onclick="dlTab='done';renderSheet()">完了 (${D.deadlines.filter(d=>d.done).length})</button>
-    </div>
     ${D.deadlines.map((dl,i)=>({dl,i})).filter(o=>dlTab==='done'?o.dl.done:!o.dl.done).map(({dl,i})=>`<div class="listrow">
       <input type="checkbox" class="chk" data-oi="deadlines.${i}.done" ${dl.done?"checked":""}>
       <input type="date" class="small" data-oi="deadlines.${i}.month" value="${esc(toDateInputMD(dl.month))}">
       ${ta(dl.text,`deadlines.${i}.text`,dl.done?'class="ddone"':"")}
       <button class="del" data-act="delDl" data-i="${i}" title="削除">✕</button>
     </div>`).join("")||`<p class="hint">${dlTab==='done'?'完了した項目はまだありません':'未完了の項目はありません'}</p>`}
-    ${dlTab==='todo'?`<button class="add" data-act="addDl">＋ 期日行動を追加</button>`:""}
+    ${dlTab==='todo'
+      ? `<button class="add" data-act="addDl">＋ 期日行動を追加</button>${D.deadlines.some(d=>d.done)?` <button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${D.deadlines.filter(d=>d.done).length})</button>`:""}`
+      : `<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`}
   </div>
   <div class="card">
     <h2>ゾーン目標</h2>
@@ -560,8 +559,10 @@ function renderSheetView(){
     </div>
     <div class="vsec"><h3>週間期日行動</h3>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
-        const blk=(arr,label)=>arr.length?`<div class="vdlh">${label}</div>${arr.map(dl=>`<div class="vdl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join("")}`:"";
-        return (blk(todo,"未完了")+blk(done,"完了"))||"<p class='vempty'>—</p>";})()}
+        const arr=dlTab==='done'?done:todo;
+        const rows=arr.length?arr.map(dl=>`<div class="vdl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join(""):"<p class='vempty'>—</p>";
+        const toggle=dlTab==='done'?`<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`:(done.length?`<button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${done.length})</button>`:"");
+        return rows+toggle;})()}
     </div>
     <div class="vsec"><h3>ゾーン目標</h3>
       <table class="vtab">${zoneNames.map((z,i)=>`<tr><th>${z}</th><td>${esc(D.zones[i])||"—"}</td></tr>`).join("")}</table>
