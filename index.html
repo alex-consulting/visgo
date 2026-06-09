@@ -305,6 +305,7 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
 .toast.show{opacity:1}
 @media print{nav,header .hbtn,#saveState{display:none}.card{break-inside:avoid}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <header>
@@ -1298,6 +1299,8 @@ function renderGTD(){
   <div class="gtd-cap">
     <input type="text" id="gtdCapture" placeholder="タスクを追加する">
     <button class="btn-save" onclick="gtdAdd()">追加</button>
+    <button class="btn-save" style="background:#5b6b80;font-size:13px;white-space:nowrap" onclick="document.getElementById('nozbeFile').click()">📥 Nozbeから移行</button>
+    <input type="file" id="nozbeFile" accept=".zip" style="display:none" onchange="importNozbe(event)">
   </div>
   <div class="gtd-wrap">
     <aside class="gtd-side">
@@ -1460,6 +1463,64 @@ function exportJSON(){
   URL.revokeObjectURL(a.href);
   toast("JSONを書き出しました");
 }
+async function importNozbe(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  ev.target.value="";
+  try{
+    if(!window.JSZip){
+      await new Promise((res,rej)=>{
+        const s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        s.onload=res; s.onerror=rej; document.head.appendChild(s);
+      });
+    }
+    const zip=await JSZip.loadAsync(file);
+    const dataFile=zip.file('data.json');
+    if(!dataFile) throw new Error('data.jsonが見つかりません');
+    const d=JSON.parse(await dataFile.async('text'));
+
+    const projMap={}; d.project.forEach(p=>projMap[p.id]=p.name);
+    const ctxMap={};  d.context.forEach(c=>ctxMap[c.id]=c.name);
+    const urgentCtx=new Set(d.context.filter(c=>c.name.includes('緊急')).map(c=>c.id));
+    const importantCtx=new Set(d.context.filter(c=>c.name.includes('重要')).map(c=>c.id));
+
+    function toDuration(t){
+      t=parseInt(t)||0; if(t<=0) return null;
+      if(t<=5) return"5"; if(t<=15) return"15"; if(t<=60) return"60"; return"more";
+    }
+
+    const existingIds=new Set(D.gtd.tasks.map(t=>String(t.id)));
+    const projSet=new Set(D.gtd.projects);
+    const catSet=new Set(D.gtd.categories);
+    const newTasks=[];
+
+    (d.task||[]).forEach(t=>{
+      if(t.completed||existingIds.has(String(t.id))) return;
+      const pname=projMap[t.project_id];
+      const project=(pname&&pname!=='Inbox')?pname:null;
+      if(project) projSet.add(project);
+      const conIds=t.con_list||[];
+      const urgent=conIds.some(id=>urgentCtx.has(id));
+      const important=conIds.some(id=>importantCtx.has(id));
+      const cats=conIds.filter(id=>!urgentCtx.has(id)&&!importantCtx.has(id)).map(id=>ctxMap[id]).filter(Boolean);
+      cats.forEach(c=>catSet.add(c));
+      let deadline=null;
+      if(t.datetime){const m=t.datetime.match(/^(\d{4}-\d{2}-\d{2})/);if(m)deadline=m[1];}
+      const memo=(t.comments||[]).map(c=>c&&c.body).filter(Boolean).join('\n').trim();
+      newTasks.push({id:t.id,text:t.name,project,categories:cats,urgent,important,
+        deadline,duration:toDuration(t.time),memo,status:"inbox",done:false});
+    });
+
+    if(!newTasks.length){alert('新しいタスクはありませんでした'); return;}
+    if(!confirm(newTasks.length+'件のタスクをNozbeからインポートします。よろしいですか？')) return;
+    D.gtd.tasks=[...D.gtd.tasks,...newTasks];
+    D.gtd.projects=[...projSet];
+    D.gtd.categories=[...catSet];
+    save(); renderGTD();
+    toast(newTasks.length+'件をインポートしました');
+  }catch(e){ alert('インポートに失敗しました: '+e.message); }
+}
+
 function importJSON(ev){
   const f=ev.target.files[0]; if(!f) return;
   const reader=new FileReader();
