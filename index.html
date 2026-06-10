@@ -27,8 +27,10 @@ header h1{font-size:17px;margin:0;font-weight:700;flex:1;min-width:160px}
 #saveState{font-size:12px;opacity:.85}
 nav{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:2px solid var(--line);
   display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
-nav button{flex:1;min-width:0;border:none;background:none;padding:9px 6px;font-size:12.5px;
-  font-weight:600;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button{flex:1;min-width:0;border:none;background:none;padding:6px 4px;font-size:10px;
+  font-weight:600;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;
+  display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}
+nav button .tab-icon{font-size:16px;line-height:1}
 nav button.act{color:var(--blue);border-bottom-color:var(--blue)}
 main{max-width:1180px;margin:0 auto;padding:14px}
 .tab{display:none}.tab.act{display:block}
@@ -518,10 +520,10 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
 </div>
 
 <nav>
-  <button id="tb-gtd" onclick="showTab('gtd')">ToDo</button>
-  <button id="tb-dream" onclick="showTab('dream')">夢リスト</button>
-  <button id="tb-sheet" onclick="showTab('sheet')">年間目標</button>
-  <button id="tb-ow" onclick="showTab('ow')">OW64</button>
+  <button id="tb-gtd" onclick="showTab('gtd')"><span class="tab-icon">✅</span>ToDo</button>
+  <button id="tb-dream" onclick="showTab('dream')"><span class="tab-icon">🏝️</span>夢リスト</button>
+  <button id="tb-sheet" onclick="showTab('sheet')"><span class="tab-icon">🎯</span>年間目標</button>
+  <button id="tb-ow" onclick="showTab('ow')"><span class="tab-icon">🪟</span>OW64</button>
 </nav>
 
 <main>
