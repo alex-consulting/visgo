@@ -1914,7 +1914,7 @@ function renderTimeline(targetDate, panelTitle, showNow){
       <div class="tl-slot-time">${String(h).padStart(2,'0')}:00</div>
       <div class="tl-slot-body">
         <span class="tl-slot-line"></span>
-        ${items.length?`<div class="tl-slot-cards">${items.map(gtdCard).join('')}</div>`:''}
+        ${items.length?`<div class="tl-slot-cards">${[...items].sort((a,b)=>(a.deadlineTime||'').localeCompare(b.deadlineTime||'')).map(gtdCard).join('')}</div>`:''}
       </div>
     </div>`;
   };
