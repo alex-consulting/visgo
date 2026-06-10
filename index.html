@@ -1266,7 +1266,7 @@ const GTD_COLS=[
   {k:"inbox",  label:"📥 Inbox（受信トレイ）"}
 ];
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
-let gtdCollapsed={category:false,project:false};
+let gtdCollapsed={category:false,project:false,recur:false};
 let gtdView='kanban'; // 'kanban' | 'today'
 function gtdTask(id){ return D.gtd.tasks.find(t=>String(t.id)===String(id)); }
 function gtdListOf(type){ return type==='project'?D.gtd.projects:D.gtd.categories; }
@@ -1276,6 +1276,7 @@ function gtdVisible(){
     if(!gtdFilter.type) return true;
     if(gtdFilter.type==='project') return (t.project||"")===gtdFilter.value;
     if(gtdFilter.type==='category') return (t.categories||[]).includes(gtdFilter.value);
+    if(gtdFilter.type==='recur') return gtdFilter.value ? (t.recur||"")=== gtdFilter.value : !!(t.recur);
     return true;
   });
 }
@@ -1410,6 +1411,16 @@ function renderGTD(){
     <aside class="gtd-side">
       <div class="gf-item gf-today-btn ${gtdView==='today'?'act':''}" data-view="today" data-f="" data-v="">📅 今日のスケジュール</div>
       <div class="gf-item gf-all ${!gtdFilter.type&&gtdView!=='today'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
+      <div class="gf-section ${gtdCollapsed.recur?'gf-collapsed':''}">
+        <div class="gf-h gf-toggle" data-toggle="recur">
+          <span><span class="gf-arrow">▾</span>🔁 ルーティン</span>
+        </div>
+        <div class="gf-items">
+          <div class="gf-item ${gtdFilter.type==='recur'&&!gtdFilter.value&&gtdView!=='today'?'act':''}" data-f="recur" data-v="">すべて <span class="gf-cnt">${D.gtd.tasks.filter(t=>!!t.recur&&!t.done).length||''}</span></div>
+          ${Object.entries(GTD_RECUR_LABEL).filter(([k])=>D.gtd.tasks.some(t=>t.recur===k&&!t.done)).map(([k,label])=>`
+          <div class="gf-item ${gtdFilter.type==='recur'&&gtdFilter.value===k&&gtdView!=='today'?'act':''}" data-f="recur" data-v="${k}">${label} <span class="gf-cnt">${D.gtd.tasks.filter(t=>t.recur===k&&!t.done).length}</span></div>`).join('')}
+        </div>
+      </div>
       <div class="gf-section ${gtdCollapsed.category?'gf-collapsed':''}">
         <div class="gf-h gf-toggle" data-toggle="category">
           <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
