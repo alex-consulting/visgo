@@ -391,9 +391,17 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
 .dream-progress-bar{height:6px;background:#e8eef8;border-radius:3px;overflow:hidden}
 .dream-progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
 .dream-star.on{color:#f59e0b}
-.dream-del{position:absolute;top:8px;right:10px;background:none;border:none;color:#ccc;font-size:15px;cursor:pointer;padding:2px 4px;line-height:1}
-.dream-del:hover{color:#e85}
+.dream-del{position:absolute;top:8px;right:10px;background:rgba(255,255,255,.75);border:none;color:#aaa;font-size:15px;cursor:pointer;padding:2px 4px;line-height:1;border-radius:50%;z-index:1}
+.dream-del:hover{color:#e85;background:rgba(255,255,255,.95)}
 .dream-empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px}
+.dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;height:140px;object-fit:cover;border-radius:12px 12px 0 0;display:block}
+.dream-memo{font-size:12px;color:var(--sub);margin:4px 0 6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dm-img-wrap{position:relative}
+.dm-img-preview{width:100%;height:160px;object-fit:cover;border-radius:8px;display:block;cursor:pointer}
+.dm-img-upload{width:100%;height:110px;border:2px dashed var(--line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;color:var(--sub);font-size:13px;background:#f8f9ff;transition:border-color .15s,color .15s;box-sizing:border-box}
+.dm-img-upload:hover{border-color:var(--blue);color:var(--blue)}
+.dm-img-clear{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:13px;cursor:pointer;line-height:24px;text-align:center;padding:0}
+.dm-img-change{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11.5px;cursor:pointer}
 /* 夢モーダル */
 #dreamModalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center;padding:12px}
 .dream-modal{background:#fff;border-radius:14px;width:480px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
@@ -410,15 +418,19 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
 .dm-cat-btn.act-do{background:#dcfce7;border-color:#86efac;color:#166534}
 .dm-cat-btn.act-be{background:#faf5ff;border-color:#d8b4fe;color:#7e22ce}
 .dm-step-list{margin-bottom:6px}
-.dm-step-item{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid #f0f4fa}
+.dm-step-item{display:flex;align-items:flex-start;gap:8px;padding:7px 4px;border-bottom:1px solid #f0f4fa}
 .dm-step-item:last-child{border-bottom:none}
-.dm-step-check{width:16px;height:16px;accent-color:var(--blue);flex:0 0 auto;cursor:pointer}
-.dm-step-text{flex:1;font-size:13.5px;color:var(--navy);line-height:1.4;word-break:break-all}
-.dm-step-done{text-decoration:line-through;color:var(--sub)}
-.dm-step-del{background:none;border:none;color:#ccc;cursor:pointer;font-size:13px;padding:0 2px;flex:0 0 auto;line-height:1}
+.dm-step-check{width:16px;height:16px;accent-color:var(--blue);flex:0 0 auto;cursor:pointer;margin-top:4px}
+.dm-step-body{flex:1;display:flex;flex-direction:column;gap:3px}
+.dm-step-text-input{border:none;background:transparent;padding:2px 0;font-size:13.5px;color:var(--navy);font-family:inherit;width:100%;outline:none}
+.dm-step-text-input:focus{border-bottom:1px solid var(--blue);background:#f8f9ff}
+.dm-step-done-input{text-decoration:line-through;color:var(--sub)}
+.dm-step-date{font-size:11.5px;color:var(--sub);border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:#f8f9ff;font-family:inherit}
+.dm-step-del{background:none;border:none;color:#ccc;cursor:pointer;font-size:13px;padding:0 2px;flex:0 0 auto;line-height:1;margin-top:2px}
 .dm-step-del:hover{color:#e85}
-.dm-step-addrow{display:flex;gap:6px;margin-top:8px}
-.dm-step-addrow input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
+.dm-step-addrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dm-step-addrow input[type=text]{flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
+.dm-step-addrow input[type=date]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit}
 .dm-step-addrow button{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
 .dm-pct-badge{font-size:12px;font-weight:700;color:var(--blue);margin-left:6px}
 .dream-modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}
@@ -737,9 +749,15 @@ function save(){
   document.getElementById("saveState").textContent="保存中…";
   saveTimer=setTimeout(async ()=>{
     try{
-      const {goalImages, ...rest}=D;        // 画像以外をlocalStorageへ
-      localStorage.setItem(LS_KEY, JSON.stringify(rest));
-      await idbSet("goalImages", D.goalImages||[]); // 画像はIndexedDBへ
+      // 夢画像をIDB用に抽出（localStorageの容量節約）
+      const dreamImgs={};
+      (D.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs[String(d.id)]=d.image; });
+      const {goalImages, ...rest}=D;
+      const lsData={...rest, dreams:{...rest.dreams,
+        items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
+      localStorage.setItem(LS_KEY, JSON.stringify(lsData));
+      await idbSet("goalImages", D.goalImages||[]);
+      await idbSet("dreamImages", dreamImgs);
       document.getElementById("saveState").textContent="✓ 保存済み";
     }catch(e){
       document.getElementById("saveState").textContent="⚠ 保存失敗";
@@ -786,6 +804,48 @@ function fitAll(root){root.querySelectorAll("textarea").forEach(fit);}
 let dreamFilter='all'; // 'all'|'Have'|'Do'|'Be'
 let dreamEditId=null;
 let dmSteps=[]; // モーダル編集中の一時ステップ配列
+let dmImage=null; // モーダル編集中の画像データURL
+
+function renderDmImgWrap(){
+  const wrap=document.getElementById('dmImgWrap'); if(!wrap) return;
+  wrap.innerHTML=`
+    <input type="file" id="dmImgInput" accept="image/*" style="display:none" onchange="dmHandleImg(this)">
+    ${dmImage
+      ? `<div style="position:relative">
+           <img class="dm-img-preview" src="${dmImage}" alt="" onclick="document.getElementById('dmImgInput').click()" title="クリックして変更">
+           <button class="dm-img-clear" onclick="dmClearImage()">✕</button>
+           <button class="dm-img-change" onclick="document.getElementById('dmImgInput').click()">変更</button>
+         </div>`
+      : `<div class="dm-img-upload" onclick="document.getElementById('dmImgInput').click()">
+           <span style="font-size:24px">🖼</span>
+           <span>画像を追加</span>
+           <span style="font-size:11.5px">クリックして選択</span>
+         </div>`
+    }`;
+}
+function dmHandleImg(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const maxW=900,maxH=600;
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      dmImage=canvas.toDataURL('image/jpeg',0.75);
+      renderDmImgWrap();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function dmClearImage(){
+  dmImage=null; renderDmImgWrap();
+}
 
 function dreamProgress(d){
   const steps=Array.isArray(d.steps)?d.steps:[];
@@ -797,19 +857,34 @@ function renderDmSteps(){
   const pct=dmSteps.length?Math.round(dmSteps.filter(s=>s.done).length/dmSteps.length*100):0;
   const badge=document.getElementById('dmProgressPct');
   if(badge) badge.textContent=pct+'%';
-  list.innerHTML=dmSteps.length
-    ? dmSteps.map(s=>`<div class="dm-step-item">
+  const sorted=[...dmSteps].sort((a,b)=>{
+    const ad=a.startDate||'9999-99-99', bd=b.startDate||'9999-99-99';
+    return ad<bd?-1:ad>bd?1:0;
+  });
+  list.innerHTML=sorted.length
+    ? sorted.map(s=>`<div class="dm-step-item">
         <input type="checkbox" class="dm-step-check" ${s.done?'checked':''} onchange="dmToggleStep(this,'${s.id}')">
-        <span class="dm-step-text${s.done?' dm-step-done':''}">${esc(s.text)}</span>
+        <div class="dm-step-body">
+          <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="アクション名"
+            oninput="dmUpdateStep('${s.id}','text',this.value)">
+          <input type="date" class="dm-step-date" value="${s.startDate||''}" title="スタート期限"
+            onchange="dmUpdateStep('${s.id}','startDate',this.value)">
+        </div>
         <button class="dm-step-del" onclick="dmDeleteStep('${s.id}')">✕</button>
       </div>`).join('')
-    : `<div style="color:var(--sub);font-size:12.5px;padding:6px 0">ステップをまだ追加していません</div>`;
+    : `<div style="color:var(--sub);font-size:12.5px;padding:6px 0">アクションをまだ追加していません</div>`;
+  // note: sorted is display-only; dmSteps order unchanged
+}
+function dmUpdateStep(id,field,value){
+  const s=dmSteps.find(x=>String(x.id)===String(id));
+  if(s) s[field]=value;
 }
 function dmAddStep(){
   const inp=document.getElementById('dmStepInput');
+  const dateInp=document.getElementById('dmStepDate');
   const text=(inp.value||'').trim(); if(!text) return;
-  dmSteps.push({id:Date.now(),text,done:false});
-  inp.value=''; renderDmSteps();
+  dmSteps.push({id:Date.now(),text,done:false,startDate:dateInp?dateInp.value:''});
+  inp.value=''; if(dateInp) dateInp.value=''; renderDmSteps();
 }
 function dmToggleStep(cb,id){
   const s=dmSteps.find(x=>String(x.id)===String(id));
@@ -841,6 +916,7 @@ function renderDreams(){
     ${items.length ? items.map(d=>{
       const catCls=dreamCatClass(d.category);
       return `<div class="dream-card" onclick="openDreamModal('${d.id}')">
+        ${d.image?`<img class="dream-card-img" src="${d.image}" alt="">`:'' }
         <button class="dream-del" onclick="event.stopPropagation();deleteDream('${d.id}')" title="削除">✕</button>
         <div class="dream-card-top">
           <span class="dream-cat ${catCls}">${esc(d.category||'')}</span>
@@ -848,9 +924,9 @@ function renderDreams(){
         </div>
 
         <div class="dream-meta">
-          ${d.targetDate?`<span>📅 ${d.targetDate}</span>`:''}
-          ${d.createdDate?`<span>登録 ${d.createdDate}</span>`:''}
+          ${d.targetDate?`<span>🗓 ${d.targetDate}年</span>`:''}
         </div>
+        ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
         ${(()=>{const pct=dreamProgress(d);const steps=Array.isArray(d.steps)?d.steps:[];return steps.length?`
         <div class="dream-progress-wrap">
           <div class="dream-progress-label"><span>進捗 ${steps.filter(s=>s.done).length}/${steps.length}</span><span>${pct}%</span></div>
@@ -888,17 +964,25 @@ function openDreamModal(id){
         <input type="date" id="dmCreated" value="${d.createdDate||''}">
       </div>
       <div class="dm-field">
-        <label>実現予定日</label>
-        <input type="date" id="dmTarget" value="${d.targetDate||''}">
+        <label>実現予定年</label>
+        <input type="number" id="dmTarget" value="${d.targetDate||''}" min="2020" max="2100" placeholder="${new Date().getFullYear()}" style="width:120px">
       </div>
     </div>
     <div class="dm-field">
+      <label>🎉 達成時の気持ち（目標達成をイメージしながら書く）</label>
+      <textarea id="dmMemo" rows="3" placeholder="達成したときどんな気持ちになるか、どんな景色が見えるか...">${esc(d.memo||'')}</textarea>
+    </div>
     <div class="dm-field">
-      <label>ステップ <span class="dm-pct-badge" id="dmProgressPct">0%</span></label>
+      <label>イメージ画像</label>
+      <div class="dm-img-wrap" id="dmImgWrap"></div>
+    </div>
+    <div class="dm-field">
+      <label>アクション <span class="dm-pct-badge" id="dmProgressPct">0%</span></label>
       <div class="dm-step-list" id="dmStepList"></div>
       <div class="dm-step-addrow">
-        <input type="text" id="dmStepInput" placeholder="ステップを追加..."
+        <input type="text" id="dmStepInput" placeholder="アクションを追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStep();}">
+        <input type="date" id="dmStepDate" title="スタート期限">
         <button onclick="dmAddStep()">追加</button>
       </div>
     </div>`;
@@ -906,7 +990,9 @@ function openDreamModal(id){
   overlay.querySelector('.dream-modal-hd span').textContent=isNew?'💭 夢を追加':'💭 夢を編集';
   overlay.style.display='flex';
   dmSteps=Array.isArray(d.steps)?d.steps.map(s=>({...s})):[];
+  dmImage=d.image||null;
   renderDmSteps();
+  renderDmImgWrap();
   document.getElementById('dmTitle').focus();
 }
 
@@ -926,7 +1012,9 @@ function saveDream(){
     category,
     createdDate:document.getElementById('dmCreated').value,
     targetDate:document.getElementById('dmTarget').value,
-    steps:[...dmSteps]
+    memo:document.getElementById('dmMemo').value,
+    steps:[...dmSteps],
+    image:dmImage||null
   };
   if(!dreamEditId){
     data.id=D.dreams.nextId++;
@@ -2200,12 +2288,17 @@ async function importNozbe(ev){
 function importJSON(ev){
   const f=ev.target.files[0]; if(!f) return;
   const reader=new FileReader();
-  reader.onload=()=>{
+  reader.onload=async ()=>{
     try{
       const obj=JSON.parse(reader.result);
       if(!obj.ow||!obj.routines) throw new Error("形式が違います");
       if(!confirm("現在のデータを読み込んだ内容で上書きします。よろしいですか？")) return;
-      D=obj; save();
+      D=obj;
+      // バックアップJSON内の夢画像をIDBへ移行しつつDには保持
+      const bkImgs={};
+      (D.dreams?.items||[]).forEach(d=>{ if(d.image) bkImgs[String(d.id)]=d.image; });
+      await idbSet("dreamImages", bkImgs);
+      save();
       showTab("sheet");
       toast("読み込みました");
     }catch(e){ alert("読み込みに失敗しました: "+e.message); }
@@ -2228,7 +2321,28 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
       await idbSet("goalImages", D.goalImages); // 旧localStorage画像をIDBへ移行
     }
   }catch(e){}
-  try{ const {goalImages, ...rest}=D; localStorage.setItem(LS_KEY, JSON.stringify(rest)); }catch(e){}
+  // 夢画像をIndexedDBから復元
+  try{
+    const dreamImgs=await idbGet("dreamImages");
+    if(dreamImgs&&typeof dreamImgs==='object'){
+      let merged=false;
+      (D.dreams?.items||[]).forEach(d=>{
+        const img=dreamImgs[String(d.id)];
+        if(img){d.image=img; merged=true;}
+      });
+      if(merged&&document.getElementById("tab-dream").classList.contains("act")) renderDreams();
+    }
+    // 旧データ移行：もしlocalStorage内に画像が残っていたらIDBへ移す
+    const hasInlineImgs=(D.dreams?.items||[]).some(d=>d.image);
+    if(hasInlineImgs) await save();
+  }catch(e){}
+  try{
+    const dreamImgs2={};
+    (D.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs2[String(d.id)]=d.image; });
+    const {goalImages,...rest}=D;
+    const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
+    localStorage.setItem(LS_KEY,JSON.stringify(lsData));
+  }catch(e){}
 })();
 </script>
 </body>
