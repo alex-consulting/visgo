@@ -333,6 +333,7 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
 .gm-head h3{font-size:15px;color:var(--navy);margin:0}
 .gm-close{border:none;background:none;font-size:18px;color:var(--sub);cursor:pointer;padding:0 4px;line-height:1}
 .gm-close:hover{color:var(--text)}
+.gm-save-top{border:none;background:var(--blue);color:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer}
 .gm-label{font-size:12px;font-weight:700;color:var(--navy);margin:12px 0 5px}
 .gm-label:first-of-type{margin-top:0}
 #gtdModal textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px;resize:vertical}
@@ -549,7 +550,10 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
   <div id="gtdModal">
     <div class="gm-head">
       <h3>タスクの詳細</h3>
-      <button class="gm-close" onclick="closeGtdModal()">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="gm-save-top" onclick="saveGtdModal()">保存</button>
+        <button class="gm-close" onclick="closeGtdModal()">✕</button>
+      </div>
     </div>
     <p class="gm-label">タスク内容</p>
     <textarea id="gmText" rows="2"></textarea>
@@ -596,10 +600,6 @@ td.dsun .daybtn{border-color:#f3c1c1}td.dsat .daybtn{border-color:#bcd2f5}
     </div>
     <p class="gm-label">メモ</p>
     <textarea id="gmMemo" rows="4" placeholder="メモを入力..."></textarea>
-    <div class="gm-btns">
-      <button onclick="closeGtdModal()">キャンセル</button>
-      <button class="gm-save" onclick="saveGtdModal()">保存</button>
-    </div>
   </div>
 </div>
 
