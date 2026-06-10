@@ -151,6 +151,9 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-item:hover{background:#e6ecf5}
 .gf-item.act{background:var(--blue);color:#fff;font-weight:600}
 .gf-all{font-weight:700;margin-bottom:4px}
+.gf-today-btn{font-weight:700;margin-bottom:8px;border:1.5px solid var(--blue);color:var(--blue);background:var(--blue-l)}
+.gf-today-btn:hover{background:#d0e0fa}
+.gf-today-btn.act{background:var(--blue);color:#fff;border-color:var(--blue)}
 .gf-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gf-cnt{margin-left:auto;font-size:11px;opacity:.75;flex:0 0 auto}
 .gf-del{opacity:.45;font-size:12px;flex:0 0 auto;padding:0 2px}
@@ -1264,6 +1267,7 @@ const GTD_COLS=[
 ];
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
 let gtdCollapsed={category:false,project:false};
+let gtdView='kanban'; // 'kanban' | 'today'
 function gtdTask(id){ return D.gtd.tasks.find(t=>String(t.id)===String(id)); }
 function gtdListOf(type){ return type==='project'?D.gtd.projects:D.gtd.categories; }
 function gtdVisible(){
@@ -1402,10 +1406,10 @@ function renderGTD(){
     <button class="btn-save" style="background:#5b6b80;font-size:13px;white-space:nowrap" onclick="document.getElementById('nozbeFile').click()">📥 Nozbeから移行</button>
     <input type="file" id="nozbeFile" accept=".zip" style="display:none" onchange="importNozbe(event)">
   </div>
-  ${renderTodayTimeline()}
   <div class="gtd-wrap">
     <aside class="gtd-side">
-      <div class="gf-item gf-all ${!gtdFilter.type?'act':''}" data-f="" data-v="">📋 すべて表示</div>
+      <div class="gf-item gf-today-btn ${gtdView==='today'?'act':''}" data-view="today" data-f="" data-v="">📅 今日のスケジュール</div>
+      <div class="gf-item gf-all ${!gtdFilter.type&&gtdView!=='today'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
       <div class="gf-section ${gtdCollapsed.category?'gf-collapsed':''}">
         <div class="gf-h gf-toggle" data-toggle="category">
           <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
@@ -1422,7 +1426,9 @@ function renderGTD(){
       </div>
     </aside>
     <div class="gtd-main">
-      <div class="kanban">
+      ${gtdView==='today'
+        ? renderTodayTimeline()
+        : `<div class="kanban">
         ${GTD_COLS.map(c=>{
           const items=vis.filter(t=>t.status===c.k);
           return `<div class="kcol">
@@ -1431,7 +1437,7 @@ function renderGTD(){
             </div>
           </div>`;
         }).join("")}
-      </div>
+      </div>`}
     </div>
   </div>`;
   bindGTD(root);
@@ -1482,8 +1488,14 @@ function bindGTD(root){
   root.querySelectorAll(".gf-item").forEach(it=>{
     it.addEventListener("click",e=>{
       if(e.target.classList.contains("gf-del")||e.target.classList.contains("gf-ren")) return;
-      const type=it.dataset.f;
-      gtdFilter = type ? {type,value:it.dataset.v} : {type:null,value:null};
+      if(it.dataset.view==='today'){
+        gtdView='today';
+        gtdFilter={type:null,value:null};
+      } else {
+        gtdView='kanban';
+        const type=it.dataset.f;
+        gtdFilter = type ? {type,value:it.dataset.v} : {type:null,value:null};
+      }
       renderGTD();
     });
   });
