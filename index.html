@@ -1933,11 +1933,7 @@ function renderTimeline(targetDate, panelTitle, showNow){
     ? `<div class="tl-empty-msg">📭 タスクはありません</div>`
     : `<div class="tl-grid">${unscheduled}${sortedHours.map(slot).join('')}</div>`;
 
-  return `<div class="tl-panel${tlCollapsed?' tl-collapsed':''}">
-    <div class="tl-panel-head" onclick="tlCollapsed=!tlCollapsed;renderGTD()">
-      <div class="tl-panel-title">${panelTitle} <span class="tl-panel-date">${dateLabel}</span></div>
-      <span class="tl-panel-toggle">▾</span>
-    </div>
+  return `<div class="tl-panel">
     <div class="tl-panel-body">${bodyContent}</div>
   </div>`;
 }
