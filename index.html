@@ -1757,7 +1757,7 @@ const GTD_COLS=[
   {k:"inbox",  label:"📥 Inbox（受信トレイ）"}
 ];
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
-let gtdCollapsed={category:false,project:false,recur:false};
+let gtdCollapsed={category:false,project:false,recur:false,taskGroup:false};
 let gtdView='today'; // 'kanban' | 'today'
 function gtdTask(id){ return D.gtd.tasks.find(t=>String(t.id)===String(id)); }
 function gtdListOf(type){ return type==='project'?D.gtd.projects:D.gtd.categories; }
@@ -2037,29 +2037,36 @@ function renderGTD(){
       <div class="gf-item gf-today-btn ${gtdView==='today'?'act':''}" data-view="today" data-f="" data-v="">📅 1日をスタート！</div>
       <div class="gf-item gf-today-btn ${gtdView==='tomorrow'?'act':''}" data-view="tomorrow" data-f="" data-v="" style="margin-top:-4px;opacity:.85">📅 明日の計画</div>
       ${(()=>{const oc=(D.gtd.tasks||[]).filter(t=>t.deadline&&t.deadline<dateStr(0)&&!t.done).length;return `<div class="gf-item gf-overdue-btn ${gtdView==='overdue'?'act':''}" data-view="overdue" data-f="" data-v="">⚠️ 期限超過${oc?` <span style="margin-left:auto;background:${gtdView==='overdue'?'rgba(255,255,255,.3)':'#e07055'};color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;flex:0 0 auto">${oc}</span>`:''}</div>`;})()}
-      <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
-      <div class="gf-section ${gtdCollapsed.category?'gf-collapsed':''}">
-        <div class="gf-h gf-toggle" data-toggle="category">
-          <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
-          <button class="gf-add" data-add="category" title="フォルダを追加">＋</button>
-        </div>
-        <div class="gf-items">${gtdFolderItems('category')}</div>
-      </div>
-      <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
-        <div class="gf-h gf-toggle" data-toggle="project">
-          <span><span class="gf-arrow">▾</span>📁 プロジェクト</span>
-          <button class="gf-add" data-add="project" title="フォルダを追加">＋</button>
-        </div>
-        <div class="gf-items">${gtdFolderItems('project')}</div>
-      </div>
-      <div class="gf-section ${gtdCollapsed.recur?'gf-collapsed':''}">
-        <div class="gf-h gf-toggle" data-toggle="recur">
-          <span><span class="gf-arrow">▾</span>🔁 ルーティン</span>
+      <div class="gf-section ${gtdCollapsed.taskGroup?'gf-collapsed':''}">
+        <div class="gf-h gf-toggle" data-toggle="taskGroup">
+          <span><span class="gf-arrow">▾</span>📋 タスク管理</span>
         </div>
         <div class="gf-items">
-          <div class="gf-item ${gtdFilter.type==='recur'&&!gtdFilter.value&&gtdView!=='today'?'act':''}" data-f="recur" data-v="">すべて <span class="gf-cnt">${D.gtd.tasks.filter(t=>!!t.recur&&!t.done).length||''}</span></div>
-          ${Object.entries(GTD_RECUR_LABEL).map(([k,label])=>`
-          <div class="gf-item ${gtdFilter.type==='recur'&&gtdFilter.value===k&&gtdView!=='today'?'act':''}" data-f="recur" data-v="${k}">${label}<span class="gf-cnt">${D.gtd.tasks.filter(t=>t.recur===k&&!t.done).length||''}</span></div>`).join('')}
+          <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">すべて表示</div>
+          <div class="gf-section ${gtdCollapsed.category?'gf-collapsed':''}">
+            <div class="gf-h gf-toggle" data-toggle="category">
+              <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
+              <button class="gf-add" data-add="category" title="フォルダを追加">＋</button>
+            </div>
+            <div class="gf-items">${gtdFolderItems('category')}</div>
+          </div>
+          <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
+            <div class="gf-h gf-toggle" data-toggle="project">
+              <span><span class="gf-arrow">▾</span>📁 プロジェクト</span>
+              <button class="gf-add" data-add="project" title="フォルダを追加">＋</button>
+            </div>
+            <div class="gf-items">${gtdFolderItems('project')}</div>
+          </div>
+          <div class="gf-section ${gtdCollapsed.recur?'gf-collapsed':''}">
+            <div class="gf-h gf-toggle" data-toggle="recur">
+              <span><span class="gf-arrow">▾</span>🔁 ルーティン</span>
+            </div>
+            <div class="gf-items">
+              <div class="gf-item ${gtdFilter.type==='recur'&&!gtdFilter.value&&gtdView!=='today'?'act':''}" data-f="recur" data-v="">すべて <span class="gf-cnt">${D.gtd.tasks.filter(t=>!!t.recur&&!t.done).length||''}</span></div>
+              ${Object.entries(GTD_RECUR_LABEL).map(([k,label])=>`
+              <div class="gf-item ${gtdFilter.type==='recur'&&gtdFilter.value===k&&gtdView!=='today'?'act':''}" data-f="recur" data-v="${k}">${label}<span class="gf-cnt">${D.gtd.tasks.filter(t=>t.recur===k&&!t.done).length||''}</span></div>`).join('')}
+            </div>
+          </div>
         </div>
       </div>
     </aside>
