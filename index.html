@@ -2074,21 +2074,16 @@ function renderGTD(){
         ? renderTomorrowTimeline()
         : gtdView==='overdue'
         ? renderOverdueView()
-        : `<div class="kanban">
-        ${GTD_COLS.map(c=>{
-          const items=vis.filter(t=>t.status===c.k).sort((a,b)=>{
-            if(a.done!==b.done) return (a.done?1:0)-(b.done?1:0);
-            const aKey=(a.deadline||'9999-99-99')+'T'+(a.deadlineTime||'99:99');
-            const bKey=(b.deadline||'9999-99-99')+'T'+(b.deadlineTime||'99:99');
-            return aKey<bKey?-1:aKey>bKey?1:0;
-          });
-          return `<div class="kcol">
-            <div class="kbody" data-col="${c.k}">
-              ${items.map(gtdCard).join("")||`<div class="kempty">ここにドラッグ</div>`}
+        : `<div class="kcol" style="width:100%;max-width:100%">
+            <div class="kbody" data-col="inbox">
+              ${[...vis].sort((a,b)=>{
+                if(a.done!==b.done) return (a.done?1:0)-(b.done?1:0);
+                const aKey=(a.deadline||'9999-99-99')+'T'+(a.deadlineTime||'99:99');
+                const bKey=(b.deadline||'9999-99-99')+'T'+(b.deadlineTime||'99:99');
+                return aKey<bKey?-1:aKey>bKey?1:0;
+              }).map(gtdCard).join("")||`<div class="kempty">タスクがありません</div>`}
             </div>
-          </div>`;
-        }).join("")}
-      </div>`}
+          </div>`}
     </div>
   </div>`;
   bindGTD(root);
