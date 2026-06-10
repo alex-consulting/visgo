@@ -1766,7 +1766,7 @@ const GTD_COLS=[
   {k:"inbox",  label:"📥 Inbox（受信トレイ）"}
 ];
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
-let gtdCollapsed={category:false,project:false,recur:false,taskGroup:false};
+let gtdCollapsed={category:true,project:true,recur:true,taskGroup:true};
 let gtdView='today'; // 'kanban' | 'today'
 function gtdTask(id){ return D.gtd.tasks.find(t=>String(t.id)===String(id)); }
 function gtdListOf(type){ return type==='project'?D.gtd.projects:D.gtd.categories; }
