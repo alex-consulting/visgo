@@ -187,7 +187,7 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-today-btn:hover{background:rgba(0,122,255,.20)}
 .gf-today-btn.act{background:var(--blue);color:#fff;border-color:var(--blue)}
 .gf-start-main{font-size:16px;padding:12px 14px;border-width:2px;margin-bottom:16px;border-radius:10px;justify-content:center;letter-spacing:.02em}
-.gf-start-main.act{box-shadow:0 2px 8px rgba(0,122,255,.30)}
+.gf-start-main.act{}
 .gf-overdue-btn{font-weight:700;margin-bottom:4px;border:1.5px solid #FF3B30;color:#D70015;background:var(--red-l)}
 .gf-overdue-btn:hover{background:rgba(255,59,48,.18)}
 .gf-overdue-btn.act{background:#FF3B30;color:#fff;border-color:#FF3B30}
@@ -2238,13 +2238,13 @@ function renderTodayTimeline(){
       </select>
     </div>`).join('');
   const panel=`<div class="today-point">
-    <div class="today-point-title">📌 今日のポイント</div>
+    <div class="today-point-title">📌 今日の要諦（ようてい）</div>
     <div class="today-point-sec">
-      <div class="today-point-label">🌙 1日の終わりの気持ち</div>
+      <div class="today-point-label">🌙 今日１日の終わりにどんな自分になっていたいか宣言</div>
       <textarea class="today-feeling" placeholder="今日1日の終わりにどんな気持ちになっていたいですか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
     </div>
     <div class="today-point-sec">
-      <div class="today-point-label">⭐ 今日の大事なタスク TOP3</div>
+      <div class="today-point-label">⭐ 今日の最重要TOP3</div>
       ${top3HTML}
     </div>
   </div>`;
