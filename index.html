@@ -2246,7 +2246,7 @@ function renderTodayTimeline(){
       ${top3HTML}
     </div>
   </div>`;
-  return panel+renderTimeline(today,'📅 1日をスタート！',true);
+  return panel+renderTimeline(today,'🌅 1日をスタート！',true);
 }
 function renderTomorrowTimeline(){ return renderTimeline(dateStr(1),'📅 明日の計画',false); }
 function dailyFeelingUpdate(date,val){
@@ -2362,7 +2362,7 @@ function renderGTD(){
   <div class="gtd-side-backdrop" id="gtdSideBackdrop" onclick="closeGtdSidebar()"></div>
   <div class="gtd-wrap">
     <aside class="gtd-side" id="gtdSide">
-      <div class="gf-item gf-today-btn gf-start-main ${gtdView==='today'?'act':''}" data-view="today" data-f="" data-v="">📅 1日をスタート！</div>
+      <div class="gf-item gf-today-btn gf-start-main ${gtdView==='today'?'act':''}" data-view="today" data-f="" data-v="">🌅 1日をスタート！</div>
       <div class="gf-item gf-today-btn ${gtdView==='tomorrow'?'act':''}" data-view="tomorrow" data-f="" data-v="" style="margin-top:-4px;opacity:.85">📅 明日の計画</div>
       ${(()=>{const oc=(D.gtd.tasks||[]).filter(t=>t.deadline&&t.deadline<dateStr(0)&&!t.done).length;return `<div class="gf-item gf-overdue-btn ${gtdView==='overdue'?'act':''}" data-view="overdue" data-f="" data-v="">⚠️ 期限超過${oc?` <span style="margin-left:auto;background:${gtdView==='overdue'?'rgba(255,255,255,.3)':'#FF3B30'};color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;flex:0 0 auto">${oc}</span>`:''}</div>`;})()}
       <div class="gf-section ${gtdCollapsed.taskGroup?'gf-collapsed':''}">
@@ -2447,7 +2447,7 @@ function closeGtdSidebar(){
   if(bd) bd.classList.remove('mob-open');
 }
 function gtdMobLabelText(){
-  if(gtdView==='today') return '📅 1日をスタート！';
+  if(gtdView==='today') return '🌅 1日をスタート！';
   if(gtdView==='tomorrow') return '📅 明日の計画';
   if(gtdView==='overdue') return '⚠️ 期限超過';
   if(gtdFilter.type&&gtdFilter.value) return gtdFilter.value;
