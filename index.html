@@ -113,12 +113,12 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 /* ---- read-only view ---- */
 .vsheet{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;max-width:920px;margin:0 auto}
 @media(max-width:700px){.vsheet{padding:16px 14px}}
-.vhead{border-bottom:2px solid var(--text);padding-bottom:10px;margin-bottom:18px}
+.vhead{border-bottom:2px solid var(--blue);padding-bottom:10px;margin-bottom:18px}
 .vhead h1{font-size:20px;color:var(--navy);margin:0 0 8px}
 .vmeta{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13.5px}
 .vmeta b{color:var(--sub);font-weight:700;margin-right:5px;font-size:12px}
 .vsec{margin-bottom:22px}
-.vsec h3{font-size:14px;color:var(--card);background:var(--text);display:inline-block;padding:4px 14px;border-radius:6px;margin:0 0 10px}
+.vsec h3{font-size:14px;color:var(--card);background:var(--blue);display:inline-block;padding:4px 14px;border-radius:6px;margin:0 0 10px}
 .vsec p{margin:4px 0;line-height:1.7}
 .vsec p b{color:var(--navy)}
 .vempty{color:var(--faint)}
@@ -186,7 +186,7 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-today-btn{font-weight:700;margin-bottom:8px;border:1.5px solid var(--blue);color:var(--blue);background:var(--blue-l)}
 .gf-today-btn:hover{background:rgba(0,122,255,.20)}
 .gf-today-btn.act{background:var(--blue);color:#fff;border-color:var(--blue)}
-.gf-start-main{font-size:16px;padding:12px 14px;border-width:2px;margin-bottom:6px;border-radius:10px;justify-content:center;letter-spacing:.02em}
+.gf-start-main{font-size:16px;padding:12px 14px;border-width:2px;margin-bottom:16px;border-radius:10px;justify-content:center;letter-spacing:.02em}
 .gf-start-main.act{box-shadow:0 2px 8px rgba(0,122,255,.30)}
 .gf-overdue-btn{font-weight:700;margin-bottom:4px;border:1.5px solid #FF3B30;color:#D70015;background:var(--red-l)}
 .gf-overdue-btn:hover{background:rgba(255,59,48,.18)}
@@ -1192,7 +1192,7 @@ function renderDreams(){
 
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">夢リスト</h1><p class="ph-sub">${(D.dreams.items||[]).length}件の夢</p></div>
+    <div><h1 class="ph-title">🏝️ 夢リスト</h1><p class="ph-sub">夢あるところに行動がある</p></div>
     <button class="ph-action" onclick="openDreamModal(null)">＋ 夢を追加</button>
   </div>
   <div class="mob-chips">
@@ -1343,7 +1343,7 @@ function renderSheetEdit(){
   const a=D.analysis;
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">年間目標</h1><p class="ph-sub">編集モード</p></div>
+    <div><h1 class="ph-title">🎯 年間目標</h1><p class="ph-sub">編集モード</p></div>
     <button class="ph-action" onclick="setSheetMode('view')">✓ 保存して表示</button>
   </div>
   <div class="mob-chips">
@@ -1483,7 +1483,7 @@ function renderSheetView(){
   const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">年間目標</h1><p class="ph-sub">目標達成日 ${esc(fmtDate(D.meta.targetDate))||"未設定"}</p></div>
+    <div><h1 class="ph-title">🎯 年間目標</h1><p class="ph-sub">目標達成日 ${esc(fmtDate(D.meta.targetDate))||"未設定"}</p></div>
     <button class="ph-action" onclick="setSheetMode('edit')">✎ 編集する</button>
   </div>
   <div class="mob-chips">
@@ -1706,12 +1706,13 @@ function renderOW(){
   }
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">OW64</h1><p class="ph-sub">オープンウィンドウ64・目標展開シート</p></div>
+    <div><h1 class="ph-title">🪟 OW64</h1><p class="ph-sub">オープンウィンドウ64・目標展開シート</p></div>
     <button class="ph-action" onclick="printOW()">🖨 A4印刷 / PDF</button>
   </div>
   <div class="mob-chips">
     <button id="owAllM" class="${owMode==="all"?"act":""}">全体表示</button>
     <button id="owBlkM" class="${owMode==="block"?"act":""}">ブロック表示</button>
+    <button onclick="printOW()">🖨 A4印刷 / PDF</button>
   </div>
   <div class="gtd-wrap">
   <aside class="gtd-side side-static">
@@ -2211,7 +2212,7 @@ function renderTimeline(targetDate, panelTitle, showNow){
   const isEmpty=tasks.length===0&&sortedHours.length===0;
   const bodyContent=isEmpty
     ? `<div class="tl-empty-msg">📭 タスクはありません</div>`
-    : `<div class="tl-grid">${unscheduled}${sortedHours.map(slot).join('')}</div>`;
+    : `<div class="tl-grid">${sortedHours.map(slot).join('')}${unscheduled}</div>`;
 
   return `<div class="tl-panel">
     <div class="tl-panel-body">${bodyContent}</div>
@@ -2225,16 +2226,21 @@ function renderTodayTimeline(){
   if(!Array.isArray(df.top3)||df.top3.length<3){
     df.top3=[0,1,2].map(i=>df.top3&&df.top3[i]?df.top3[i]:{text:'',done:false});
   }
+  const todayTasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||'')=== today&&!t.done);
   const top3HTML=df.top3.map((item,i)=>`
     <div class="tp3-row">
       <input type="checkbox" class="tp3-cb" ${item.done?'checked':''} onchange="dailyTop3Toggle('${today}',${i})">
-      <input type="text" class="tp3-text ${item.done?'tp3-done':''}" value="${esc(item.text)}" placeholder="タスク ${i+1}" oninput="dailyTop3Text('${today}',${i},this.value)">
+      <select class="tp3-text ${item.done?'tp3-done':''}" onchange="dailyTop3Text('${today}',${i},this.value)">
+        <option value="">-- タスクを選択 --</option>
+        ${todayTasks.map(t=>`<option value="${esc(t.text)}" ${item.text===t.text?'selected':''}>${esc(t.text)}</option>`).join('')}
+        ${item.text&&!todayTasks.find(t=>t.text===item.text)?`<option value="${esc(item.text)}" selected>${esc(item.text)}</option>`:''}
+      </select>
     </div>`).join('');
   const panel=`<div class="today-point">
     <div class="today-point-title">📌 今日のポイント</div>
     <div class="today-point-sec">
       <div class="today-point-label">🌙 1日の終わりの気持ち</div>
-      <textarea class="today-feeling" placeholder="今日はどんな1日でしたか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
+      <textarea class="today-feeling" placeholder="今日1日の終わりにどんな気持ちになっていたいですか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
     </div>
     <div class="today-point-sec">
       <div class="today-point-label">⭐ 今日の大事なタスク TOP3</div>
@@ -2345,10 +2351,9 @@ function renderGTD(){
   const vis=gtdVisible();
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">ToDo</h1><p class="ph-sub">${vis.filter(t=>!t.done).length}件のタスク</p></div>
-    <button class="ph-action" onclick="gtdHeadAdd()">＋ タスク追加</button>
+    <div><h1 class="ph-title">✅ ToDo</h1><p class="ph-sub">GTD®メソッドで、生産性の向上を助ける。</p></div>
   </div>
-  <div class="gtd-cap" style="${gtdView==='kanban'?'':'display:none'}">
+  <div class="gtd-cap">
     <input type="text" id="gtdCapture" placeholder="タスクを追加する">
     <button class="btn-save" onclick="gtdAdd()">追加</button>
   </div>
