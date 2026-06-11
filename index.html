@@ -1264,9 +1264,13 @@ function renderDreams(){
       groups[y].stepGoals.push({sg,d});
     });
   });
-  // ステップ目標を月順ソート
-  Object.values(groups).forEach(g=>{
-    g.stepGoals.sort((a,b)=>(a.sg.yearMonth||'').localeCompare(b.sg.yearMonth||''));
+  // 夢・ステップ目標を時系列でマージ（夢は年-12-31扱い）
+  Object.entries(groups).forEach(([y,g])=>{
+    const merged=[];
+    g.dreams.forEach(d=>merged.push({type:'dream',sortKey:y==='未設定'?'9999-12-31':`${y}-12-31`,d}));
+    g.stepGoals.forEach(({sg,d})=>merged.push({type:'sg',sortKey:sg.yearMonth?`${sg.yearMonth}-01`:'9999-12-31',sg,d}));
+    merged.sort((a,b)=>a.sortKey.localeCompare(b.sortKey));
+    g.merged=merged;
   });
   // 年順ソート（未設定は最後）
   const years=Object.keys(groups).sort((a,b)=>{
@@ -1328,8 +1332,7 @@ function renderDreams(){
       <div class="dream-year-section">
         <div class="dream-year-heading">${y==='未設定'?'年未設定':y+'年'}</div>
         <div class="dream-grid">
-          ${groups[y].dreams.map(cardHtml).join('')}
-          ${groups[y].stepGoals.map(({sg,d})=>sgCardHtml(sg,d)).join('')}
+          ${groups[y].merged.map(item=>item.type==='dream'?cardHtml(item.d):sgCardHtml(item.sg,item.d)).join('')}
         </div>
       </div>`).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
