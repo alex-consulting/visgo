@@ -727,7 +727,7 @@ const DEFAULT_DATA = {
 };
 
 /* ================= 状態管理 ================= */
-const APP_VERSION="2.1.0";
+const APP_VERSION="2.2.0";
 const LS_KEY="haradaApp_v1";
 const SYNC_KEY="visgo_sync_v1";
 const WORKER_URL="https://visgo-sync.moriyamakoto.workers.dev"; // ← デプロイ後に変更
@@ -816,7 +816,6 @@ function save(){
       const {goalImages, ...rest}=D;
       const lsData={...rest, dreams:{...rest.dreams,
         items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
-      D._syncAt=Date.now();
       localStorage.setItem(LS_KEY, JSON.stringify(lsData));
       await idbSet("goalImages", D.goalImages||[]);
       await idbSet("dreamImages", dreamImgs);
@@ -837,6 +836,9 @@ function syncPush(){
 async function syncPushNow(){
   if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
   setSyncStatus("⬆ 同期中…");
+  const oldSyncAt=D._syncAt;
+  const now=Date.now();
+  D._syncAt=now;
   try{
     const {goalImages,...rest}=D;
     const data={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
@@ -846,8 +848,11 @@ async function syncPushNow(){
       body:JSON.stringify(data)
     });
     if(!res.ok) throw new Error();
+    const lsRaw=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+    lsRaw._syncAt=now;
+    localStorage.setItem(LS_KEY,JSON.stringify(lsRaw));
     setSyncStatus("☁ 同期済み");
-  }catch(e){ setSyncStatus("⚠ 同期失敗"); }
+  }catch(e){ D._syncAt=oldSyncAt; setSyncStatus("⚠ 同期失敗"); }
 }
 async function syncPull(){
   if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
@@ -919,7 +924,6 @@ async function syncModalSave(){
     }
   }catch(e){}
   // サーバー未使用 → ローカルをアップロード
-  D._syncAt=Date.now();
   await syncPushNow();
   st.textContent="✓ 設定完了・同期しました";
 }
@@ -940,7 +944,6 @@ async function syncUseLocal(){
   document.getElementById("syncConflict").style.display="none";
   document.getElementById("syncSaveBtnRow").style.display="flex";
   st.textContent="このデバイスのデータをアップロード中…";
-  D._syncAt=Date.now();
   await syncPushNow();
   st.textContent="✓ アップロード完了";
   setTimeout(()=>closeSyncModal(),1200);
