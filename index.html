@@ -725,8 +725,8 @@ const DEFAULT_DATA = {
 /* ================= 状態管理 ================= */
 const LS_KEY="haradaApp_v1";
 const SYNC_KEY="visgo_sync_v1";
-const SYNC_FILE="visgo-backup.json";
-let syncCfg=JSON.parse(localStorage.getItem(SYNC_KEY)||"null")||{token:"",gistId:""};
+const WORKER_URL="https://visgo-sync.CHANGEME.workers.dev"; // ← デプロイ後に変更
+let syncCfg=JSON.parse(localStorage.getItem(SYNC_KEY)||"null")||{syncCode:""};
 let D;
 try{ D = JSON.parse(localStorage.getItem(LS_KEY)) || structuredClone(DEFAULT_DATA); }
 catch(e){ D = structuredClone(DEFAULT_DATA); }
@@ -822,39 +822,37 @@ function save(){
     }
   },400);
 }
-// ---- Gist同期 ----
+// ---- Cloudflare同期 ----
 let syncPushTimer=null;
 function syncPush(){
-  if(!syncCfg.token||!syncCfg.gistId) return;
+  if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
   clearTimeout(syncPushTimer);
   syncPushTimer=setTimeout(syncPushNow,3000);
 }
 async function syncPushNow(){
-  if(!syncCfg.token||!syncCfg.gistId) return;
+  if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
   setSyncStatus("⬆ 同期中…");
   try{
     const {goalImages,...rest}=D;
     const data={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
-    const res=await fetch("https://api.github.com/gists/"+syncCfg.gistId,{
-      method:"PATCH",
-      headers:{"Authorization":"token "+syncCfg.token,"Content-Type":"application/json"},
-      body:JSON.stringify({files:{[SYNC_FILE]:{content:JSON.stringify(data)}}})
+    const res=await fetch(WORKER_URL,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json","X-Sync-Code":syncCfg.syncCode},
+      body:JSON.stringify(data)
     });
     if(!res.ok) throw new Error();
     setSyncStatus("☁ 同期済み");
   }catch(e){ setSyncStatus("⚠ 同期失敗"); }
 }
 async function syncPull(){
-  if(!syncCfg.token||!syncCfg.gistId) return;
+  if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
   try{
-    const res=await fetch("https://api.github.com/gists/"+syncCfg.gistId,{
-      headers:{"Authorization":"token "+syncCfg.token}
+    const res=await fetch(WORKER_URL,{
+      headers:{"X-Sync-Code":syncCfg.syncCode}
     });
     if(!res.ok) return;
-    const gist=await res.json();
-    const file=gist.files[SYNC_FILE];
-    if(!file) return;
-    const remote=JSON.parse(file.content);
+    const remote=await res.json();
+    if(!remote||!remote._syncAt) return;
     const localAt=D._syncAt||0, remoteAt=remote._syncAt||0;
     if(remoteAt>localAt){
       const {goalImages,...restRemote}=remote;
@@ -873,42 +871,22 @@ function setSyncStatus(msg){
 }
 function openSyncModal(){
   document.getElementById("syncModal").style.display="flex";
-  document.getElementById("syncTokenInput").value=syncCfg.token||"";
-  document.getElementById("syncGistInput").value=syncCfg.gistId||"";
+  document.getElementById("syncCodeInput").value=syncCfg.syncCode||"";
   document.getElementById("syncModalStatus").textContent="";
 }
 function closeSyncModal(){ document.getElementById("syncModal").style.display="none"; }
 async function syncModalSave(){
-  const token=document.getElementById("syncTokenInput").value.trim();
-  const gistId=document.getElementById("syncGistInput").value.trim();
+  const code=document.getElementById("syncCodeInput").value.trim();
   const st=document.getElementById("syncModalStatus");
-  if(!token){ st.textContent="⚠ トークンを入力してください"; return; }
-  st.textContent="確認中…";
-  let finalId=gistId;
-  if(!finalId){
-    try{
-      const r=await fetch("https://api.github.com/gists",{
-        method:"POST",
-        headers:{"Authorization":"token "+token,"Content-Type":"application/json"},
-        body:JSON.stringify({description:"VISGO Backup",public:false,files:{[SYNC_FILE]:{content:"{}"}}})
-      });
-      if(!r.ok) throw new Error();
-      finalId=(await r.json()).id;
-      document.getElementById("syncGistInput").value=finalId;
-    }catch(e){ st.textContent="⚠ Gist作成失敗。トークン(scopeにgist)を確認"; return; }
-  } else {
-    try{
-      const r=await fetch("https://api.github.com/gists/"+finalId,{headers:{"Authorization":"token "+token}});
-      if(!r.ok) throw new Error();
-    }catch(e){ st.textContent="⚠ Gist IDまたはトークンが無効"; return; }
-  }
-  syncCfg={token,gistId:finalId};
+  if(code.length<4){ st.textContent="⚠ 同期コードは4文字以上にしてください"; return; }
+  if(WORKER_URL.includes('CHANGEME')){ st.textContent="⚠ サーバーが未設定です（開発者にお問い合わせください）"; return; }
+  syncCfg={syncCode:code};
   localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
-  st.textContent="バックアップ中…";
+  st.textContent="同期中…";
   await syncPushNow();
-  st.textContent="✓ 設定完了・バックアップ済み（Gist: "+finalId.slice(0,8)+"…）";
+  st.textContent="✓ 設定完了・同期しました";
 }
-// ---- /Gist同期 ----
+// ---- /Cloudflare同期 ----
 function toast(msg){
   const t=document.getElementById("toast");
   t.textContent=msg; t.classList.add("show");
@@ -2576,19 +2554,17 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
 </script>
 <div id="syncModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
   <div class="sync-modal-box">
-    <div style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px">☁ Gist自動バックアップ設定</div>
-    <div style="font-size:13px;color:var(--sub);margin-bottom:14px;line-height:1.6">データ変更時にGitHub Gistへ自動バックアップします。別端末で開くと最新データを自動取得します。<br><a href="https://github.com/settings/tokens/new?scopes=gist&description=VISGO+Backup" target="_blank" style="color:var(--blue)">こちらでPATを発行</a>（scopeは「gist」のみ）</div>
-    <div style="margin-bottom:10px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:4px">GitHub Personal Access Token</div>
-      <input id="syncTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit">
+    <div style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:12px">☁ 同期設定</div>
+    <div style="font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.6">
+      自分だけの同期コードを決めてください。同じコードを別の端末で入力するとデータが自動で同期されます。アカウント不要・無料で使えます。
     </div>
     <div style="margin-bottom:14px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:4px">Gist ID <span style="font-weight:400;color:var(--sub)">（空欄なら自動作成）</span></div>
-      <input id="syncGistInput" type="text" placeholder="空欄の場合は新規作成されます" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--navy)">同期コード <span style="font-weight:400;color:var(--sub)">（4文字以上、自由に決めてOK）</span></div>
+      <input id="syncCodeInput" type="text" placeholder="例: myvisgo2024" style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:15px;font-family:inherit">
     </div>
     <div id="syncModalStatus" style="font-size:13px;color:var(--blue);min-height:20px;margin-bottom:14px"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="syncModalSave()" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer">保存・バックアップ</button>
+      <button onclick="syncModalSave()" style="flex:1;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer">保存・同期</button>
       <button onclick="closeSyncModal()" style="background:#f0f2f6;color:var(--text);border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer">閉じる</button>
     </div>
   </div>
