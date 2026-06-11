@@ -1357,6 +1357,10 @@ function renderDreams(){
         <div style="height:4px;background:var(--fill);border-radius:2px;overflow:hidden">
           <div style="height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,var(--blue),#AF52DE);border-radius:2px;transition:width .3s"></div>
         </div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span style="font-size:10px;color:var(--faint)">0歳</span>
+          <span style="font-size:10px;color:#AF52DE;font-weight:600">🏁 ${ls}歳</span>
+        </div>
       </div>`;
     })()}
   </div>
@@ -2588,7 +2592,7 @@ function renderTodayTimeline(){
       ${(()=>{
         const hasAny=df.top3.some(t=>t.text);
         const allDone=hasAny&&df.top3.filter(t=>t.text).every(t=>t.done);
-        const badge=allDone?`<span style="font-size:16px;margin-left:6px">🎉</span><span style="font-size:11px;font-weight:700;color:#34C759;margin-left:2px">完了</span>`:'';
+        const badge=allDone?`<span style="font-size:16px;margin-left:6px">🌸</span><span style="font-size:11px;font-weight:700;color:#34C759;margin-left:2px">合格</span>`:'';
         return `<div class="tp-tab${tpTop3Collapsed?' collapsed':''}" onclick="toggleTpTab('top3')">今日の最重要TOP3${badge}<span class="tp-arrow">▾</span></div>`;
       })()}
       <div class="tp-body">${top3Body}</div>
