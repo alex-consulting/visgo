@@ -426,7 +426,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   padding:9px 20px;border-radius:20px;font-size:13.5px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200}
 .toast.show{opacity:1}
 /* 夢タブ */
-#tab-dream{padding:16px;max-width:860px;margin:0 auto}
+#tab-dream{padding:0;max-width:none;margin:0}
 .dream-topbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .dream-topbar h2{font-size:17px;font-weight:700;color:var(--navy);margin:0;flex:1}
 .dream-add-btn{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:8px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
@@ -508,6 +508,32 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .settings-btn:hover{background:var(--fill)}
 .settings-btn:last-child{margin-bottom:0}
 
+/* ===== layout A: unified page head + PC sidebar ===== */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 0 16px}
+.page-head h1.ph-title{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0;color:var(--text);line-height:1.2}
+.ph-sub{margin:3px 0 0;font-size:13px;color:var(--sub)}
+.ph-action{background:var(--blue);color:#fff;border:none;border-radius:20px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex:0 0 auto;box-shadow:var(--shadow)}
+.ph-action:active{opacity:.75}
+.mob-chips{display:none;gap:6px;overflow-x:auto;margin:0 0 12px;-webkit-overflow-scrolling:touch}
+.mob-chips button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.mob-chips button.act{background:var(--blue);color:#fff;border-color:var(--blue)}
+#appFooter{grid-column:1/-1}
+@media(min-width:701px){
+  body{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto 1fr}
+  header{grid-column:1/-1}
+  nav{grid-column:1;grid-row:2;position:static;flex-direction:column;justify-content:flex-start;gap:4px;padding:12px 8px;border-bottom:none;border-right:1px solid var(--line);background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;overflow:visible}
+  nav button{flex:0 0 auto;border-bottom:none;border-radius:10px;padding:10px 2px;font-size:11px;gap:5px}
+  nav button .tab-icon{font-size:21px}
+  nav button.act{background:var(--blue-l);border-bottom-color:transparent}
+  main{grid-column:2;grid-row:2;margin:0 auto;width:100%}
+  .gtd-side{flex:0 0 225px;background:transparent;border:none;padding:0 6px 0 0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}
+}
+@media(max-width:700px){
+  .mob-chips{display:flex}
+  .side-static{display:none}
+  .page-head h1.ph-title{font-size:24px}
+  .gtd-side{background:var(--card)}
+}
 /* ===== Apple-style: mobile bottom tab bar ===== */
 @media(max-width:700px){
   body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
@@ -1165,16 +1191,24 @@ function renderDreams(){
   }
 
   root.innerHTML=`
-  <div class="dream-topbar">
-    <h2>💭 夢リスト</h2>
-    <button class="dream-add-btn" onclick="openDreamModal(null)">＋ 夢を追加</button>
+  <div class="page-head">
+    <div><h1 class="ph-title">夢リスト</h1><p class="ph-sub">${(D.dreams.items||[]).length}件の夢</p></div>
+    <button class="ph-action" onclick="openDreamModal(null)">＋ 夢を追加</button>
   </div>
-  <div class="dream-filter">
+  <div class="mob-chips">
     <button class="${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">すべて</button>
-    <button class="${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">Have（欲しい）</button>
-    <button class="${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">Do（したい）</button>
-    <button class="${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">Be（なりたい）</button>
+    <button class="${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">Have</button>
+    <button class="${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">Do</button>
+    <button class="${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">Be</button>
   </div>
+  <div class="gtd-wrap">
+  <aside class="gtd-side side-static">
+    <div class="gf-item ${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">🗂 すべて</div>
+    <div class="gf-item ${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">💎 Have（欲しい）</div>
+    <div class="gf-item ${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">🏃 Do（したい）</div>
+    <div class="gf-item ${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">🌟 Be（なりたい）</div>
+  </aside>
+  <div class="gtd-main">
   ${items.length
     ? years.map(y=>`
       <div class="dream-year-section">
@@ -1182,7 +1216,7 @@ function renderDreams(){
         <div class="dream-grid">${groups[y].map(cardHtml).join('')}</div>
       </div>`).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
-  }`;
+  }</div></div>`;
 }
 
 function openDreamModal(id){
@@ -1308,10 +1342,20 @@ function renderSheetEdit(){
   const root=document.getElementById("tab-sheet");
   const a=D.analysis;
   root.innerHTML=`
-  <div class="sheetbar">
-    <button class="btn-save" onclick="setSheetMode('view')">✓ 保存して表示</button>
-    <button class="add" onclick="printSheet()">🖨 A4印刷 / PDF出力</button>
+  <div class="page-head">
+    <div><h1 class="ph-title">年間目標</h1><p class="ph-sub">編集モード</p></div>
+    <button class="ph-action" onclick="setSheetMode('view')">✓ 保存して表示</button>
   </div>
+  <div class="mob-chips">
+    <button onclick="printSheet()">🖨 A4印刷 / PDF</button>
+  </div>
+  <div class="gtd-wrap">
+  <aside class="gtd-side side-static">
+    <div class="gf-item act">✏️ 編集</div>
+    <div class="gf-item" onclick="setSheetMode('view')">👁 表示</div>
+    <div class="gf-item" onclick="printSheet()">🖨 A4印刷 / PDF</div>
+  </aside>
+  <div class="gtd-main">
   <div class="card">
     <h2>基本情報</h2>
     <div class="row">
@@ -1428,7 +1472,7 @@ function renderSheetEdit(){
         <td>${ta(a.problem[i],`analysis.problem.${i}`)}</td>
         <td>${ta(a.solution[i],`analysis.solution.${i}`)}</td></tr>`).join("")}
     </table></div>
-  </div>`;
+  </div></div></div>`;
   bindSheet(root);
   fitAll(root);
 }
@@ -1438,10 +1482,20 @@ function renderSheetView(){
   const nl2br=s=>esc(s).replace(/\n/g,"<br>");
   const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
   root.innerHTML=`
-  <div class="sheetbar">
-    <button class="btn-edit" onclick="setSheetMode('edit')">✎ 編集する</button>
-    <button class="add" onclick="printSheet()">🖨 A4印刷 / PDF出力</button>
+  <div class="page-head">
+    <div><h1 class="ph-title">年間目標</h1><p class="ph-sub">目標達成日 ${esc(fmtDate(D.meta.targetDate))||"未設定"}</p></div>
+    <button class="ph-action" onclick="setSheetMode('edit')">✎ 編集する</button>
   </div>
+  <div class="mob-chips">
+    <button onclick="printSheet()">🖨 A4印刷 / PDF</button>
+  </div>
+  <div class="gtd-wrap">
+  <aside class="gtd-side side-static">
+    <div class="gf-item" onclick="setSheetMode('edit')">✏️ 編集</div>
+    <div class="gf-item act">👁 表示</div>
+    <div class="gf-item" onclick="printSheet()">🖨 A4印刷 / PDF</div>
+  </aside>
+  <div class="gtd-main">
   <div class="vsheet">
     <div class="vhead">
       <h1>年間目標シート</h1>
@@ -1494,7 +1548,7 @@ function renderSheetView(){
       <table class="vtab vtab3"><tr><th></th><th>予想される問題点</th><th>解決策</th></tr>
         ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.problem[i])}</td><td>${nl2br(a.solution[i])}</td></tr>`).join("")}</table>
     </div>
-  </div>`;
+  </div></div></div>`;
   root.querySelectorAll("[data-gzoom]").forEach(img=>{
     img.onclick=()=>{ document.getElementById("lightboxImg").src=img.src; document.getElementById("lightbox").classList.add("show"); };
   });
@@ -1650,26 +1704,39 @@ function renderOW(){
     <div class="grid3">${cells}</div>
     <p class="hint">${owBlock===4?"セルをタップして編集。テーマを編集すると各ブロックの中央にも自動反映されます。ブロック移動は◀▶またはミニマップで。":"セルをタップして編集。中央のテーマはここでは編集できません（タップすると中心ブロックへ移動）。"}</p>`;
   }
-  root.innerHTML=`<div class="card">
+  root.innerHTML=`
+  <div class="page-head">
+    <div><h1 class="ph-title">OW64</h1><p class="ph-sub">オープンウィンドウ64・目標展開シート</p></div>
+    <button class="ph-action" onclick="printOW()">🖨 A4印刷 / PDF</button>
+  </div>
+  <div class="mob-chips">
+    <button id="owAllM" class="${owMode==="all"?"act":""}">全体表示</button>
+    <button id="owBlkM" class="${owMode==="block"?"act":""}">ブロック表示</button>
+  </div>
+  <div class="gtd-wrap">
+  <aside class="gtd-side side-static">
+    <div class="gf-item ${owMode==="all"?"act":""}" id="owAll">🪟 全体表示</div>
+    <div class="gf-item ${owMode==="block"?"act":""}" id="owBlk">🔍 ブロック表示</div>
+    <div class="gf-item" onclick="printOW()">🖨 A4印刷 / PDF</div>
+  </aside>
+  <div class="gtd-main">
+  <div class="card">
     <div class="owbar">
-      <div class="seg">
-        <button id="owAll" class="${owMode==="all"?"act":""}">全体表示</button>
-        <button id="owBlk" class="${owMode==="block"?"act":""}">ブロック表示</button>
-      </div>
-      <button class="add" onclick="printOW()" style="margin-top:0">🖨 A4印刷 / PDF</button>
       <div class="minimap">${[0,1,2,3,4,5,6,7,8].map(b=>{
         const cur=owMode==="block"&&owBlock===b;
         let st;
-        if(b===4) st=cur?"background:#d32f2f;border-color:#d32f2f;color:#fff":"background:#fff;border-color:#d32f2f;color:#d32f2f";
-        else st=cur?"background:#2563c4;border-color:#2563c4;color:#fff":"background:#fff;border-color:#2563c4;color:#2563c4";
+        if(b===4) st=cur?"background:var(--red);border-color:var(--red);color:#fff":"background:var(--card);border-color:var(--red);color:var(--red)";
+        else st=cur?"background:var(--blue);border-color:var(--blue);color:#fff":"background:var(--card);border-color:var(--blue);color:var(--blue)";
         return `<button data-mm="${b}" style="${st}">${b===4?"◎":""}</button>`;}).join("")}
       </div>
     </div>
     ${body}
-  </div>`;
+  </div></div></div>`;
   // bind
   root.querySelector("#owAll").onclick=()=>{owMode="all";renderOW();};
   root.querySelector("#owBlk").onclick=()=>{owMode="block";renderOW();};
+  const owAllM=root.querySelector("#owAllM"); if(owAllM) owAllM.onclick=()=>{owMode="all";renderOW();};
+  const owBlkM=root.querySelector("#owBlkM"); if(owBlkM) owBlkM.onclick=()=>{owMode="block";renderOW();};
   root.querySelectorAll("[data-mm]").forEach(b=>b.onclick=()=>{owMode="block";owBlock=+b.dataset.mm;renderOW();});
   root.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>{
     owBlock=(owBlock+(b.dataset.nav==="next"?1:8))%9; renderOW();
@@ -1969,6 +2036,11 @@ let gtdCollapsed={category:true,project:true,recur:true,taskGroup:true};
 let gtdView='today'; // 'kanban' | 'today'
 function gtdTask(id){ return D.gtd.tasks.find(t=>String(t.id)===String(id)); }
 function gtdListOf(type){ return type==='project'?D.gtd.projects:D.gtd.categories; }
+function gtdHeadAdd(){
+  if(gtdView!=='kanban'){ gtdView='kanban'; gtdFilter={type:'',value:''}; renderGtd(); }
+  const i=document.getElementById('gtdCapture');
+  if(i){ i.focus(); i.scrollIntoView({block:'center',behavior:'smooth'}); }
+}
 function gtdVisible(){
   const today=dateStr(0);
   return D.gtd.tasks.filter(t=>{
@@ -2272,6 +2344,10 @@ function renderGTD(){
   if(needSave) save();
   const vis=gtdVisible();
   root.innerHTML=`
+  <div class="page-head">
+    <div><h1 class="ph-title">ToDo</h1><p class="ph-sub">${vis.filter(t=>!t.done).length}件のタスク</p></div>
+    <button class="ph-action" onclick="gtdHeadAdd()">＋ タスク追加</button>
+  </div>
   <div class="gtd-cap" style="${gtdView==='kanban'?'':'display:none'}">
     <input type="text" id="gtdCapture" placeholder="タスクを追加する">
     <button class="btn-save" onclick="gtdAdd()">追加</button>
