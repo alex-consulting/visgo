@@ -1,6 +1,6 @@
 // VISGO Service Worker
 // バージョンを変更するとPWAキャッシュが自動更新されます
-const CACHE_VERSION = 'visgo-v2.2.4';
+const CACHE_VERSION = 'visgo-v2.2.5';
 const CACHE_URLS = [
   './index.html',
   './apple-touch-icon.png'
@@ -11,7 +11,7 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_VERSION).then(cache => cache.addAll(CACHE_URLS))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // すぐにアクティブ化
 });
 
 // アクティベート: 古いキャッシュを削除
@@ -24,7 +24,7 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// フェッチ: ナビゲーションはネットワーク優先、失敗時はキャッシュ
+// フェッチ: ナビゲーションはネットワーク優先（常に最新を取得）、失敗時はキャッシュ
 self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate') {
     e.respondWith(
