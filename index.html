@@ -9,7 +9,7 @@
 <title>VISGO</title>
 <style>
 :root{
-  --navy:#1a3a6b; --blue:#2563c4; --blue-l:#e8f0fc; --red:#d32f2f; --red-l:#fdecea;
+  --navy:#1a3a6b; --blue:#2563c4; --blue-l:#e8f0fc; --red:#d32f2f;--red-l:#fdecea;
   --bg:#f4f6fa; --card:#ffffff; --line:#d7dee9; --text:#1e2a3a; --sub:#5b6b80;
   --green:#2e7d32; --green-l:#e8f5e9; --amber:#b26a00;
   --radius:12px; --shadow:0 1px 4px rgba(20,40,80,.08);
@@ -725,7 +725,7 @@ const DEFAULT_DATA = {
 /* ================= 状態管理 ================= */
 const LS_KEY="haradaApp_v1";
 const SYNC_KEY="visgo_sync_v1";
-const WORKER_URL="https://visgo-sync.CHANGEME.workers.dev"; // ← デプロイ後に変更
+const WORKER_URL="https://visgo-sync.moriyamakoto.workers.dev"; // ← デプロイ後に変更
 let syncCfg=JSON.parse(localStorage.getItem(SYNC_KEY)||"null")||{syncCode:""};
 let D;
 try{ D = JSON.parse(localStorage.getItem(LS_KEY)) || structuredClone(DEFAULT_DATA); }
@@ -825,12 +825,12 @@ function save(){
 // ---- Cloudflare同期 ----
 let syncPushTimer=null;
 function syncPush(){
-  if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
+  if(!syncCfg.syncCode||WORKER_URL.includes('moriyamakoto')) return;
   clearTimeout(syncPushTimer);
   syncPushTimer=setTimeout(syncPushNow,3000);
 }
 async function syncPushNow(){
-  if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
+  if(!syncCfg.syncCode||WORKER_URL.includes('moriyamakoto')) return;
   setSyncStatus("⬆ 同期中…");
   try{
     const {goalImages,...rest}=D;
@@ -845,7 +845,7 @@ async function syncPushNow(){
   }catch(e){ setSyncStatus("⚠ 同期失敗"); }
 }
 async function syncPull(){
-  if(!syncCfg.syncCode||WORKER_URL.includes('CHANGEME')) return;
+  if(!syncCfg.syncCode||WORKER_URL.includes('moriyamakoto')) return;
   try{
     const res=await fetch(WORKER_URL,{
       headers:{"X-Sync-Code":syncCfg.syncCode}
@@ -879,7 +879,7 @@ async function syncModalSave(){
   const code=document.getElementById("syncCodeInput").value.trim();
   const st=document.getElementById("syncModalStatus");
   if(code.length<4){ st.textContent="⚠ 同期コードは4文字以上にしてください"; return; }
-  if(WORKER_URL.includes('CHANGEME')){ st.textContent="⚠ サーバーが未設定です（開発者にお問い合わせください）"; return; }
+  if(WORKER_URL.includes('moriyamakoto')){ st.textContent="⚠ サーバーが未設定です（開発者にお問い合わせください）"; return; }
   syncCfg={syncCode:code};
   localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
   st.textContent="同期中…";
