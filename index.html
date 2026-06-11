@@ -1351,7 +1351,7 @@ function renderDreams(){
       const ageYears=Math.floor(ageMs/(1000*60*60*24*365.25));
       return `<div class="dream-age-bar">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
-          <span style="font-size:12px;color:var(--sub)">現在 <strong style="color:var(--navy);font-size:15px">${ageYears}</strong> 歳</span>
+          <span style="font-size:12px;color:var(--sub)">今日は <strong style="color:var(--navy);font-size:15px">${Math.floor(ageMs/(1000*60*60*24)).toLocaleString()}</strong> 日目</span>
           <span style="font-size:12px;color:var(--sub)">${ls}歳まであと <strong style="color:var(--blue);font-size:15px">${daysLeft.toLocaleString()}</strong> 日</span>
         </div>
         <div style="height:4px;background:var(--fill);border-radius:2px;overflow:hidden">
