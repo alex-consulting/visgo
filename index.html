@@ -2372,19 +2372,20 @@ function renderGTD(){
         </div>
         <div class="gf-items gf-taskedit-panel">
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
-          <div class="gf-section ${gtdCollapsed.category?'gf-collapsed':''}">
-            <div class="gf-h gf-toggle" data-toggle="category">
-              <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
-              <button class="gf-add" data-add="category" title="フォルダを追加">＋</button>
-            </div>
-            <div class="gf-items">${gtdFolderItems('category')}</div>
-          </div>
+          <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
           <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="project">
               <span><span class="gf-arrow">▾</span>📁 プロジェクト</span>
               <button class="gf-add" data-add="project" title="フォルダを追加">＋</button>
             </div>
             <div class="gf-items">${gtdFolderItems('project')}</div>
+          </div>
+          <div class="gf-section ${gtdCollapsed.category?'gf-collapsed':''}">
+            <div class="gf-h gf-toggle" data-toggle="category">
+              <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
+              <button class="gf-add" data-add="category" title="フォルダを追加">＋</button>
+            </div>
+            <div class="gf-items">${gtdFolderItems('category')}</div>
           </div>
           <div class="gf-section ${gtdCollapsed.recur?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="recur">
