@@ -415,19 +415,22 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .tl-panel.tl-collapsed .tl-panel-toggle{transform:rotate(-90deg)}
 .tl-panel-body{padding:8px 14px 12px}
 .today-point{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
-.today-point-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
-.today-point-title .tp-arrow{margin-left:auto;font-size:12px;color:var(--sub);transition:transform .2s}
-.today-point.collapsed .tp-arrow{transform:rotate(-90deg)}
-.today-point.collapsed .today-point-sec{display:none}
-.today-point-sec{margin-bottom:12px}
+.today-point-sec{margin-bottom:8px}
 .today-point-sec:last-child{margin-bottom:0}
-.today-point-label{font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.tp-tab{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:7px 10px;border-radius:8px;background:var(--fill);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:0}
+.tp-tab:hover{background:var(--fill2)}
+.tp-tab .tp-arrow{margin-left:auto;font-size:11px;color:var(--sub);transition:transform .2s}
+.tp-tab.collapsed .tp-arrow{transform:rotate(-90deg)}
+.tp-body{padding:8px 2px 4px;overflow:hidden}
+.tp-tab.collapsed+.tp-body{display:none}
+.tp3-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;min-width:0}
+.tp3-row:last-child{margin-bottom:0}
 .today-feeling{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;resize:vertical;min-height:60px;color:var(--text);background:var(--fill2);line-height:1.55}
 .today-feeling:focus{outline:none;border-color:var(--blue);background:var(--card)}
 .tp3-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .tp3-row:last-child{margin-bottom:0}
 .tp3-cb{width:18px;height:18px;flex:0 0 auto;accent-color:var(--blue);cursor:pointer}
-.tp3-text{flex:1;border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--fill2)}
+.tp3-text{flex:1;min-width:0;border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--fill2)}
 .tp3-text:focus{outline:none;border-color:var(--blue);background:var(--card)}
 .tp3-text.tp3-done{text-decoration:line-through;color:var(--sub);background:var(--fill)}
 .tl-panel.tl-collapsed .tl-panel-body{display:none}
@@ -2441,8 +2444,13 @@ function advanceRecurDeadline(t){
   t._subResetDate=t.deadline;
 }
 let tlCollapsed=false;
-let todayPointCollapsed=false;
-function toggleTodayPoint(){todayPointCollapsed=!todayPointCollapsed;const el=document.querySelector('.today-point');if(el)el.classList.toggle('collapsed',todayPointCollapsed);}
+let tpFeelingCollapsed=false;
+let tpTop3Collapsed=false;
+function toggleTpTab(key){
+  if(key==='feeling') tpFeelingCollapsed=!tpFeelingCollapsed;
+  else tpTop3Collapsed=!tpTop3Collapsed;
+  renderGTD();
+}
 function localDateStr(d){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
@@ -2526,15 +2534,18 @@ function renderTodayTimeline(){
       </select>
     </div>`;
   }).join('');
-  const panel=`<div class="today-point${todayPointCollapsed?' collapsed':''}">
-    <div class="today-point-title" onclick="toggleTodayPoint()">今日の要諦（ようてい）<span class="tp-arrow">▾</span></div>
+  const panel=`<div class="today-point">
     <div class="today-point-sec">
-      <div class="today-point-label">今日の到達宣言</div>
-      <textarea class="today-feeling" placeholder="今日１日の終わりにどんな自分になっていたいですか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
+      <div class="tp-tab${tpFeelingCollapsed?' collapsed':''}" onclick="toggleTpTab('feeling')">今日の到達宣言<span class="tp-arrow">▾</span></div>
+      <div class="tp-body">
+        <textarea class="today-feeling" placeholder="今日１日の終わりにどんな自分になっていたいですか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
+      </div>
     </div>
     <div class="today-point-sec">
-      <div class="today-point-label">今日の最重要TOP3</div>
-      ${top3HTML}
+      <div class="tp-tab${tpTop3Collapsed?' collapsed':''}" onclick="toggleTpTab('top3')">今日の最重要TOP3<span class="tp-arrow">▾</span></div>
+      <div class="tp-body">
+        ${top3HTML}
+      </div>
     </div>
   </div>`;
   return panel+renderTimeline(today,'☀️ 1日をスタート！',true);
