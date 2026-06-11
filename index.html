@@ -478,6 +478,13 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-year-section{margin-bottom:22px}
 .dream-year-heading{font-size:14px;font-weight:700;color:var(--sub);margin:0 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
 .dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;height:140px;object-fit:cover;border-radius:14px 12px 0 0;display:block}
+.sg-card{background:var(--card);border:1px solid var(--blue-l);border-left:3px solid var(--blue);border-radius:14px;padding:12px 14px;cursor:pointer;transition:box-shadow .15s;position:relative}
+.sg-card:hover{box-shadow:0 4px 16px rgba(0,122,255,.12)}
+.sg-card-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.sg-badge{font-size:10px;font-weight:700;letter-spacing:.04em;background:var(--blue);color:#fff;border-radius:4px;padding:2px 7px;flex:0 0 auto}
+.sg-ym{font-size:12px;font-weight:700;color:var(--blue)}
+.sg-text{font-size:13.5px;font-weight:600;color:var(--navy);line-height:1.45;margin-bottom:8px}
+.sg-dream-label{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px}
 .dream-memo{font-size:12px;color:var(--sub);margin:4px 0 6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .dm-img-wrap{position:relative}
 .dm-img-preview{width:100%;height:160px;object-fit:cover;border-radius:8px;display:block;cursor:pointer}
@@ -1242,11 +1249,24 @@ function renderDreams(){
   const root=document.getElementById('tab-dream');
   const items=(D.dreams.items||[]).filter(d=>dreamFilter==='all'||d.category===dreamFilter);
 
-  // 年ごとにグループ化
-  const groups={};
+  // 年ごとにグループ化（夢カード）
+  const groups={};      // { year: { dreams:[], stepGoals:[] } }
   items.forEach(d=>{
     const y=d.targetDate?String(d.targetDate):'未設定';
-    (groups[y]||(groups[y]=[])).push(d);
+    if(!groups[y]) groups[y]={dreams:[],stepGoals:[]};
+    groups[y].dreams.push(d);
+  });
+  // ステップ目標を年グループへ追加
+  items.forEach(d=>{
+    (Array.isArray(d.stepGoals)?d.stepGoals:[]).forEach(sg=>{
+      const y=sg.yearMonth?sg.yearMonth.slice(0,4):'未設定';
+      if(!groups[y]) groups[y]={dreams:[],stepGoals:[]};
+      groups[y].stepGoals.push({sg,d});
+    });
+  });
+  // ステップ目標を月順ソート
+  Object.values(groups).forEach(g=>{
+    g.stepGoals.sort((a,b)=>(a.sg.yearMonth||'').localeCompare(b.sg.yearMonth||''));
   });
   // 年順ソート（未設定は最後）
   const years=Object.keys(groups).sort((a,b)=>{
@@ -1265,12 +1285,22 @@ function renderDreams(){
         <span class="dream-title">${esc(d.title)}</span>
       </div>
       ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
-      ${(()=>{const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];return sgs.length?`<div class="dream-stepgoals">${sgs.map(s=>`<div class="dream-sg-item"><span class="dream-sg-ym">${s.yearMonth?s.yearMonth.replace('-','年')+'月':'—'}</span><span class="dream-sg-text">${esc(s.text)}</span></div>`).join('')}</div>`:'';})()}
       ${(()=>{const pct=dreamProgress(d);const steps=Array.isArray(d.steps)?d.steps:[];return steps.length?`
       <div class="dream-progress-wrap">
         <div class="dream-progress-label"><span>進捗 ${steps.filter(s=>s.done).length}/${steps.length}</span><span>${pct}%</span></div>
         <div class="dream-progress-bar"><div class="dream-progress-fill" style="width:${pct}%"></div></div>
       </div>`:'';})()}
+    </div>`;
+  }
+  function sgCardHtml(sg, d){
+    const ymFmt=sg.yearMonth?sg.yearMonth.replace('-','年')+'月':'年月未設定';
+    return `<div class="sg-card" onclick="openDreamModal('${d.id}')">
+      <div class="sg-card-top">
+        <span class="sg-badge">STEP</span>
+        <span class="sg-ym">${ymFmt}</span>
+      </div>
+      <div class="sg-text">${esc(sg.text)}</div>
+      <div class="sg-dream-label">🏝️ ${esc(d.title)}</div>
     </div>`;
   }
 
@@ -1297,7 +1327,10 @@ function renderDreams(){
     ? years.map(y=>`
       <div class="dream-year-section">
         <div class="dream-year-heading">${y==='未設定'?'年未設定':y+'年'}</div>
-        <div class="dream-grid">${groups[y].map(cardHtml).join('')}</div>
+        <div class="dream-grid">
+          ${groups[y].dreams.map(cardHtml).join('')}
+          ${groups[y].stepGoals.map(({sg,d})=>sgCardHtml(sg,d)).join('')}
+        </div>
       </div>`).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
   }</div></div>`;
