@@ -728,7 +728,7 @@ const DEFAULT_DATA = {
 };
 
 /* ================= 状態管理 ================= */
-const APP_VERSION="2.2.3";
+const APP_VERSION="2.2.4";
 const LS_KEY="haradaApp_v1";
 const SYNC_KEY="visgo_sync_v1";
 const WORKER_URL="https://visgo-sync.moriyamakoto.workers.dev"; // ← デプロイ後に変更
@@ -2631,6 +2631,18 @@ if('serviceWorker' in navigator){
     });
   }).catch(()=>{});
 }
+// PWA対応: バックグラウンドから復帰時に同期とSW更新チェック
+let _lastVisibilitySync=Date.now();
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    const now=Date.now();
+    if(now-_lastVisibilitySync>30000){
+      _lastVisibilitySync=now;
+      syncPull();
+      navigator.serviceWorker?.getRegistration('./sw.js').then(reg=>{if(reg)reg.update();}).catch(()=>{});
+    }
+  }
+});
 </script>
 <div id="syncModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
   <div class="sync-modal-box">
