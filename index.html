@@ -2578,26 +2578,26 @@ function renderTodayTimeline(){
 
   // TOP3
   const top3Body=df.top3.map((item,i)=>{
-    const task=(D.gtd.tasks||[]).find(t=>t.text===item.text);
+    const task=(D.gtd.tasks||[]).find(t=>String(t.id)===String(item.taskId))||(D.gtd.tasks||[]).find(t=>t.text===item.text);
+    const isDone=task?task.done:false;
     const q=task?gtdQuadrant(task):null;
     const badge=q?`<span class="kquad kquad-${q}">${q}</span>`
                  :`<span class="kquad" style="background:var(--fill);color:var(--faint);border:1px solid var(--line)">—</span>`;
     if(tpTop3EditIdx===i){
       return `<div class="tp3-row">
-        <input type="checkbox" class="tp3-cb" ${item.done?'checked':''} onchange="dailyTop3Toggle('${today}',${i})">
+        <input type="checkbox" class="tp3-cb" ${isDone?'checked':''} onchange="dailyTop3Toggle('${today}',${i})">
         ${badge}
         <select class="tp3-text" onchange="dailyTop3Text('${today}',${i},this.value);tpEndEdit('top3')" autofocus>
           <option value="">-- タスクを選択 --</option>
-          ${todayTasks.map(t=>`<option value="${esc(t.text)}" ${item.text===t.text?'selected':''}>${esc(t.text)}</option>`).join('')}
-          ${item.text&&!todayTasks.find(t=>t.text===item.text)?`<option value="${esc(item.text)}" selected>${esc(item.text)}</option>`:''}
+          ${todayTasks.map(t=>`<option value="${t.id}" ${item.taskId==t.id||item.text===t.text?'selected':''}>${esc(t.text)}</option>`).join('')}
         </select>
         <button class="tp-edit-btn" onclick="tpEndEdit('top3')">✕</button>
       </div>`;
     }
     return `<div class="tp3-view-row">
-      <input type="checkbox" class="tp3-cb" ${item.done?'checked':''} onchange="dailyTop3Toggle('${today}',${i})">
+      <input type="checkbox" class="tp3-cb" ${isDone?'checked':''} onchange="dailyTop3Toggle('${today}',${i})">
       ${badge}
-      <span class="tp3-view-text${item.done?' done':''}${!item.text?' empty':''}" onclick="tpStartEdit('top3',${i})">${item.text?esc(item.text):'タップして選択…'}</span>
+      <span class="tp3-view-text${isDone?' done':''}${!item.text?' empty':''}" onclick="tpStartEdit('top3',${i})">${item.text?esc(item.text):'タップして選択…'}</span>
     </div>`;
   }).join('');
 
@@ -2608,7 +2608,7 @@ function renderTodayTimeline(){
     </div>
     <div class="today-point-sec">
       ${(()=>{
-        const checkedCount=df.top3.filter(t=>t.done).length;
+        const checkedCount=df.top3.filter(item=>{const task=(D.gtd.tasks||[]).find(t=>String(t.id)===String(item.taskId))||(D.gtd.tasks||[]).find(t=>t.text===item.text);return task?task.done:false;}).length;
         const statusMap=[
           {icon:'👣',text:'まず最初の1歩を！',color:'var(--sub)'},
           {icon:'📍',text:'この調子！',color:'#FF9500'},
@@ -2630,15 +2630,19 @@ function dailyFeelingUpdate(date,val){
   if(!D.dailyFocus[date]) D.dailyFocus[date]={feeling:'',top3:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};
   D.dailyFocus[date].feeling=val; save();
 }
-function dailyTop3Text(date,i,val){
+function dailyTop3Text(date,i,taskId){
   if(!D.dailyFocus) D.dailyFocus={};
   if(!D.dailyFocus[date]) D.dailyFocus[date]={feeling:'',top3:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};
-  D.dailyFocus[date].top3[i].text=val; save();
+  const task=(D.gtd.tasks||[]).find(t=>String(t.id)===String(taskId));
+  D.dailyFocus[date].top3[i].text=task?task.text:(taskId||'');
+  D.dailyFocus[date].top3[i].taskId=task?task.id:null;
+  save();
 }
 function dailyTop3Toggle(date,i){
   if(!D.dailyFocus||!D.dailyFocus[date]) return;
-  D.dailyFocus[date].top3[i].done=!D.dailyFocus[date].top3[i].done;
-  save(); renderGTD();
+  const item=D.dailyFocus[date].top3[i];
+  const task=(D.gtd.tasks||[]).find(t=>String(t.id)===String(item.taskId))||(D.gtd.tasks||[]).find(t=>t.text===item.text);
+  if(task){ task.done=!task.done; save(); renderGTD(); }
 }
 let overdueSelected=new Set();
 let overdueTargetDate='';
