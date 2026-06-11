@@ -427,8 +427,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .tp3-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .tp3-row:last-child{margin-bottom:0}
 .tp3-cb{width:18px;height:18px;flex:0 0 auto;accent-color:var(--blue);cursor:pointer}
-.tp3-area-wrap{position:relative;flex:0 0 auto;width:28px;height:28px}
-.tp3-area-badge{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:12px;font-weight:700;color:#fff;pointer-events:none}
+.tp3-area-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700;color:#fff;flex:0 0 auto;box-sizing:border-box}
 .tp3-text{flex:1;border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--fill2)}
 .tp3-text:focus{outline:none;border-color:var(--blue);background:var(--card)}
 .tp3-text.tp3-done{text-decoration:line-through;color:var(--sub);background:var(--fill)}
@@ -2509,20 +2508,16 @@ function renderTodayTimeline(){
     df.top3=[0,1,2].map(i=>df.top3&&df.top3[i]?df.top3[i]:{text:'',done:false});
   }
   const todayTasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||'')=== today&&!t.done);
-  const OW_AREA_COLORS=['#FF3B30','#FF9500','#FFCC00','#34C759','#00C7BE','#0071E3','#5856D6','#AF52DE'];
+  const Q_COLOR={1:'#FF3B30',2:'#0071E3',3:'#FF9500',4:'var(--sub)'};
+  const Q_LABEL={1:'①',2:'②',3:'③',4:'④'};
   const top3HTML=df.top3.map((item,i)=>{
-    const area=item.owArea||0;
-    const areaColor=area?OW_AREA_COLORS[area-1]:'var(--line)';
-    const areaLabel=area?String(area):'—';
-    const areaMenu=[0,1,2,3,4,5,6,7,8].map(n=>
-      `<option value="${n}" ${area===n?'selected':''}>${n===0?'—':n+'領域'}</option>`
-    ).join('');
+    const task=(D.gtd.tasks||[]).find(t=>t.text===item.text);
+    const q=task?gtdQuadrant(task):null;
+    const badge=q?`<span class="tp3-area-badge" style="background:${Q_COLOR[q]}">${Q_LABEL[q]}</span>`
+                 :`<span class="tp3-area-badge" style="background:var(--fill);color:var(--sub);border:1px solid var(--line)">—</span>`;
     return `<div class="tp3-row">
       <input type="checkbox" class="tp3-cb" ${item.done?'checked':''} onchange="dailyTop3Toggle('${today}',${i})">
-      <div class="tp3-area-wrap" title="OW領域を選択">
-        <select class="tp3-area-sel" onchange="dailyTop3Area('${today}',${i},+this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">${areaMenu}</select>
-        <span class="tp3-area-badge" style="background:${areaColor}">${areaLabel}</span>
-      </div>
+      ${badge}
       <select class="tp3-text ${item.done?'tp3-done':''}" onchange="dailyTop3Text('${today}',${i},this.value)">
         <option value="">-- タスクを選択 --</option>
         ${todayTasks.map(t=>`<option value="${esc(t.text)}" ${item.text===t.text?'selected':''}>${esc(t.text)}</option>`).join('')}
@@ -2558,11 +2553,6 @@ function dailyTop3Toggle(date,i){
   if(!D.dailyFocus||!D.dailyFocus[date]) return;
   D.dailyFocus[date].top3[i].done=!D.dailyFocus[date].top3[i].done;
   save(); renderGTD();
-}
-function dailyTop3Area(date,i,val){
-  if(!D.dailyFocus) D.dailyFocus={};
-  if(!D.dailyFocus[date]) D.dailyFocus[date]={feeling:'',top3:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};
-  D.dailyFocus[date].top3[i].owArea=val||0; save(); renderGTD();
 }
 let overdueSelected=new Set();
 let overdueTargetDate='';
