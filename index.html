@@ -882,7 +882,30 @@ async function syncModalSave(){
   if(WORKER_URL.includes('CHANGEME')){ st.textContent="⚠ サーバーが未設定です（開発者にお問い合わせください）"; return; }
   syncCfg={syncCode:code};
   localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
-  st.textContent="同期中…";
+  st.textContent="サーバーを確認中…";
+  // まずサーバーを確認：サーバーが新しければダウンロード、古ければアップロード
+  try{
+    const res=await fetch(WORKER_URL,{headers:{"X-Sync-Code":code}});
+    if(res.ok){
+      const remote=await res.json();
+      if(remote&&remote._syncAt){
+        const localAt=D._syncAt||0, remoteAt=remote._syncAt||0;
+        if(remoteAt>localAt){
+          // サーバーのほうが新しい → ローカルに上書き＆再読込
+          const {goalImages,...restRemote}=remote;
+          Object.assign(D,restRemote);
+          const {goalImages:gi2,...rest2}=D;
+          const lsData={...rest2,dreams:{...rest2.dreams,items:(rest2.dreams?.items||[]).map(({image,...r})=>r)}};
+          localStorage.setItem(LS_KEY,JSON.stringify(lsData));
+          st.textContent="✓ サーバーのデータを取得しました。再読込します…";
+          setTimeout(()=>location.reload(),800);
+          return;
+        }
+      }
+    }
+  }catch(e){}
+  // ローカルのほうが新しい（またはサーバー未使用）→ アップロード
+  D._syncAt=Date.now();
   await syncPushNow();
   st.textContent="✓ 設定完了・同期しました";
 }
