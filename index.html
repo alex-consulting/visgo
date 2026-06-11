@@ -2243,8 +2243,8 @@ function renderTodayTimeline(){
   const panel=`<div class="today-point${todayPointCollapsed?' collapsed':''}">
     <div class="today-point-title" onclick="toggleTodayPoint()">📌 今日の要諦（ようてい）<span class="tp-arrow">▾</span></div>
     <div class="today-point-sec">
-      <div class="today-point-label">🌙 今日１日の終わりにどんな自分になっていたいか宣言</div>
-      <textarea class="today-feeling" placeholder="今日1日の終わりにどんな気持ちになっていたいですか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
+      <div class="today-point-label">🌙 今日の到達宣言</div>
+      <textarea class="today-feeling" placeholder="今日１日の終わりにどんな自分になっていたいですか？" oninput="dailyFeelingUpdate('${today}',this.value)">${esc(df.feeling||'')}</textarea>
     </div>
     <div class="today-point-sec">
       <div class="today-point-label">⭐ 今日の最重要TOP3</div>
