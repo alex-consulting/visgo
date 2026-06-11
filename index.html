@@ -1192,7 +1192,7 @@ function renderDreams(){
 
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">🏝️ 夢リスト</h1><p class="ph-sub">夢あるところに行動がある</p></div>
+    <div><h1 class="ph-title">🏝️ 夢リスト</h1><p class="ph-sub">夢あるところに行動がある。</p></div>
     <button class="ph-action" onclick="openDreamModal(null)">＋ 夢を追加</button>
   </div>
   <div class="mob-chips">
@@ -1483,7 +1483,7 @@ function renderSheetView(){
   const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">🎯 年間目標</h1><p class="ph-sub">目標達成日 ${esc(fmtDate(D.meta.targetDate))||"未設定"}</p></div>
+    <div><h1 class="ph-title">🎯 年間目標</h1><p class="ph-sub">心身・スキル・健康・生活習慣を整える。</p></div>
     <button class="ph-action" onclick="setSheetMode('edit')">✎ 編集する</button>
   </div>
   <div class="mob-chips">
@@ -1706,8 +1706,7 @@ function renderOW(){
   }
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">🪟 OW64</h1><p class="ph-sub">オープンウィンドウ64・目標展開シート</p></div>
-    <button class="ph-action" onclick="printOW()">🖨 A4印刷 / PDF</button>
+    <div><h1 class="ph-title">🪟 OW64</h1><p class="ph-sub">オープンウインドウ６４・マンダラチャート</p></div>
   </div>
   <div class="mob-chips">
     <button id="owAllM" class="${owMode==="all"?"act":""}">全体表示</button>
