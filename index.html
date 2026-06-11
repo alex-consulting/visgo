@@ -550,6 +550,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .seg-tabs{display:inline-flex;background:var(--fill);border-radius:10px;padding:3px;gap:2px;flex:0 0 auto}
 .seg-tabs button{border:none;background:transparent;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--sub);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
 .seg-tabs button.act{background:var(--card);color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.dream-toolbar{display:flex;align-items:center;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.dream-tb-btn{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.dream-tb-btn:hover{border-color:var(--blue);color:var(--blue)}
+.dream-tb-add{margin-left:auto}
 #appFooter{grid-column:1/-1}
 @media(min-width:701px){
   body{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto 1fr}
@@ -934,6 +938,7 @@ function idbGet(k){
   }));
 }
 let saveTimer=null;
+let goalImagesReady=false; // IDBからの初回ロード完了前にsave()がgoalImagesを上書きするのを防ぐ
 function save(){
   clearTimeout(saveTimer);
   document.getElementById("saveState").textContent="保存中…";
@@ -946,7 +951,7 @@ function save(){
       const lsData={...rest, dreams:{...rest.dreams,
         items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
       localStorage.setItem(LS_KEY, JSON.stringify(lsData));
-      await idbSet("goalImages", D.goalImages||[]);
+      if(goalImagesReady) await idbSet("goalImages", D.goalImages||[]);
       await idbSet("dreamImages", dreamImgs);
       document.getElementById("saveState").textContent="✓ 保存済み";
       syncPush();
@@ -1345,23 +1350,20 @@ function renderDreams(){
       })()}
     </div>
   </div>
-  <div class="mob-chips">
+  <div class="dream-toolbar">
     <div class="seg-tabs">
       <button class="${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">すべて</button>
       <button class="${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">Have</button>
       <button class="${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">Do</button>
       <button class="${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">Be</button>
     </div>
-    <button onclick="dreamShowSteps=!dreamShowSteps;renderDreams()">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</button>
-    <button onclick="openDreamModal(null)" style="margin-left:auto">＋ 夢を追加</button>
+    <button class="dream-tb-btn" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</button>
+    <button class="dream-tb-btn dream-tb-add" onclick="openDreamModal(null)">＋ 夢を追加</button>
   </div>
   <div class="gtd-wrap">
   <aside class="gtd-side side-static">
-    <div class="gf-item ${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">🗂 すべて</div>
-    <div class="gf-item ${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">💎 Have（欲しい）</div>
-    <div class="gf-item ${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">🏃 Do（したい）</div>
-    <div class="gf-item ${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">🌟 Be（なりたい）</div>
-    <div class="gf-item ${dreamShowSteps?'':''}" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="border-top:1px solid var(--line);margin-top:8px;padding-top:10px;color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
+    <div class="gf-item" onclick="openDreamModal(null)">＋ 夢を追加</div>
+    <div class="gf-item" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
   </aside>
   <div class="gtd-main">
   ${items.length
@@ -3011,7 +3013,8 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
     }else if(D.goalImages&&D.goalImages.length){
       await idbSet("goalImages", D.goalImages); // 旧localStorage画像をIDBへ移行
     }
-  }catch(e){}
+    goalImagesReady=true;
+  }catch(e){ goalImagesReady=true; }
   // 夢画像をIndexedDBから復元
   try{
     const dreamImgs=await idbGet("dreamImages");
