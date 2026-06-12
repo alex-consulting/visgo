@@ -637,10 +637,31 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   textarea:focus,input:focus{background:var(--fill2)}
 }
 @media print{nav,header .hbtn,#saveState{display:none}.card{break-inside:avoid}}
+#loginOverlay{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px}
+#loginBox{background:var(--card);border-radius:20px;padding:32px 28px;width:min(380px,100%);box-shadow:0 8px 40px rgba(0,0,0,.15)}
+#loginBox img{height:44px;display:block;margin:0 auto 28px}
+#loginBox .login-lbl{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px}
+#loginBox input{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:11px 14px;font-size:15px;font-family:inherit;margin-bottom:12px;background:var(--fill2);color:var(--text)}
+#loginBox input:focus{outline:none;border-color:var(--blue)}
+#loginBtn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+#loginBtn:active{background:#0062CC}
+#loginError{color:var(--red);font-size:13px;min-height:18px;margin-bottom:8px;text-align:center}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
+<div id="loginOverlay" style="display:none">
+  <div id="loginBox">
+    <img src="visgo-logo.png" alt="VISGO">
+    <div class="login-lbl">ID</div>
+    <input id="loginIdInput" type="text" placeholder="IDを入力" autocomplete="username">
+    <div class="login-lbl">パスワード</div>
+    <input id="loginPwInput" type="password" placeholder="パスワードを入力" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter'&&!event.isComposing)doLogin()">
+    <div id="loginError"></div>
+    <button id="loginBtn" onclick="doLogin()">ログイン</button>
+  </div>
+</div>
 <header>
   <h1 style="flex:1;min-width:160px;margin:0;line-height:1"><img src="visgo-logo.png" alt="VISGO" style="height:36px;width:auto;display:block"></h1>
   <span id="saveState" style="display:none"></span>
@@ -1073,6 +1094,26 @@ function setSyncStatus(msg){
   const el=document.getElementById("syncStatus");
   if(!el) return;
   if(el) el.textContent=msg;
+}
+// ---- ログイン ----
+function checkLogin(){
+  if(!syncCfg.syncId||!syncCfg.syncPassword) return; // 同期未設定なら不要
+  document.getElementById('loginOverlay').style.display='flex';
+  document.body.style.overflow='hidden';
+  setTimeout(()=>document.getElementById('loginIdInput').focus(),100);
+}
+function doLogin(){
+  const id=document.getElementById('loginIdInput').value.trim();
+  const pw=document.getElementById('loginPwInput').value;
+  const err=document.getElementById('loginError');
+  if(id===syncCfg.syncId&&pw===syncCfg.syncPassword){
+    document.getElementById('loginOverlay').style.display='none';
+    document.body.style.overflow='';
+  } else {
+    err.textContent='IDまたはパスワードが違います';
+    document.getElementById('loginPwInput').value='';
+    document.getElementById('loginPwInput').focus();
+  }
 }
 function openSyncModal(){
   document.getElementById("syncModal").style.display="flex";
@@ -3174,6 +3215,8 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
     const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
     localStorage.setItem(LS_KEY,JSON.stringify(lsData));
   }catch(e){}
+  // ログイン確認
+  checkLogin();
   // キャッシュクリア後はpullを優先（pushは保護済み）
   if(!dataLoadedFromStorage && getSyncCode()){
     setSyncStatus("⬇ データ復元中…");
