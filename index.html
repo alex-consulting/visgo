@@ -1940,8 +1940,28 @@ function renderSheetView(){
   const nl2br=s=>esc(s).replace(/\n/g,"<br>");
   const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
   root.innerHTML=`
-  <div class="page-head">
+  <div class="page-head dream-page-head">
     <div><h1 class="ph-title">🎯 年間目標</h1><p class="ph-sub">心身・スキル・健康・生活習慣を整える。</p></div>
+    ${(()=>{
+      const wd=toDateInput(D.meta.writeDate), td=toDateInput(D.meta.targetDate);
+      if(!wd||!td) return '';
+      const wMs=new Date(wd+'T00:00:00').getTime(), tMs=new Date(td+'T00:00:00').getTime(), now=Date.now();
+      const total=tMs-wMs; if(total<=0) return '';
+      const pct=Math.max(0,Math.min(100,(now-wMs)/total*100));
+      const remain=Math.max(0,Math.ceil((tMs-now)/86400000));
+      const wDate=new Date(wd+'T00:00:00');
+      const writeLbl=`${wDate.getMonth()+1}月${wDate.getDate()}日`;
+      const remainTxt=remain>0?`目標達成日まで残り <strong style="color:var(--blue);font-size:15px">${remain.toLocaleString()}</strong> 日`:'期限到達';
+      return `<div class="dream-age-bar">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+          <span style="font-size:12px;color:var(--sub)"><strong style="color:var(--navy);font-size:15px">${writeLbl}</strong> スタート</span>
+          <span style="font-size:12px;color:var(--sub)">${remainTxt}</span>
+        </div>
+        <div style="height:4px;background:#D1D1D6;border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,var(--blue),#AF52DE);border-radius:2px;transition:width .3s"></div>
+        </div>
+      </div>`;
+    })()}
   </div>
   <div class="mob-chips">
     <button onclick="printSheet()">🖨 A4印刷 / PDF</button>
@@ -1962,19 +1982,6 @@ function renderSheetView(){
         <span><b>目標達成日</b>${esc(fmtDate(D.meta.targetDate))||"—"}</span>
         <span><b>更新日</b>${esc(fmtDate(D.meta.updateDate))||"—"}</span>
       </div>
-      ${(()=>{
-        const wd=toDateInput(D.meta.writeDate), td=toDateInput(D.meta.targetDate);
-        if(!wd||!td) return '';
-        const wMs=new Date(wd+'T00:00:00').getTime(), tMs=new Date(td+'T00:00:00').getTime(), now=Date.now();
-        const total=tMs-wMs; if(total<=0) return '';
-        const pct=Math.max(0,Math.min(100,Math.round((now-wMs)/total*100)));
-        const remain=Math.ceil((tMs-now)/(86400000));
-        const remainTxt=remain>0?`残り${remain}日`:'期限到達';
-        return `<div class="vhead-prog" onclick="event.stopPropagation()">
-          <div class="vhead-prog-bar"><div style="width:${pct}%"></div></div>
-          <div class="vhead-prog-lbl"><span>${pct}% 達成</span><span>${remainTxt}</span></div>
-        </div>`;
-      })()}
     </div>
     <div class="vsec"><h3 onclick="openSheetSection('service')">奉仕活動</h3>
       <p><b>家族：</b>${nl2br(D.service.family)||"—"}</p>
