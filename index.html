@@ -648,6 +648,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 #loginError{color:var(--red);font-size:13px;min-height:18px;margin-bottom:8px;text-align:center}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div id="loginOverlay" style="display:none">
@@ -715,6 +716,11 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
     <div class="settings-body">
       <p class="settings-section">同期</p>
       <button class="settings-btn" onclick="closeSettings();syncNow()">☁ 今すぐ同期</button>
+      <div id="qrSection" style="display:none;margin-bottom:8px;padding:14px;background:var(--fill);border-radius:10px;text-align:center">
+        <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:10px">📱 スマホで読み取って開く</div>
+        <div id="qrCanvas" style="display:inline-block;background:#fff;padding:8px;border-radius:8px"></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:8px">スキャンするとログイン済みで開きます</div>
+      </div>
       <p class="settings-section">データ管理</p>
       <button class="settings-btn" onclick="exportJSON()">📤 バックアップ</button>
       <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 復元</button>
@@ -1100,6 +1106,18 @@ function setSyncStatus(msg){
 // ---- ログイン ----
 const LOGIN_SESSION_KEY='visgo_login_at';
 const LOGIN_TTL=7*24*60*60*1000; // 7日間
+// QRコードからのURL自動ログイン
+(()=>{
+  const p=new URLSearchParams(location.search);
+  const sid=p.get('sid'), spw=p.get('spw');
+  if(sid&&spw){
+    syncCfg={syncId:sid,syncPassword:spw};
+    localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
+    localStorage.setItem(LOGIN_SESSION_KEY,Date.now());
+    // URLパラメータを除去してリロード
+    history.replaceState({},'',location.pathname);
+  }
+})();
 function checkLogin(){
   // セッションが有効なら（7日以内）スキップ
   const loginAt=parseInt(localStorage.getItem(LOGIN_SESSION_KEY)||'0',10);
@@ -3136,6 +3154,17 @@ function openSettings(){
   const l=document.getElementById('profileLifespan');
   if(b) b.value=D.profile.birthday||'';
   if(l) l.value=D.profile.lifespan||90;
+  // PCのみQRコード表示
+  const qrSec=document.getElementById('qrSection');
+  if(qrSec&&syncCfg.syncId&&syncCfg.syncPassword&&window.innerWidth>700){
+    qrSec.style.display='block';
+    const qrEl=document.getElementById('qrCanvas');
+    qrEl.innerHTML='';
+    const url=location.origin+location.pathname+'?sid='+encodeURIComponent(syncCfg.syncId)+'&spw='+encodeURIComponent(syncCfg.syncPassword);
+    new QRCode(qrEl,{text:url,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
+  } else if(qrSec){
+    qrSec.style.display='none';
+  }
 }
 function closeSettings(){ document.getElementById('settingsOverlay').style.display='none'; }
 
