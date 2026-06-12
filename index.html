@@ -2812,6 +2812,8 @@ function gtdAdd(){
   const cap=document.getElementById("gtdCapture");
   const v=cap.value.trim(); if(!v) return;
   const task={id:D.gtd.nextId++, text:v, status:"inbox", project:"", categories:[], created:Date.now()};
+  if(gtdView==='today') task.deadline=dateStr(0);
+  else if(gtdView==='tomorrow') task.deadline=dateStr(1);
   if(gtdFilter.type==='project') task.project=gtdFilter.value;
   if(gtdFilter.type==='category') task.categories=[gtdFilter.value];
   D.gtd.tasks.unshift(task);
