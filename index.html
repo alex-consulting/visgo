@@ -480,6 +480,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .tl-slot-line.tl-dashed{background:none;border-top:2px dashed var(--line);height:0;margin-top:12px}
 .tl-slot-cards{display:flex;flex-direction:column;gap:5px;padding:5px 0 4px}
 .tl-empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:12px 0}
+.gcal-card{display:flex;align-items:baseline;gap:6px;background:rgba(52,199,89,.12);border-left:3px solid #34C759;border-radius:8px;padding:6px 10px;font-size:13px}
+.gcal-time{flex:0 0 auto;font-size:11px;font-weight:700;color:#248A3D;min-width:34px}
+.gcal-title{flex:1;font-weight:600;color:var(--text)}
+.gcal-loc{font-size:11px;color:var(--sub);flex:0 0 auto}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--card);
   padding:9px 20px;border-radius:20px;font-size:13.5px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200}
 .toast.show{opacity:1}
@@ -738,6 +742,12 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
         <div id="qrCanvas" style="display:inline-block;background:#fff;padding:8px;border-radius:8px"></div>
         <div style="font-size:11px;color:var(--sub);margin-top:8px">スキャンするとログイン済みで開きます</div>
       </div>
+      <p class="settings-section">Googleカレンダー連携</p>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
+        GoogleカレンダーのiCal URL（シークレット）を登録すると、今日・明日のタイムラインに予定が表示されます。
+      </div>
+      <div id="gcalUrlList"></div>
+      <button class="settings-btn" onclick="gcalAddUrl()" style="margin-top:6px">＋ カレンダーを追加</button>
       <p class="settings-section">データ管理</p>
       <div style="display:flex;gap:8px">
         <button class="settings-btn" style="flex:1" onclick="exportJSON()">📤 バックアップ</button>
@@ -961,6 +971,79 @@ const APP_VERSION="3.0.0";
 const LS_KEY="haradaApp_v1";
 const SYNC_KEY="visgo_sync_v1";
 const WORKER_URL="https://visgo-sync.moriyamakoto.workers.dev";
+const GCAL_KEY="visgo_gcal_v1";
+let gcalUrls=JSON.parse(localStorage.getItem(GCAL_KEY)||'[]');
+function saveGcalUrls(){localStorage.setItem(GCAL_KEY,JSON.stringify(gcalUrls));}
+
+/* ===== iCal パーサー ===== */
+function parseIcalDate(val,tzid){
+  // DATE-only: 20260613
+  if(/^\d{8}$/.test(val)){
+    return new Date(+val.slice(0,4),+val.slice(4,6)-1,+val.slice(6,8));
+  }
+  // UTC: 20260613T090000Z
+  if(val.endsWith('Z')){
+    return new Date(Date.UTC(+val.slice(0,4),+val.slice(4,6)-1,+val.slice(6,8),+val.slice(9,11),+val.slice(11,13),+val.slice(13,15)));
+  }
+  // LOCAL (treat as JST): 20260613T090000
+  const y=+val.slice(0,4),mo=+val.slice(4,6)-1,d=+val.slice(6,8);
+  const h=+val.slice(9,11),m=+val.slice(11,13);
+  return new Date(y,mo,d,h,m);
+}
+function unfoldIcal(text){return text.replace(/\r\n[ \t]/g,'').replace(/\r\n/g,'\n');}
+function parseIcalEvents(text){
+  const lines=unfoldIcal(text).split('\n');
+  const events=[];
+  let ev=null;
+  for(const line of lines){
+    if(line==='BEGIN:VEVENT'){ev={};continue;}
+    if(line==='END:VEVENT'){if(ev)events.push(ev);ev=null;continue;}
+    if(!ev) continue;
+    const col=line.indexOf(':');
+    if(col<0) continue;
+    const key=line.slice(0,col).toUpperCase();
+    const val=line.slice(col+1).trim();
+    if(key==='SUMMARY') ev.summary=val.replace(/\\n/g,' ').replace(/\\,/g,',');
+    if(key==='LOCATION') ev.location=val.replace(/\\n/g,' ');
+    if(key.startsWith('DTSTART')){
+      const tzm=key.match(/TZID=([^;:]+)/);
+      ev.start=parseIcalDate(val,tzm?tzm[1]:null);
+      ev.allDay=/^\d{8}$/.test(val);
+    }
+    if(key.startsWith('DTEND')){
+      const tzm=key.match(/TZID=([^;:]+)/);
+      ev.end=parseIcalDate(val,tzm?tzm[1]:null);
+    }
+  }
+  return events;
+}
+function icalEventForDate(events,dateStr){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const dayStart=new Date(y,m-1,d,0,0,0).getTime();
+  const dayEnd=new Date(y,m-1,d,23,59,59).getTime();
+  return events.filter(ev=>{
+    if(!ev.start) return false;
+    const s=ev.start.getTime();
+    const e=ev.end?ev.end.getTime():s+3600000;
+    return s<=dayEnd&&e>=dayStart;
+  });
+}
+let _gcalCache={data:[],fetchedAt:0};
+async function fetchGcalEvents(){
+  if(!gcalUrls.length) return [];
+  if(Date.now()-_gcalCache.fetchedAt<5*60*1000) return _gcalCache.data;
+  const allEvents=[];
+  for(const url of gcalUrls){
+    try{
+      const res=await fetch(WORKER_URL+'/ical-proxy',{headers:{'X-Sync-Code':getSyncCode(),'X-Ical-Url':url}});
+      if(!res.ok) continue;
+      const text=await res.text();
+      allEvents.push(...parseIcalEvents(text));
+    }catch(e){console.warn('iCal fetch error',e);}
+  }
+  _gcalCache={data:allEvents,fetchedAt:Date.now()};
+  return allEvents;
+}
 let _rawSyncCfg=JSON.parse(localStorage.getItem(SYNC_KEY)||"null")||{};
 // 旧syncCode形式からマイグレーション
 if(_rawSyncCfg.syncCode&&!_rawSyncCfg.syncId){
@@ -2728,13 +2811,17 @@ function dateStr(offsetDays){
   const d=new Date(); d.setDate(d.getDate()+offsetDays);
   return localDateStr(d);
 }
-function renderTimeline(targetDate, panelTitle, showNow){
+function gcalCard(ev){
+  const h=ev.allDay?null:ev.start.getHours();
+  const hm=ev.allDay?'終日':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`;
+  const loc=ev.location?`<span class="gcal-loc">📍${esc(ev.location)}</span>`:'';
+  return `<div class="gcal-card"><span class="gcal-time">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span>${loc}</div>`;
+}
+function renderTimeline(targetDate, panelTitle, showNow, gcalEvs){
   const tasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&!t.done);
   const doneTasks=showNow?(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&t.done):[];
   const now=new Date();
   const nowH=now.getHours();
-  const d=new Date(targetDate+'T00:00:00');
-  const dateLabel=d.toLocaleDateString('ja-JP',{month:'long',day:'numeric',weekday:'short'});
 
   const byHour={};
   const noTime=[];
@@ -2747,12 +2834,22 @@ function renderTimeline(targetDate, panelTitle, showNow){
     }
   });
 
-  const hours=new Set(Object.keys(byHour).map(Number));
+  // Googleカレンダーイベントをbyhourに追加
+  const gcalByHour={};
+  const gcalAllDay=[];
+  (gcalEvs||[]).forEach(ev=>{
+    if(ev.allDay){ gcalAllDay.push(ev); return; }
+    const h=ev.start.getHours();
+    (gcalByHour[h]||(gcalByHour[h]=[])).push(ev);
+  });
+
+  const hours=new Set([...Object.keys(byHour).map(Number),...Object.keys(gcalByHour).map(Number)]);
   if(showNow) hours.add(nowH);
   const sortedHours=[...hours].sort((a,b)=>a-b);
 
   const slot=(h)=>{
     const items=byHour[h]||[];
+    const gcalItems=gcalByHour[h]||[];
     const isNow=(showNow&&h===nowH);
     const timeLabel=isNow
       ? `${String(h).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
@@ -2761,10 +2858,20 @@ function renderTimeline(targetDate, panelTitle, showNow){
       <div class="tl-slot-time">${timeLabel}</div>
       <div class="tl-slot-body">
         <span class="tl-slot-line"></span>
+        ${gcalItems.length?`<div class="tl-slot-cards">${gcalItems.map(gcalCard).join('')}</div>`:''}
         ${items.length?`<div class="tl-slot-cards">${[...items].sort((a,b)=>(a.deadlineTime||'').localeCompare(b.deadlineTime||'')).map(gtdCard).join('')}</div>`:''}
       </div>
     </div>`;
   };
+
+  const gcalAllDaySection=gcalAllDay.length?`
+    <div class="tl-slot">
+      <div class="tl-slot-time tl-unscheduled">終日</div>
+      <div class="tl-slot-body">
+        <span class="tl-slot-line tl-dashed"></span>
+        <div class="tl-slot-cards">${gcalAllDay.map(gcalCard).join('')}</div>
+      </div>
+    </div>`:'';
 
   const unscheduled=noTime.length?`
     <div class="tl-slot">
@@ -2775,10 +2882,10 @@ function renderTimeline(targetDate, panelTitle, showNow){
       </div>
     </div>`:'';
 
-  const isEmpty=tasks.length===0&&sortedHours.length===0;
+  const isEmpty=tasks.length===0&&sortedHours.length===0&&!gcalAllDay.length;
   const bodyContent=isEmpty
     ? `<div class="tl-empty-msg">📭 タスクはありません</div>`
-    : `<div class="tl-grid">${sortedHours.map(slot).join('')}${unscheduled}</div>`;
+    : `<div class="tl-grid">${gcalAllDaySection}${sortedHours.map(slot).join('')}${unscheduled}</div>`;
 
   const doneSection=doneTasks.length?`
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
@@ -2786,9 +2893,26 @@ function renderTimeline(targetDate, panelTitle, showNow){
       <div class="tl-slot-cards">${doneTasks.map(gtdCard).join('')}</div>
     </div>`:'';
 
-  return `<div class="tl-panel">
+  return `<div class="tl-panel" id="tl-panel-${targetDate}">
     <div class="tl-panel-body">${bodyContent}${doneSection}</div>
   </div>`;
+}
+// Googleカレンダーを非同期で後付けする
+async function injectGcalToTimeline(targetDate){
+  if(!gcalUrls.length) return;
+  try{
+    const all=await fetchGcalEvents();
+    const evs=icalEventForDate(all,targetDate);
+    if(!evs.length) return;
+    // 再レンダリングして差し替え
+    const panel=document.getElementById('tl-panel-'+targetDate);
+    if(!panel) return;
+    const newHtml=renderTimeline(targetDate,'',targetDate===dateStr(0),evs);
+    const tmp=document.createElement('div');
+    tmp.innerHTML=newHtml;
+    const newBody=tmp.querySelector('.tl-panel-body');
+    if(newBody) panel.querySelector('.tl-panel-body').replaceWith(newBody);
+  }catch(e){console.warn('gcal inject error',e);}
 }
 function renderTodayTimeline(){
   const today=dateStr(0);
@@ -2860,9 +2984,15 @@ function renderTodayTimeline(){
     <div class="today-review-label">📝 今日の振り返り</div>
     <textarea class="today-review-ta" placeholder="今日の学び・気づき・感謝など自由に…" oninput="dailyReviewUpdate('${today}',this.value)">${esc(df.review||'')}</textarea>
   </div>`;
-  return panel+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
+  const html=panel+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
+  setTimeout(()=>injectGcalToTimeline(today),0);
+  return html;
 }
-function renderTomorrowTimeline(){ return renderTimeline(dateStr(1),'📅 明日の計画',false); }
+function renderTomorrowTimeline(){
+  const html=renderTimeline(dateStr(1),'📅 明日の計画',false);
+  setTimeout(()=>injectGcalToTimeline(dateStr(1)),0);
+  return html;
+}
 function dailyFeelingUpdate(date,val){
   if(!D.dailyFocus) D.dailyFocus={};
   if(!D.dailyFocus[date]) D.dailyFocus[date]={feeling:'',top3:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};
@@ -3245,6 +3375,7 @@ function openSettings(){
   if(mn) mn.value=D.meta.name||'';
   if(mw) mw.value=toDateInput(D.meta.writeDate)||'';
   if(mt) mt.value=toDateInput(D.meta.targetDate)||'';
+  gcalRenderUrls();
   // PCのみQRコード表示
   const qrSec=document.getElementById('qrSection');
   if(qrSec&&syncCfg.syncId&&syncCfg.syncPassword&&window.innerWidth>700){
@@ -3258,6 +3389,29 @@ function openSettings(){
   }
 }
 function closeSettings(){ document.getElementById('settingsOverlay').style.display='none'; }
+function gcalRenderUrls(){
+  const wrap=document.getElementById('gcalUrlList'); if(!wrap) return;
+  if(!gcalUrls.length){wrap.innerHTML='<div style="font-size:12px;color:var(--faint);padding:4px 0">未登録</div>';return;}
+  wrap.innerHTML=gcalUrls.map((u,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <div style="flex:1;font-size:11px;color:var(--sub);word-break:break-all;background:var(--fill);border-radius:6px;padding:5px 8px">${esc(u.slice(0,60))}…</div>
+      <button onclick="gcalDelUrl(${i})" style="background:none;border:none;color:var(--faint);font-size:16px;cursor:pointer;padding:0 4px">✕</button>
+    </div>`).join('');
+}
+function gcalAddUrl(){
+  const u=prompt('GoogleカレンダーのiCal URL（シークレット）を貼り付けてください\n\n取得方法：Googleカレンダー → 設定 → カレンダーの統合 → 「非公開のアドレス（iCal形式）」');
+  if(!u||!u.startsWith('https://')) return;
+  gcalUrls.push(u.trim());
+  saveGcalUrls();
+  _gcalCache={data:[],fetchedAt:0};
+  gcalRenderUrls();
+}
+function gcalDelUrl(i){
+  gcalUrls.splice(i,1);
+  saveGcalUrls();
+  _gcalCache={data:[],fetchedAt:0};
+  gcalRenderUrls();
+}
 
 /* ================= 入出力 ================= */
 function exportJSON(){
