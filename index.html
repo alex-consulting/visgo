@@ -418,6 +418,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .gm-ri-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .gm-ri-row:last-child{border-bottom:none}
 .gm-ri-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:0 3px;flex:0 0 auto;line-height:1}
+.ri-handle{cursor:grab;color:var(--faint);font-size:14px;flex:0 0 auto;touch-action:none}
+.ri-handle:active{cursor:grabbing}
 .gm-ri-del:hover{color:var(--red)}
 .gm-routine-addrow{display:flex;gap:6px;margin-top:8px}
 .gm-routine-addrow input{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card)}
@@ -454,6 +456,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .tp3-row:last-child{margin-bottom:0}
 .today-feeling{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;resize:vertical;min-height:60px;color:var(--text);background:var(--fill2);line-height:1.55}
 .today-feeling:focus{outline:none;border-color:var(--blue);background:var(--card)}
+.today-review-wrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.today-review-label{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.today-review-ta{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;resize:vertical;min-height:80px;color:var(--text);background:var(--fill2);line-height:1.55}
+.today-review-ta:focus{outline:none;border-color:var(--blue);background:var(--card)}
 .tp3-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .tp3-row:last-child{margin-bottom:0}
 .tp3-cb{width:18px;height:18px;flex:0 0 auto;accent-color:var(--blue);cursor:pointer}
@@ -1380,12 +1386,10 @@ function renderDmSteps(){
   const pct=dmSteps.length?Math.round(dmSteps.filter(s=>s.done).length/dmSteps.length*100):0;
   const badge=document.getElementById('dmProgressPct');
   if(badge) badge.textContent=pct+'%';
-  const sorted=[...dmSteps].sort((a,b)=>{
-    const ad=a.startDate||'9999-99-99', bd=b.startDate||'9999-99-99';
-    return ad<bd?-1:ad>bd?1:0;
-  });
-  list.innerHTML=sorted.length
-    ? sorted.map(s=>`<div class="dm-step-item">
+  list.innerHTML=dmSteps.length
+    ? dmSteps.map((s,i)=>`<div class="dm-step-item" draggable="true" data-si="${i}"
+        ondragstart="dmStepDragStart(event,${i})" ondragover="dmStepDragOver(event)" ondrop="dmStepDrop(event,${i})" ondragend="dmStepDragEnd()">
+        <span class="ri-handle" title="ドラッグで並び替え">⠿</span>
         <input type="checkbox" class="dm-step-check" ${s.done?'checked':''} onchange="dmToggleStep(this,'${s.id}')">
         <div class="dm-step-body">
           <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="アクション名"
@@ -1396,8 +1400,18 @@ function renderDmSteps(){
         <button class="dm-step-del" onclick="dmDeleteStep('${s.id}')">✕</button>
       </div>`).join('')
     : `<div style="color:var(--sub);font-size:12.5px;padding:6px 0">アクションをまだ追加していません</div>`;
-  // note: sorted is display-only; dmSteps order unchanged
 }
+let _dmStepDragIdx=null;
+function dmStepDragStart(e,i){_dmStepDragIdx=i;e.currentTarget.style.opacity='.4';}
+function dmStepDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function dmStepDrop(e,toIdx){
+  e.preventDefault();
+  if(_dmStepDragIdx===null||_dmStepDragIdx===toIdx) return;
+  const [item]=dmSteps.splice(_dmStepDragIdx,1);
+  dmSteps.splice(toIdx,0,item);
+  renderDmSteps();
+}
+function dmStepDragEnd(){_dmStepDragIdx=null;renderDmSteps();}
 function dmUpdateStep(id,field,value){
   const s=dmSteps.find(x=>String(x.id)===String(id));
   if(s) s[field]=value;
@@ -1715,7 +1729,7 @@ function openSheetSection(key){
     case 'deadlines':
       title='週間期日行動';
       const todoIdxs=[];D.deadlines.forEach((d,i)=>{if(!d.done)todoIdxs.push(i);});
-      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:90px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="text" placeholder="月/日" value="${esc(D.deadlines[ri].month||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>`;
+      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>`;
       onSave=()=>{const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});document.querySelectorAll('[data-dli]').forEach(el=>{const li=+el.dataset.dli,f=el.dataset.dlf;if(ti[li]!=null)D.deadlines[ti[li]][f]=el.value;});};
       break;
     case 'quad':
@@ -2305,12 +2319,26 @@ function gmRenderRoutineItems(){
   const c=document.getElementById('gmRoutineList');
   if(!c) return;
   if(!gmRoutineItems.length){c.innerHTML='<div style="font-size:12px;color:var(--faint);padding:4px 0">サブタスクがありません</div>';return;}
-  c.innerHTML=gmRoutineItems.map(it=>`
-    <div class="gm-ri-row">
+  c.innerHTML=gmRoutineItems.map((it,i)=>`
+    <div class="gm-ri-row" draggable="true" data-ri="${i}"
+      ondragstart="riDragStart(event,${i})" ondragover="riDragOver(event)" ondrop="riDrop(event,${i})" ondragend="riDragEnd()">
+      <span class="ri-handle" title="ドラッグで並び替え">⠿</span>
       <span style="flex:1;min-width:0">${esc(it.text)}</span>
       <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')">✕</button>
     </div>`).join('');
 }
+let _riDragIdx=null;
+function riDragStart(e,i){_riDragIdx=i;e.currentTarget.style.opacity='.4';}
+function riDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function riDrop(e,toIdx){
+  e.preventDefault();
+  if(_riDragIdx===null||_riDragIdx===toIdx) return;
+  const arr=gmRoutineItems;
+  const [item]=arr.splice(_riDragIdx,1);
+  arr.splice(toIdx,0,item);
+  gmRenderRoutineItems();
+}
+function riDragEnd(){_riDragIdx=null;gmRenderRoutineItems();}
 function gmAddRoutineItem(){
   const inp=document.getElementById('gmRoutineInput');
   const v=(inp.value||'').trim(); if(!v) return;
@@ -2731,8 +2759,11 @@ function renderTimeline(targetDate, panelTitle, showNow){
   const slot=(h)=>{
     const items=byHour[h]||[];
     const isNow=(showNow&&h===nowH);
-    return `<div class="tl-slot${isNow?' tl-now':''}">
-      <div class="tl-slot-time">${String(h).padStart(2,'0')}:00</div>
+    const timeLabel=isNow
+      ? `${String(h).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+      : `${String(h).padStart(2,'0')}:00`;
+    return `<div class="tl-slot${isNow?' tl-now':''}" data-hour="${h}">
+      <div class="tl-slot-time">${timeLabel}</div>
       <div class="tl-slot-body">
         <span class="tl-slot-line"></span>
         ${items.length?`<div class="tl-slot-cards">${[...items].sort((a,b)=>(a.deadlineTime||'').localeCompare(b.deadlineTime||'')).map(gtdCard).join('')}</div>`:''}
@@ -2830,13 +2861,22 @@ function renderTodayTimeline(){
       <div class="tp-body">${top3Body}</div>
     </div>
   </div>`;
-  return panel+renderTimeline(today,'☀️ 1日をスタート！',true);
+  const reviewSection=`<div class="today-review-wrap">
+    <div class="today-review-label">📝 今日の振り返り</div>
+    <textarea class="today-review-ta" placeholder="今日の学び・気づき・感謝など自由に…" oninput="dailyReviewUpdate('${today}',this.value)">${esc(df.review||'')}</textarea>
+  </div>`;
+  return panel+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
 }
 function renderTomorrowTimeline(){ return renderTimeline(dateStr(1),'📅 明日の計画',false); }
 function dailyFeelingUpdate(date,val){
   if(!D.dailyFocus) D.dailyFocus={};
   if(!D.dailyFocus[date]) D.dailyFocus[date]={feeling:'',top3:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};
   D.dailyFocus[date].feeling=val; save();
+}
+function dailyReviewUpdate(date,val){
+  if(!D.dailyFocus) D.dailyFocus={};
+  if(!D.dailyFocus[date]) D.dailyFocus[date]={feeling:'',top3:[{text:'',done:false},{text:'',done:false},{text:'',done:false}]};
+  D.dailyFocus[date].review=val; save();
 }
 function dailyTop3Text(date,i,taskId){
   if(!D.dailyFocus) D.dailyFocus={};
@@ -3315,8 +3355,30 @@ function importJSON(ev){
   ev.target.value="";
 }
 
+/* ================= タイムライン現在時刻更新 ================= */
+let _tlNowTimer=null;
+function startTimelineNowTimer(){
+  if(_tlNowTimer) return;
+  _tlNowTimer=setInterval(()=>{
+    const now=new Date();
+    const h=now.getHours();
+    const mm=String(now.getMinutes()).padStart(2,'0');
+    document.querySelectorAll('.tl-slot').forEach(el=>{
+      const wasNow=el.classList.contains('tl-now');
+      const isNow=String(h)===String(el.dataset.hour);
+      if(isNow&&!wasNow){ el.classList.add('tl-now'); }
+      if(!isNow&&wasNow){ el.classList.remove('tl-now'); }
+      if(isNow){
+        const timeEl=el.querySelector('.tl-slot-time');
+        if(timeEl) timeEl.textContent=`${String(h).padStart(2,'0')}:${mm}`;
+      }
+    });
+  },60000);
+}
+
 /* ================= 起動 ================= */
 showTab("gtd");
+startTimelineNowTimer();
 document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) ? "✓ 保存済み" : "";
 // 画像をIndexedDBから読み込み（localStorageの容量制限を回避）
 (async function(){
