@@ -575,10 +575,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dm-btn-save{background:var(--blue);color:#fff}
 /* 設定モーダル */
 #settingsOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
-.settings-modal{background:var(--card);border-radius:14px;width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden}
+.settings-modal{background:var(--card);border-radius:14px;width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;display:flex;flex-direction:column}
+.settings-body{overflow-y:auto;flex:1;padding:18px;-webkit-overflow-scrolling:touch}
 .settings-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;color:var(--navy)}
 .settings-hd button{background:none;border:none;font-size:18px;cursor:pointer;color:var(--sub);line-height:1}
-.settings-body{padding:18px}
 .settings-section{font-size:13px;font-weight:700;color:var(--navy);letter-spacing:.02em;margin:0 0 8px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
 .settings-section+.settings-section{margin-top:18px}
 .settings-btn{display:flex;align-items:center;gap:10px;width:100%;background:var(--fill);border:1px solid var(--line);border-radius:9px;padding:11px 14px;font-size:13.5px;color:var(--navy);cursor:pointer;margin-bottom:8px;text-align:left}
