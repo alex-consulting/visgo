@@ -216,15 +216,16 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-item:hover{background:var(--fill)}
 .gf-item.act{background:var(--blue);color:#fff;font-weight:600}
 .gf-all{font-weight:700;margin-bottom:4px}
-.gf-today-btn{font-weight:700;margin-bottom:8px;border:1.5px solid var(--blue);color:var(--blue);background:var(--blue-l)}
+.gf-today-btn{font-weight:700;margin-bottom:8px;border:1.5px solid var(--blue);color:var(--blue);background:var(--blue-l);justify-content:center}
 .gf-today-btn:hover{background:rgba(0,122,255,.20)}
 .gf-today-btn.act{background:var(--blue);color:#fff;border-color:var(--blue)}
 .gf-start-main{font-size:16px;padding:12px 14px;border-width:2px;margin-bottom:16px;border-radius:10px;justify-content:center;letter-spacing:.02em}
 .gf-start-main.act{}
-.gf-overdue-btn{font-weight:700;margin-bottom:4px;border:1.5px solid #FF3B30;color:#D70015;background:var(--red-l)}
+.gf-overdue-btn{font-weight:700;margin-bottom:4px;border:1.5px solid #FF3B30;color:#D70015;background:var(--red-l);justify-content:center}
 .gf-overdue-btn:hover{background:rgba(255,59,48,.18)}
 .gf-overdue-btn.act{background:#FF3B30;color:#fff;border-color:#FF3B30}
-.gf-taskedit-btn{display:flex;align-items:center;justify-content:space-between;width:100%;font-weight:700;font-size:14px;padding:8px 12px;border-radius:8px;border:1.5px solid var(--navy);color:var(--navy);background:var(--fill);cursor:pointer;margin-top:8px;user-select:none;text-align:left}
+.gf-taskedit-btn{display:flex;align-items:center;justify-content:center;position:relative;width:100%;font-weight:700;font-size:14px;padding:8px 12px;border-radius:8px;border:1.5px solid var(--navy);color:var(--navy);background:var(--fill);cursor:pointer;margin-top:8px;user-select:none}
+.gf-arrow{position:absolute;right:12px;font-size:12px;color:var(--sub)}
 .gf-taskedit-btn:hover{background:var(--fill)}
 .gf-taskedit-panel{background:var(--fill2);border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:4px}
 .gf-taskedit-panel .gf-all{font-size:14px;font-weight:700;margin-bottom:6px;border-bottom:1px solid var(--line);padding-bottom:6px}
@@ -3166,7 +3167,7 @@ function renderGTD(){
       <div class="gf-section ${gtdCollapsed.taskGroup?'gf-collapsed':''}">
         <div class="gf-taskedit-btn gf-toggle" data-toggle="taskGroup">
           <span>✏️ タスク編集</span>
-          <span class="gf-arrow" style="font-size:12px;color:var(--sub)">▾</span>
+          <span class="gf-arrow">▾</span>
         </div>
         <div class="gf-items gf-taskedit-panel">
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
