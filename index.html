@@ -1729,7 +1729,7 @@ function openSheetSection(key){
     case 'deadlines':
       title='週間期日行動';
       const todoIdxs=[];D.deadlines.forEach((d,i)=>{if(!d.done)todoIdxs.push(i);});
-      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>`;
+      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" onclick="try{this.showPicker()}catch(e){}" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>`;
       onSave=()=>{const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});document.querySelectorAll('[data-dli]').forEach(el=>{const li=+el.dataset.dli,f=el.dataset.dlf;if(ti[li]!=null)D.deadlines[ti[li]][f]=el.value;});};
       break;
     case 'quad':
@@ -1809,7 +1809,7 @@ function ssAddDl(){
   const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});
   const li=ti.length-1;
   const dl=document.getElementById('ss-dl');
-  if(dl){const div=document.createElement('div');div.className='ss-row2';div.innerHTML=`<input class="ss-inp" style="width:90px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="text" placeholder="月/日" value=""><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="">`;dl.appendChild(div);}
+  if(dl){const div=document.createElement('div');div.className='ss-row2';div.innerHTML=`<input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" value="" onclick="try{this.showPicker()}catch(e){}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="">`;dl.appendChild(div);}
 }
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
 
