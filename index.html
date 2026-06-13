@@ -418,8 +418,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .gm-ri-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .gm-ri-row:last-child{border-bottom:none}
 .gm-ri-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:0 3px;flex:0 0 auto;line-height:1}
-.ri-handle{cursor:grab;color:var(--faint);font-size:14px;flex:0 0 auto;touch-action:none}
-.ri-handle:active{cursor:grabbing}
+.ri-btns{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
+.ri-mv{background:none;border:1px solid var(--line);border-radius:4px;color:var(--sub);font-size:10px;padding:2px 5px;cursor:pointer;line-height:1;min-width:28px;min-height:22px}
+.ri-mv:active{background:var(--fill)}
+.ri-mv:disabled{opacity:.25;cursor:default}
 .gm-ri-del:hover{color:var(--red)}
 .gm-routine-addrow{display:flex;gap:6px;margin-top:8px}
 .gm-routine-addrow input{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card)}
@@ -1387,9 +1389,11 @@ function renderDmSteps(){
   const badge=document.getElementById('dmProgressPct');
   if(badge) badge.textContent=pct+'%';
   list.innerHTML=dmSteps.length
-    ? dmSteps.map((s,i)=>`<div class="dm-step-item" draggable="true" data-si="${i}"
-        ondragstart="dmStepDragStart(event,${i})" ondragover="dmStepDragOver(event)" ondrop="dmStepDrop(event,${i})" ondragend="dmStepDragEnd()">
-        <span class="ri-handle" title="ドラッグで並び替え">⠿</span>
+    ? dmSteps.map((s,i)=>`<div class="dm-step-item">
+        <div class="ri-btns">
+          <button class="ri-mv" onclick="dmStepMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="ri-mv" onclick="dmStepMove(${i},1)" ${i===dmSteps.length-1?'disabled':''}>▼</button>
+        </div>
         <input type="checkbox" class="dm-step-check" ${s.done?'checked':''} onchange="dmToggleStep(this,'${s.id}')">
         <div class="dm-step-body">
           <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="アクション名"
@@ -1401,17 +1405,12 @@ function renderDmSteps(){
       </div>`).join('')
     : `<div style="color:var(--sub);font-size:12.5px;padding:6px 0">アクションをまだ追加していません</div>`;
 }
-let _dmStepDragIdx=null;
-function dmStepDragStart(e,i){_dmStepDragIdx=i;e.currentTarget.style.opacity='.4';}
-function dmStepDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
-function dmStepDrop(e,toIdx){
-  e.preventDefault();
-  if(_dmStepDragIdx===null||_dmStepDragIdx===toIdx) return;
-  const [item]=dmSteps.splice(_dmStepDragIdx,1);
-  dmSteps.splice(toIdx,0,item);
+function dmStepMove(i,dir){
+  const j=i+dir;
+  if(j<0||j>=dmSteps.length) return;
+  [dmSteps[i],dmSteps[j]]=[dmSteps[j],dmSteps[i]];
   renderDmSteps();
 }
-function dmStepDragEnd(){_dmStepDragIdx=null;renderDmSteps();}
 function dmUpdateStep(id,field,value){
   const s=dmSteps.find(x=>String(x.id)===String(id));
   if(s) s[field]=value;
@@ -2320,25 +2319,21 @@ function gmRenderRoutineItems(){
   if(!c) return;
   if(!gmRoutineItems.length){c.innerHTML='<div style="font-size:12px;color:var(--faint);padding:4px 0">サブタスクがありません</div>';return;}
   c.innerHTML=gmRoutineItems.map((it,i)=>`
-    <div class="gm-ri-row" draggable="true" data-ri="${i}"
-      ondragstart="riDragStart(event,${i})" ondragover="riDragOver(event)" ondrop="riDrop(event,${i})" ondragend="riDragEnd()">
-      <span class="ri-handle" title="ドラッグで並び替え">⠿</span>
+    <div class="gm-ri-row">
+      <div class="ri-btns">
+        <button class="ri-mv" onclick="riMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="ri-mv" onclick="riMove(${i},1)" ${i===gmRoutineItems.length-1?'disabled':''}>▼</button>
+      </div>
       <span style="flex:1;min-width:0">${esc(it.text)}</span>
       <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')">✕</button>
     </div>`).join('');
 }
-let _riDragIdx=null;
-function riDragStart(e,i){_riDragIdx=i;e.currentTarget.style.opacity='.4';}
-function riDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
-function riDrop(e,toIdx){
-  e.preventDefault();
-  if(_riDragIdx===null||_riDragIdx===toIdx) return;
-  const arr=gmRoutineItems;
-  const [item]=arr.splice(_riDragIdx,1);
-  arr.splice(toIdx,0,item);
+function riMove(i,dir){
+  const j=i+dir;
+  if(j<0||j>=gmRoutineItems.length) return;
+  [gmRoutineItems[i],gmRoutineItems[j]]=[gmRoutineItems[j],gmRoutineItems[i]];
   gmRenderRoutineItems();
 }
-function riDragEnd(){_riDragIdx=null;gmRenderRoutineItems();}
 function gmAddRoutineItem(){
   const inp=document.getElementById('gmRoutineInput');
   const v=(inp.value||'').trim(); if(!v) return;
