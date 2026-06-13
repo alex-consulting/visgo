@@ -482,10 +482,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .tl-slot-line.tl-dashed{background:none;border-top:2px dashed var(--line);height:0;margin-top:12px}
 .tl-slot-cards{display:flex;flex-direction:column;gap:5px;padding:5px 0 4px}
 .tl-empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:12px 0}
-.gcal-card{background:rgba(52,199,89,.12);border-left:3px solid #34C759;border-radius:8px;padding:6px 10px;font-size:13px}
+.gcal-card{border-left:3px solid #34C759;border-radius:8px;padding:6px 10px;font-size:13px}
 .gcal-card-row{display:flex;align-items:center;gap:6px;min-width:0}
-.gcal-time{flex:0 0 auto;font-size:11px;font-weight:700;color:#248A3D;min-width:34px}
-.gcal-title{flex:1;font-weight:600;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gcal-time{flex:0 0 auto;font-size:11px;font-weight:600;min-width:34px}
+.gcal-title{flex:1;font-weight:400;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gcal-loc{font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:40px;margin-top:2px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--card);
   padding:9px 20px;border-radius:20px;font-size:13.5px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200}
@@ -1037,17 +1037,26 @@ function icalEventForDate(events,dateStr){
   });
 }
 let _gcalCache={data:[],fetchedAt:0};
+const GCAL_COLORS=[
+  {border:'#34C759',bg:'rgba(52,199,89,.10)',time:'#1a8a3a'},
+  {border:'#007AFF',bg:'rgba(0,122,255,.10)',time:'#005ecb'},
+  {border:'#FF9500',bg:'rgba(255,149,0,.10)',time:'#c47200'},
+  {border:'#AF52DE',bg:'rgba(175,82,222,.10)',time:'#8a3ab0'},
+  {border:'#FF3B30',bg:'rgba(255,59,48,.10)',time:'#c42020'},
+];
 async function fetchGcalEvents(){
   if(!gcalUrls.length) return [];
   if(Date.now()-_gcalCache.fetchedAt<5*60*1000) return _gcalCache.data;
   const allEvents=[];
-  for(const url of gcalUrls){
+  for(let i=0;i<gcalUrls.length;i++){
     try{
-      const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(url);
+      const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(gcalUrls[i]);
       const res=await fetch(proxyUrl);
       if(!res.ok) continue;
       const text=await res.text();
-      allEvents.push(...parseIcalEvents(text));
+      const evs=parseIcalEvents(text);
+      evs.forEach(ev=>ev.calIdx=i);
+      allEvents.push(...evs);
     }catch(e){console.warn('iCal fetch error',e);}
   }
   _gcalCache={data:allEvents,fetchedAt:Date.now()};
@@ -2831,8 +2840,9 @@ function dateStr(offsetDays){
 function gcalCard(ev){
   const h=ev.allDay?null:ev.start.getHours();
   const hm=ev.allDay?'終日':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`;
+  const c=GCAL_COLORS[(ev.calIdx||0)%GCAL_COLORS.length];
   const loc=ev.location?`<div class="gcal-loc">📍${esc(ev.location)}</div>`:'';
-  return `<div class="gcal-card"><div class="gcal-card-row"><span class="gcal-time">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span></div>${loc}</div>`;
+  return `<div class="gcal-card" style="background:${c.bg};border-left-color:${c.border}"><div class="gcal-card-row"><span class="gcal-time" style="color:${c.time}">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span></div>${loc}</div>`;
 }
 function renderTimeline(targetDate, panelTitle, showNow, gcalEvs){
   const tasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&!t.done);
