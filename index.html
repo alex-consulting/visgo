@@ -1695,24 +1695,23 @@ function renderDreams(){
   ${items.length
     ? years.map(y=>{
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
-        // 各夢の最も期日の近いステップ目標を集める（同着は全部）
-        const nearestSgs=dreamShowSteps?dreamersInYear(dreamsInYear):'';
-        function dreamersInYear(ds){
-          const cards=ds.flatMap(d=>{
+        const nearestSgHtml=(()=>{
+          if(!dreamShowSteps) return '';
+          const cards=dreamsInYear.flatMap(d=>{
             const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
             if(!sgs.length) return [];
             const minYM=sgs.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
             return sgs.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
           });
           return cards.length?`<div class="sg-list">${cards.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`:'';
-        }
+        })();
         return `
       <div class="dream-year-section">
         <div class="dream-year-heading">${y==='未設定'?'年未設定':y+'年'}</div>
         <div class="dream-grid">
           ${dreamsInYear.map(d=>cardHtml(d)).join('')}
         </div>
-        ${nearestSgs}
+        ${nearestSgHtml}
       </div>`;
       }).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
