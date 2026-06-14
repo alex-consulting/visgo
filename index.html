@@ -514,6 +514,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-cat.be{background:rgba(175,82,222,.12);color:#AF52DE}
 .dream-title{font-size:14px;font-weight:600;color:var(--navy);line-height:1.4;flex:1;word-break:break-all}
 .dream-meta{font-size:11.5px;color:var(--sub);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap}
+.dream-first-step{font-size:12px;color:var(--blue);margin:5px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dream-first-step-done{color:var(--sub);text-decoration:line-through}
 .dream-stepgoals{margin:6px 0;display:flex;flex-direction:column;gap:3px}
 .dream-sg-item{display:flex;align-items:baseline;gap:6px;font-size:12px}
 .dream-sg-ym{flex:0 0 auto;background:var(--blue-l);color:var(--blue);border-radius:4px;padding:1px 6px;font-size:11px;font-weight:600}
@@ -1623,7 +1625,8 @@ function renderDreams(){
         <span class="dream-title">${esc(d.title)}</span>
       </div>
       ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
-      ${(()=>{const pct=dreamProgress(d);const steps=Array.isArray(d.steps)?d.steps:[];return steps.length?`
+      ${(()=>{const pct=dreamProgress(d);const steps=Array.isArray(d.steps)?d.steps:[];const first=steps.find(s=>!s.done)||steps[0];return steps.length?`
+      ${first?`<div class="dream-first-step${first.done?' dream-first-step-done':''}">▶ ${esc(first.text)}</div>`:''}
       <div class="dream-progress-wrap">
         <div class="dream-progress-label"><span>進捗 ${steps.filter(s=>s.done).length}/${steps.length}</span><span>${pct}%</span></div>
         <div class="dream-progress-bar"><div class="dream-progress-fill" style="width:${pct}%"></div></div>
