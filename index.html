@@ -1856,7 +1856,9 @@ function openSheetSection(key){
       break;
     case 'routines':
       title='ルーティン行動';
-      body=`<div>${D.routines.map((r,i)=>`<input class="ss-inp" style="margin-bottom:4px" data-ri="${i}" value="${esc(r.text||'')}"></div>`).join('')}</div>`;
+      body=`<div>${D.routines.map((r,i)=>`<input class="ss-inp" style="margin-bottom:4px" data-ri="${i}" value="${esc(r.text||'')}"></div>`).join('')}
+        <button onclick="routinesToTodo()" style="margin-top:12px;width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">✅ ToDoに反映する</button>
+      </div>`;
       onSave=()=>{document.querySelectorAll('[data-ri]').forEach(el=>{const i=+el.dataset.ri;if(D.routines[i])D.routines[i].text=el.value;});};
       break;
     case 'supports':
@@ -1929,6 +1931,38 @@ function ssAddDl(){
   if(dl){const div=document.createElement('div');div.className='ss-row2';div.innerHTML=`<input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" value="" onclick="try{this.showPicker()}catch(e){}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="">`;dl.appendChild(div);}
 }
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
+function routinesToTodo(){
+  // 入力中の最新値を取得
+  const items=[];
+  document.querySelectorAll('[data-ri]').forEach(el=>{
+    const text=el.value.trim();
+    if(text) items.push({id:Date.now()+Math.random(),text,done:false});
+  });
+  if(!items.length){alert('ルーティン行動が登録されていません。');return;}
+  // 既存の「ルーティン行動」タスクを探して上書き、なければ新規作成
+  let task=D.gtd.tasks.find(t=>t.text==='ルーティン行動'&&t.recur==='daily');
+  if(task){
+    task.routineItems=items;
+    task.important=true;
+    task.memo='年間目標のルーティン行動（重要度が高い順）';
+  } else {
+    task={
+      id:D.gtd.nextId++,
+      text:'ルーティン行動',
+      status:'inbox',
+      project:'',
+      categories:[],
+      created:Date.now(),
+      recur:'daily',
+      important:true,
+      memo:'年間目標のルーティン行動（重要度が高い順）',
+      routineItems:items
+    };
+    D.gtd.tasks.unshift(task);
+  }
+  save(); renderGTD();
+  alert('ToDoに「ルーティン行動」タスクを反映しました。');
+}
 
 /* ================= タブ ================= */
 function showTab(name){
