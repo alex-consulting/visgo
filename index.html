@@ -1756,7 +1756,7 @@ function openDreamModal(id){
         <input type="text" id="dmStepGoalInput" placeholder="ステップ目標を追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStepGoal();}">
         <input type="month" id="dmStepGoalMonth" title="目標年月">
-        <button onclick="dmAddStepGoal()">追加</button>
+        <button onclick="dmAddStepGoal()">確定</button>
       </div>
     </div>
     <div class="dm-field">
@@ -1770,7 +1770,7 @@ function openDreamModal(id){
         <input type="text" id="dmStepInput" placeholder="アクションを追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStep();}">
         <input type="date" id="dmStepDate" title="スタート期限">
-        <button onclick="dmAddStep()">追加</button>
+        <button onclick="dmAddStep()">確定</button>
       </div>
     </div>`;
 
