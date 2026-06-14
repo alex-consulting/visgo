@@ -2981,7 +2981,7 @@ function gcalCard(ev){
   const hm=ev.allDay?'終日':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`;
   const c=GCAL_COLORS[(ev.calIdx||0)%GCAL_COLORS.length];
   const loc=ev.location?`<div class="gcal-loc">📍${esc(ev.location)}</div>`:'';
-  return `<div class="gcal-card" style="background:${c.bg};border-left-color:${c.border}"><div class="gcal-card-row"><span class="gcal-time" style="color:${c.time}">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span></div>${loc}</div>`;
+  return `<div class="gcal-card" style="background:${c.bg};border-left-color:${c.border}"><div class="gcal-card-row"><span class="gcal-time" style="color:${c.time}">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span><span style="flex:0 0 auto;font-size:10px;font-weight:700;background:${c.border};color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto">GCal</span></div>${loc}</div>`;
 }
 function renderTimeline(targetDate, panelTitle, showNow, gcalEvs){
   const tasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&!t.done);
