@@ -2534,14 +2534,16 @@ function gmRenderRoutineItems(){
   const c=document.getElementById('gmRoutineList');
   if(!c) return;
   if(!gmRoutineItems.length){c.innerHTML='<div style="font-size:12px;color:var(--faint);padding:4px 0">サブタスクがありません</div>';return;}
+  const t=gtdTask(gtdModalId);
+  const isAnn=t&&t.project===ANNUAL_PROJECT;
   c.innerHTML=gmRoutineItems.map((it,i)=>`
     <div class="gm-ri-row">
-      <div class="ri-btns">
+      <div class="ri-btns" style="${isAnn?'visibility:hidden;pointer-events:none':''}">
         <button class="ri-mv" onclick="riMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
         <button class="ri-mv" onclick="riMove(${i},1)" ${i===gmRoutineItems.length-1?'disabled':''}>▼</button>
       </div>
       <span style="flex:1;min-width:0">${esc(it.text)}</span>
-      <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')">✕</button>
+      <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')" style="${isAnn?'display:none':''}">✕</button>
     </div>`).join('');
 }
 function riMove(i,dir){
