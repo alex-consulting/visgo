@@ -1023,6 +1023,11 @@ function parseIcalEvents(text){
     const val=line.slice(col+1).trim();
     if(key==='SUMMARY') ev.summary=val.replace(/\\n/g,' ').replace(/\\,/g,',');
     if(key==='LOCATION') ev.location=val.replace(/\\n/g,' ');
+    if(key==='RRULE') ev.rrule=val;
+    if(key.startsWith('EXDATE')) {
+      if(!ev.exdates) ev.exdates=[];
+      val.split(',').forEach(v=>{const d=parseIcalDate(v.trim());if(d)ev.exdates.push(d.toDateString());});
+    }
     if(key.startsWith('DTSTART')){
       const tzm=key.match(/TZID=([^;:]+)/);
       ev.start=parseIcalDate(val,tzm?tzm[1]:null);
@@ -1033,7 +1038,42 @@ function parseIcalEvents(text){
       ev.end=parseIcalDate(val,tzm?tzm[1]:null);
     }
   }
-  return events;
+  // RRULE展開：今日の前後60日分
+  const winStart=new Date(); winStart.setDate(winStart.getDate()-1); winStart.setHours(0,0,0,0);
+  const winEnd=new Date(); winEnd.setDate(winEnd.getDate()+60); winEnd.setHours(23,59,59,999);
+  const expanded=[];
+  for(const ev of events){
+    if(!ev.rrule||!ev.start){expanded.push(ev);continue;}
+    const freq=(ev.rrule.match(/FREQ=([^;]+)/)||[])[1];
+    if(!freq){expanded.push(ev);continue;}
+    const interval=parseInt((ev.rrule.match(/INTERVAL=(\d+)/)||[])[1]||'1');
+    const count=parseInt((ev.rrule.match(/COUNT=(\d+)/)||[])[1]||'0');
+    const untilStr=(ev.rrule.match(/UNTIL=([^;]+)/)||[])[1];
+    const untilDate=untilStr?parseIcalDate(untilStr):null;
+    const duration=ev.end?ev.end.getTime()-ev.start.getTime():3600000;
+    const exdates=ev.exdates||[];
+    let cur=new Date(ev.start); let n=0; let added=0;
+    while(cur<=winEnd&&n<3000){
+      if(untilDate&&cur>untilDate) break;
+      if(count&&n>=count) break;
+      if(cur>=winStart&&!exdates.includes(cur.toDateString())){
+        const occ=Object.assign({},ev);
+        occ.start=new Date(cur);
+        occ.end=new Date(cur.getTime()+duration);
+        expanded.push(occ);
+        added++;
+      }
+      const nx=new Date(cur);
+      if(freq==='DAILY') nx.setDate(nx.getDate()+interval);
+      else if(freq==='WEEKLY') nx.setDate(nx.getDate()+7*interval);
+      else if(freq==='MONTHLY') nx.setMonth(nx.getMonth()+interval);
+      else if(freq==='YEARLY') nx.setFullYear(nx.getFullYear()+interval);
+      else break;
+      cur=nx; n++;
+    }
+    if(added===0) expanded.push(ev); // 展開なければ元のまま
+  }
+  return expanded;
 }
 function icalEventForDate(events,dateStr){
   const [y,m,d]=dateStr.split('-').map(Number);
@@ -2981,7 +3021,7 @@ function gcalCard(ev){
   const hm=ev.allDay?'終日':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`;
   const c=GCAL_COLORS[(ev.calIdx||0)%GCAL_COLORS.length];
   const loc=ev.location?`<div class="gcal-loc">📍${esc(ev.location)}</div>`:'';
-  return `<div class="gcal-card" style="background:${c.bg};border-left-color:${c.border}"><div class="gcal-card-row"><span class="gcal-time" style="color:${c.time}">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span><span style="flex:0 0 auto;font-size:10px;font-weight:700;background:${c.border};color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto">GCal</span></div>${loc}</div>`;
+  return `<div class="gcal-card" style="background:${c.bg};border-left-color:${c.border}"><div class="gcal-card-row"><span class="gcal-time" style="color:${c.time}">${hm}</span><span class="gcal-title">${esc(ev.summary||'（タイトルなし）')}</span><span style="flex:0 0 auto;font-size:10px;font-weight:700;background:${c.border};color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto">Gカレンダー</span></div>${loc}</div>`;
 }
 function renderTimeline(targetDate, panelTitle, showNow, gcalEvs){
   const tasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&!t.done);
