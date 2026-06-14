@@ -1862,7 +1862,8 @@ function openSheetSection(key){
     case 'deadlines':
       title='週間期日行動';
       const todoIdxs=[];D.deadlines.forEach((d,i)=>{if(!d.done)todoIdxs.push(i);});
-      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" onclick="try{this.showPicker()}catch(e){}" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>`;
+      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" onclick="try{this.showPicker()}catch(e){}" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>
+        <button onclick="deadlinesToTodo()" style="margin-top:12px;width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">✅ ToDoに反映する</button>`;
       onSave=()=>{const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});document.querySelectorAll('[data-dli]').forEach(el=>{const li=+el.dataset.dli,f=el.dataset.dlf;if(ti[li]!=null)D.deadlines[ti[li]][f]=el.value;});};
       break;
     case 'quad':
@@ -1983,6 +1984,48 @@ function routinesToTodo(){
   }
   save(); renderGTD();
   alert('ToDoに「ルーティン行動」タスクを反映しました。');
+}
+function deadlinesToTodo(){
+  // 入力中の最新値を取得
+  const items=[];
+  const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});
+  document.querySelectorAll('[data-dli]').forEach(el=>{
+    const li=+el.dataset.dli,f=el.dataset.dlf;
+    if(ti[li]!=null){
+      if(!items[li]) items[li]={text:'',deadline:''};
+      if(f==='text') items[li].text=el.value.trim();
+      if(f==='month') items[li].deadline=el.value;
+    }
+  });
+  const validItems=items.filter(it=>it&&it.text);
+  if(!validItems.length){alert('週間期日行動が登録されていません。');return;}
+  if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
+  if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
+  // 各行動を個別タスクとして追加（既存の同名タスクは上書き）
+  validItems.forEach(it=>{
+    let task=D.gtd.tasks.find(t=>t.text===it.text&&t.project===ANNUAL_PROJECT&&!t.recur);
+    if(task){
+      task.deadline=it.deadline||task.deadline;
+      task.important=true;
+      task.memo='年間目標の週間期日行動';
+    } else {
+      D.gtd.tasks.unshift({
+        id:D.gtd.nextId++,
+        text:it.text,
+        status:'inbox',
+        project:ANNUAL_PROJECT,
+        categories:[],
+        created:Date.now(),
+        deadline:it.deadline||'',
+        recur:'',
+        important:true,
+        memo:'年間目標の週間期日行動',
+        routineItems:[]
+      });
+    }
+  });
+  save(); renderGTD();
+  alert(`ToDoに${validItems.length}件の週間期日行動を反映しました。`);
 }
 
 /* ================= タブ ================= */
