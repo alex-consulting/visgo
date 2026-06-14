@@ -1740,10 +1740,12 @@ function renderDreams(){
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
         const nearestSgHtml=(()=>{
           if(!dreamShowSteps) return '';
-          const cards=dreamsInYear.flatMap(d=>{
+          // 全ドリームから「一番期日の近いステップ目標」を探し、そのyearMonthがこの年ならここに表示
+          const cards=items.flatMap(d=>{
             const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
             if(!sgs.length) return [];
             const minYM=sgs.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
+            if(minYM.slice(0,4)!==y) return [];
             return sgs.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
           });
           return cards.length?`<div class="sg-list">${cards.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`:'';
