@@ -773,7 +773,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <p class="settings-section">ToDo設定</p>
       <button class="settings-btn" onclick="document.getElementById('nozbeFile').click()">📥 Nozbeから移行</button>
       <input type="file" id="nozbeFile" accept=".zip" style="display:none" onchange="importNozbe(event);closeSettings()">
-      <p class="settings-section">年間目標シート</p>
+      <p class="settings-section">年間目標達成シート</p>
       <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">氏名</label>
@@ -2056,7 +2056,7 @@ function renderSheetEdit(){
   const a=D.analysis;
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">🎯 年間目標シート</h1><p class="ph-sub">編集モード</p></div>
+    <div><h1 class="ph-title">🎯 年間目標達成シート</h1><p class="ph-sub">編集モード</p></div>
     <button class="ph-action" onclick="setSheetMode('view')">✓ 保存して表示</button>
   </div>
   <div class="mob-chips">
@@ -2196,7 +2196,7 @@ function renderSheetView(){
   const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
   root.innerHTML=`
   <div class="page-head dream-page-head">
-    <div><h1 class="ph-title">🎯 年間目標シート</h1><p class="ph-sub">心身・スキル・健康・生活習慣を整える。</p></div>
+    <div><h1 class="ph-title">🎯 年間目標達成シート</h1><p class="ph-sub">心身・スキル・健康・生活習慣を整える。</p></div>
     ${(()=>{
       const wd=toDateInput(D.meta.writeDate), td=toDateInput(D.meta.targetDate);
       if(!wd||!td) return '';
@@ -2230,7 +2230,7 @@ function renderSheetView(){
   <div class="gtd-main">
   <div class="vsheet">
     <div class="vhead" onclick="openSheetSection('meta')" title="クリックして編集">
-      <h1 class="print-only">年間目標シート</h1>
+      <h1 class="print-only">年間目標達成シート</h1>
       <div class="vmeta">
         <span class="print-only"><b>氏名</b>${esc(D.meta.name)||"—"}</span>
         <span class="print-only"><b>記入日</b>${esc(fmtDate(D.meta.writeDate))||"—"}</span>
