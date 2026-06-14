@@ -2619,8 +2619,11 @@ function openGtdModal(id){
     if(el) el.disabled=isAnnualTask;
   });
   document.querySelectorAll('#gmRecurBtns .gm-dur-btn,#gmDurBtns .gm-dur-btn,#gmCats .gm-dur-btn').forEach(b=>b.disabled=isAnnualTask);
-  const addRoutineBtn=document.querySelector('#gmRoutineArea button');
-  if(addRoutineBtn) addRoutineBtn.disabled=isAnnualTask;
+  // サブタスク追加エリアをannualタスクでは非表示
+  const routineSection=document.querySelector('#gmRoutineArea');
+  if(routineSection) routineSection.style.display=isAnnualTask?'none':'block';
+  const routineLabel=routineSection&&routineSection.previousElementSibling;
+  if(routineLabel&&routineLabel.classList.contains('gm-label')) routineLabel.style.display=isAnnualTask?'none':'';
   document.getElementById("gtdModalBg").classList.add("show");
   setTimeout(()=>{ if(!isAnnualTask) document.getElementById("gmText").focus(); },50);
 }
