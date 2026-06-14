@@ -1059,15 +1059,16 @@ async function fetchGcalEvents(){
   if(Date.now()-_gcalCache.fetchedAt<5*60*1000) return _gcalCache.data;
   const allEvents=[];
   for(let i=0;i<gcalUrls.length;i++){
+    if(i>0) await new Promise(r=>setTimeout(r,600));
     try{
       const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(gcalUrls[i]);
-      const res=await fetch(proxyUrl);
-      if(!res.ok) continue;
+      const res=await fetch(proxyUrl,{cache:'no-store'});
+      if(!res.ok){console.warn('gcal fetch failed',i,res.status);continue;}
       const text=await res.text();
       const evs=parseIcalEvents(text);
       evs.forEach(ev=>ev.calIdx=i);
       allEvents.push(...evs);
-    }catch(e){console.warn('iCal fetch error',e);}
+    }catch(e){console.warn('iCal fetch error',i,e);}
   }
   _gcalCache={data:allEvents,fetchedAt:Date.now()};
   return allEvents;
