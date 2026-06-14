@@ -2911,7 +2911,7 @@ function gtdFolderItems(type){
       ? '' // リネーム・削除ボタン非表示
       : `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`;
-    const annualStyle=isAnnual?'background:rgba(255,182,193,.18);border:1px solid rgba(255,105,135,.3);':'';
+    const annualStyle=isAnnual?'border-left:3px solid rgba(255,105,135,.7);':'';
     return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${isAnnual?'false':'true'}" style="${annualStyle}">
       ${isAnnual?'':`<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`}
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt}</span>
