@@ -1692,19 +1692,31 @@ function renderDreams(){
     <div class="gf-item" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
   </aside>
   <div class="gtd-main">
-  ${(()=>{
-    const allSg=years.flatMap(y=>groups[y].merged.filter(i=>i.type==='sg'));
-    const nearestSg=allSg.sort((a,b)=>(a.sg.yearMonth||'9999-12').localeCompare(b.sg.yearMonth||'9999-12'))[0];
-    if(!items.length) return `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`;
-    return years.map(y=>`
+  ${items.length
+    ? years.map(y=>{
+        const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
+        // 各夢の最も期日の近いステップ目標を集める（同着は全部）
+        const nearestSgs=dreamShowSteps?dreamersInYear(dreamsInYear):'';
+        function dreamersInYear(ds){
+          const cards=ds.flatMap(d=>{
+            const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
+            if(!sgs.length) return [];
+            const minYM=sgs.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
+            return sgs.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
+          });
+          return cards.length?`<div class="sg-list">${cards.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`:'';
+        }
+        return `
       <div class="dream-year-section">
         <div class="dream-year-heading">${y==='未設定'?'年未設定':y+'年'}</div>
         <div class="dream-grid">
-          ${groups[y].merged.filter(item=>item.type==='dream').map(item=>cardHtml(item.d)).join('')}
+          ${dreamsInYear.map(d=>cardHtml(d)).join('')}
         </div>
-      </div>`).join('')
-    +(dreamShowSteps&&nearestSg?`<div class="sg-list">${sgCardHtml(nearestSg.sg,nearestSg.d)}</div>`:'');
-  })()}
+        ${nearestSgs}
+      </div>`;
+      }).join('')
+    : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
+  }
   </div></div>`;
 }
 
