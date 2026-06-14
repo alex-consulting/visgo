@@ -1948,18 +1948,22 @@ function ssAddDl(){
   if(dl){const div=document.createElement('div');div.className='ss-row2';div.innerHTML=`<input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" value="" onclick="try{this.showPicker()}catch(e){}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="">`;dl.appendChild(div);}
 }
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
+const ANNUAL_PROJECT='🎯年間目標達成';
 function routinesToTodo(){
-  // 入力中の最新値を取得
   const items=[];
   document.querySelectorAll('[data-ri]').forEach(el=>{
     const text=el.value.trim();
     if(text) items.push({id:Date.now()+Math.random(),text,done:false});
   });
   if(!items.length){alert('ルーティン行動が登録されていません。');return;}
-  // 既存の「ルーティン行動」タスクを探して上書き、なければ新規作成
-  let task=D.gtd.tasks.find(t=>t.text==='ルーティン行動'&&t.recur==='daily');
+  // プロジェクトがなければ追加
+  if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
+  if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
+  const today=dateStr(0);
+  let task=D.gtd.tasks.find(t=>t.text==='ルーティン行動'&&t.project===ANNUAL_PROJECT);
   if(task){
     task.routineItems=items;
+    task.deadline=today;
     task.important=true;
     task.memo='年間目標のルーティン行動（重要度が高い順）';
   } else {
@@ -1967,9 +1971,10 @@ function routinesToTodo(){
       id:D.gtd.nextId++,
       text:'ルーティン行動',
       status:'inbox',
-      project:'',
+      project:ANNUAL_PROJECT,
       categories:[],
       created:Date.now(),
+      deadline:today,
       recur:'daily',
       important:true,
       memo:'年間目標のルーティン行動（重要度が高い順）',
@@ -2560,8 +2565,22 @@ function openGtdModal(id){
   // サブタスク
   gmRoutineItems=JSON.parse(JSON.stringify(t.routineItems||[]));
   gmRenderRoutineItems();
+  // 🎯年間目標達成プロジェクトのタスクは期日・時刻以外ロック
+  const isAnnualTask=(t.project===ANNUAL_PROJECT);
+  const lockEls=['gmText','gmProject','gmMemo'];
+  lockEls.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=isAnnualTask;
+  });
+  ['gmUrgent','gmImportant'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=isAnnualTask;
+  });
+  document.querySelectorAll('#gmRecurBtns .gm-dur-btn,#gmDurBtns .gm-dur-btn,#gmCats .gm-dur-btn').forEach(b=>b.disabled=isAnnualTask);
+  const addRoutineBtn=document.querySelector('#gmRoutineArea button');
+  if(addRoutineBtn) addRoutineBtn.disabled=isAnnualTask;
   document.getElementById("gtdModalBg").classList.add("show");
-  setTimeout(()=>document.getElementById("gmText").focus(),50);
+  setTimeout(()=>{ if(!isAnnualTask) document.getElementById("gmText").focus(); },50);
 }
 function saveGtdModal(){
   const t=gtdTask(gtdModalId); if(!t) return;
@@ -2841,14 +2860,19 @@ function gtdFolderItems(type){
       ? D.gtd.tasks.filter(t=>(t.categories||[]).includes(name)).length
       : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
     const act=(gtdFilter.type===type&&gtdFilter.value===name)?'act':'';
+    const isAnnual=(type==='project'&&name===ANNUAL_PROJECT);
     const dot=type==='project'
-      ? `<span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`
+      ? (isAnnual?'':` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`)
       : '';
-    return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="true">
-      <span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>
+    const controls=isAnnual
+      ? '' // リネーム・削除ボタン非表示
+      : `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
+         <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`;
+    const annualStyle=isAnnual?'background:linear-gradient(135deg,rgba(255,204,0,.18),rgba(255,149,0,.12));border:1.5px solid rgba(255,180,0,.5);':'';
+    return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${isAnnual?'false':'true'}" style="${annualStyle}">
+      ${isAnnual?'':`<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`}
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt}</span>
-      <span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
-      <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span></div>`;
+      ${controls}</div>`;
   }).join("");
 }
 function advanceRecurDeadline(t){
