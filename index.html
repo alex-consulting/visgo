@@ -3114,6 +3114,21 @@ async function injectGcalToTimeline(targetDate){
           if(it){it.done=cb.checked; save(); renderGTD();}
         });
       });
+      // kcard-headクリック（タスク編集モーダル）も再バインド
+      newBody.querySelectorAll('.kcard-head').forEach(area=>{
+        area.addEventListener('click',e=>{
+          if(e.target.closest('.kcheck')) return;
+          openGtdModal(area.dataset.open);
+        });
+      });
+      // kdel（削除ボタン）も再バインド
+      newBody.querySelectorAll('.kdel').forEach(b=>{
+        b.onclick=()=>{
+          if(!confirm('このタスクを削除しますか？')) return;
+          D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id));
+          save(); renderGTD();
+        };
+      });
     }
   }catch(e){console.warn('gcal inject error',e);}
 }
