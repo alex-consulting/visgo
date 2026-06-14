@@ -2619,9 +2619,19 @@ function openGtdModal(id){
     if(el) el.disabled=isAnnualTask;
   });
   document.querySelectorAll('#gmRecurBtns .gm-dur-btn,#gmDurBtns .gm-dur-btn,#gmCats .gm-dur-btn').forEach(b=>b.disabled=isAnnualTask);
-  // サブタスク追加エリアをannualタスクでは非表示
-  const addRoutineBtn=document.querySelector('#gmRoutineArea .gm-routine-addrow');
-  if(addRoutineBtn) addRoutineBtn.style.display=isAnnualTask?'none':'';
+  // サブタスク追加エリアをannualタスクでは非表示＋案内文
+  const addRowEl=document.querySelector('#gmRoutineArea .gm-routine-addrow');
+  if(addRowEl) addRowEl.style.display=isAnnualTask?'none':'';
+  const annualNoteId='gmAnnualNote';
+  let annualNote=document.getElementById(annualNoteId);
+  if(!annualNote){
+    annualNote=document.createElement('p');
+    annualNote.id=annualNoteId;
+    annualNote.style.cssText='font-size:12px;color:var(--sub);margin:6px 0 0;padding:6px 8px;background:var(--fill);border-radius:6px;line-height:1.5';
+    document.getElementById('gmRoutineArea').appendChild(annualNote);
+  }
+  annualNote.textContent='編集・追加は「年間目標」シートのルーティン行動欄から行ってください。';
+  annualNote.style.display=isAnnualTask?'block':'none';
   document.getElementById("gtdModalBg").classList.add("show");
   setTimeout(()=>{ if(!isAnnualTask) document.getElementById("gmText").focus(); },50);
 }
