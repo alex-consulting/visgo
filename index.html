@@ -3459,8 +3459,10 @@ function bindGTD(root){
     h.addEventListener("click",e=>{
       if(e.target.closest(".gf-add")) return;
       const type=h.dataset.toggle;
+      if(!type) return;
       gtdCollapsed[type]=!gtdCollapsed[type];
-      h.closest(".gf-section").classList.toggle("gf-collapsed",gtdCollapsed[type]);
+      const sec=h.closest(".gf-section");
+      if(sec) sec.classList.toggle("gf-collapsed",gtdCollapsed[type]);
     });
   });
   // フォルダ：選択
