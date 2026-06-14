@@ -2851,7 +2851,7 @@ function gtdCard(t){
   const q=gtdQuadrant(t);
   const quadBadge=q?`<span class="kquad kquad-${q}">${q}</span>`:'';
   const textDisp=t.text?esc(t.text):`<span style="color:var(--faint)">タスク内容を入力...</span>`;
-  const annualCardStyle=(t.project===ANNUAL_PROJECT)?'background:linear-gradient(135deg,rgba(255,182,193,.28),rgba(255,105,135,.10));border-left:3px solid rgba(255,105,135,.5);':'';
+  const annualCardStyle=(t.project===ANNUAL_PROJECT)?'border-left:3px solid rgba(255,105,135,.6);':'';
   return `<div class="kcard${t.done?' kdone':''}" draggable="true" data-id="${t.id}" style="${annualCardStyle}">
     <button class="kdel" data-id="${t.id}" title="削除">✕</button>
     <div class="kcard-head" data-open="${t.id}">
@@ -2911,7 +2911,7 @@ function gtdFolderItems(type){
       ? '' // リネーム・削除ボタン非表示
       : `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`;
-    const annualStyle=isAnnual?'background:linear-gradient(135deg,rgba(255,182,193,.35),rgba(255,105,135,.15));border:1.5px solid rgba(255,105,135,.4);':'';
+    const annualStyle=isAnnual?'background:rgba(255,182,193,.18);border:1px solid rgba(255,105,135,.3);':'';
     return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${isAnnual?'false':'true'}" style="${annualStyle}">
       ${isAnnual?'':`<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`}
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt}</span>
