@@ -847,6 +847,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
     <textarea id="gmText" rows="2"></textarea>
     <p class="gm-label">プロジェクト</p>
     <select id="gmProject" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px;color:var(--blue)"></select>
+    <p id="gmAnnualNote" style="display:none;font-size:12px;color:var(--red);margin:5px 0 0;line-height:1.5">編集・追加は「🎯年間目標達成シート」から行ってください</p>
     <p class="gm-label">スタート日時</p>
     <div class="gm-row">
       <input type="date" id="gmDate">
@@ -2624,16 +2625,8 @@ function openGtdModal(id){
   // サブタスク追加エリアをannualタスクでは非表示＋案内文
   const addRowEl=document.querySelector('#gmRoutineArea .gm-routine-addrow');
   if(addRowEl) addRowEl.style.display=isAnnualTask?'none':'';
-  const annualNoteId='gmAnnualNote';
-  let annualNote=document.getElementById(annualNoteId);
-  if(!annualNote){
-    annualNote=document.createElement('p');
-    annualNote.id=annualNoteId;
-    annualNote.style.cssText='font-size:12px;color:var(--sub);margin:6px 0 0;padding:6px 8px;background:var(--fill);border-radius:6px;line-height:1.5';
-    document.getElementById('gmRoutineArea').appendChild(annualNote);
-  }
-  annualNote.textContent='編集・追加は「年間目標」シートのルーティン行動欄から行ってください。';
-  annualNote.style.display=isAnnualTask?'block':'none';
+  const annualNote=document.getElementById('gmAnnualNote');
+  if(annualNote) annualNote.style.display=isAnnualTask?'block':'none';
   document.getElementById("gtdModalBg").classList.add("show");
   setTimeout(()=>{ if(!isAnnualTask) document.getElementById("gmText").focus(); },50);
 }
