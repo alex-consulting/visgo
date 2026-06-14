@@ -853,6 +853,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <input type="date" id="gmDate">
       <input type="time" id="gmTime">
     </div>
+    <p id="gmDeadlineNote" style="display:none;font-size:12px;color:var(--red);margin:4px 0 0;line-height:1.5">期日の変更は「🎯年間目標達成シート」から行ってください</p>
     <p class="gm-label">繰り返し</p>
     <div class="gm-dur" id="gmRecurBtns">
       <button class="gm-dur-btn" data-recur="">なし</button>
@@ -2610,25 +2611,35 @@ function openGtdModal(id){
   // サブタスク
   gmRoutineItems=JSON.parse(JSON.stringify(t.routineItems||[]));
   gmRenderRoutineItems();
-  // 🎯年間目標達成プロジェクトのタスクは期日・時刻以外ロック
+  // 🎯年間目標達成プロジェクトのタスク制御
   const isAnnualTask=(t.project===ANNUAL_PROJECT);
-  const lockEls=['gmText','gmProject','gmMemo'];
-  lockEls.forEach(id=>{
+  const isRoutineTask=isAnnualTask&&(t.memo||'').includes('ルーティン行動');
+  const isDeadlineTask=isAnnualTask&&(t.memo||'').includes('週間期日行動');
+  // ルーティン行動：テキスト・プロジェクト・メモ・重要度・繰り返し・所要時間・カテゴリをロック
+  ['gmText','gmProject','gmMemo'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.disabled=isAnnualTask;
+    if(el) el.disabled=isRoutineTask||(isDeadlineTask&&id==='gmProject');
   });
   ['gmUrgent','gmImportant'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.disabled=isAnnualTask;
+    if(el) el.disabled=isRoutineTask;
   });
-  document.querySelectorAll('#gmRecurBtns .gm-dur-btn,#gmDurBtns .gm-dur-btn,#gmCats .gm-dur-btn').forEach(b=>b.disabled=isAnnualTask);
-  // サブタスク追加エリアをannualタスクでは非表示＋案内文
+  document.querySelectorAll('#gmRecurBtns .gm-dur-btn,#gmDurBtns .gm-dur-btn,#gmCats .gm-dur-btn').forEach(b=>b.disabled=isRoutineTask);
+  // 期日：ルーティンはOK、期日行動はロック
+  ['gmDate','gmTime'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=isDeadlineTask;
+  });
+  // サブタスク追加エリア
   const addRowEl=document.querySelector('#gmRoutineArea .gm-routine-addrow');
   if(addRowEl) addRowEl.style.display=isAnnualTask?'none':'';
+  // 案内文
   const annualNote=document.getElementById('gmAnnualNote');
-  if(annualNote) annualNote.style.display=isAnnualTask?'block':'none';
+  if(annualNote) annualNote.style.display=isRoutineTask?'block':'none';
+  const deadlineNote=document.getElementById('gmDeadlineNote');
+  if(deadlineNote) deadlineNote.style.display=isDeadlineTask?'block':'none';
   document.getElementById("gtdModalBg").classList.add("show");
-  setTimeout(()=>{ if(!isAnnualTask) document.getElementById("gmText").focus(); },50);
+  setTimeout(()=>{ if(!isRoutineTask) document.getElementById("gmText").focus(); },50);
 }
 function saveGtdModal(){
   const t=gtdTask(gtdModalId); if(!t) return;
