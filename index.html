@@ -1780,6 +1780,11 @@ function dmSelectCat(btn){
 }
 
 function saveDream(){
+  // 入力中のステップ目標・アクションを自動確定
+  const sgInp=document.getElementById('dmStepGoalInput');
+  if(sgInp&&sgInp.value.trim()) dmAddStepGoal();
+  const stInp=document.getElementById('dmStepInput');
+  if(stInp&&stInp.value.trim()) dmAddStep();
   const title=document.getElementById('dmTitle').value.trim();
   if(!title){alert('タイトルを入力してください'); return;}
   const catBtn=document.querySelector('.dm-cat-btn.act-have,.dm-cat-btn.act-do,.dm-cat-btn.act-be');
