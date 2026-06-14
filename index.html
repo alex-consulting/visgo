@@ -3041,8 +3041,24 @@ async function injectGcalToTimeline(targetDate){
     const newBody=tmp.querySelector('.tl-panel-body');
     if(newBody){
       panel.querySelector('.tl-panel-body').replaceWith(newBody);
-      const root=document.getElementById('tab-gtd');
-      if(root) bindGTD(root);
+      // kcheckのみ再バインド（bindGTD全体だと二重登録になりトグル等が壊れる）
+      newBody.querySelectorAll('.kcheck').forEach(cb=>{
+        cb.addEventListener('click',e=>e.stopPropagation());
+        cb.addEventListener('change',()=>{
+          const t=gtdTask(cb.dataset.id); if(!t) return;
+          t.done=cb.checked;
+          if(cb.checked&&t.recur) advanceRecurDeadline(t);
+          save(); renderGTD();
+        });
+      });
+      newBody.querySelectorAll('.ri-check').forEach(cb=>{
+        cb.addEventListener('change',e=>{
+          e.stopPropagation();
+          const t=gtdTask(cb.dataset.tid); if(!t) return;
+          const it=(t.routineItems||[]).find(x=>String(x.id)===String(cb.dataset.iid));
+          if(it){it.done=cb.checked; save(); renderGTD();}
+        });
+      });
     }
   }catch(e){console.warn('gcal inject error',e);}
 }
