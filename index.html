@@ -483,6 +483,11 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .tl-slot-line.tl-dashed{background:none;border-top:2px dashed var(--line);height:0;margin-top:12px}
 .tl-slot-cards{display:flex;flex-direction:column;gap:5px;padding:5px 0 4px}
 .tl-empty-msg{text-align:center;color:var(--sub);font-size:13px;padding:12px 0}
+.today-progress-wrap{margin-bottom:12px}
+.today-progress-label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px}
+.today-progress-label .tp-done-count{color:var(--blue)}
+.today-progress-bar{height:8px;background:var(--fill);border-radius:4px;overflow:hidden}
+.today-progress-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s ease}
 .gcal-card{border-left:3px solid #34C759;border-radius:8px;padding:6px 10px;font-size:13px}
 .gcal-card-row{display:flex;align-items:center;gap:6px;min-width:0}
 .gcal-time{flex:0 0 auto;font-size:11px;font-weight:600;min-width:34px}
@@ -770,26 +775,26 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">氏名</label>
-          <input type="text" id="metaName" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.meta.name=this.value;save()">
+          <input type="text" id="metaName" style="width:160px;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.meta.name=this.value;save()">
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">記入日</label>
-          <input type="date" id="metaWriteDate" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.meta.writeDate=this.value;save()">
+          <input type="date" id="metaWriteDate" style="width:160px;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.meta.writeDate=this.value;save()">
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">目標達成日</label>
-          <input type="date" id="metaTargetDate" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.meta.targetDate=this.value;save()">
+          <input type="date" id="metaTargetDate" style="width:160px;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.meta.targetDate=this.value;save()">
         </div>
       </div>
       <p class="settings-section">夢リスト</p>
       <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">生年月日</label>
-          <input type="date" id="profileBirthday" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.profile.birthday=this.value;save()">
+          <input type="date" id="profileBirthday" style="width:160px;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.profile.birthday=this.value;save()">
         </div>
         <div>
           <label style="font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px">目標寿命（歳）</label>
-          <input type="number" id="profileLifespan" min="1" max="150" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.profile.lifespan=+this.value;save()">
+          <input type="number" id="profileLifespan" min="1" max="150" style="width:80px;box-sizing:border-box;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px" onchange="D.profile.lifespan=+this.value;save()">
         </div>
       </div>
     </div>
@@ -2847,7 +2852,7 @@ function gcalCard(ev){
 }
 function renderTimeline(targetDate, panelTitle, showNow, gcalEvs){
   const tasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&!t.done);
-  const doneTasks=showNow?(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&t.done):[];
+  const doneTasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||"")===targetDate&&t.done);
   const now=new Date();
   const nowH=now.getHours();
 
@@ -2957,7 +2962,11 @@ async function injectGcalToTimeline(targetDate){
     const tmp=document.createElement('div');
     tmp.innerHTML=newHtml;
     const newBody=tmp.querySelector('.tl-panel-body');
-    if(newBody) panel.querySelector('.tl-panel-body').replaceWith(newBody);
+    if(newBody){
+      panel.querySelector('.tl-panel-body').replaceWith(newBody);
+      const root=document.getElementById('tab-gtd');
+      if(root) bindGTD(root);
+    }
   }catch(e){console.warn('gcal inject error',e);}
 }
 function renderTodayTimeline(){
@@ -3030,7 +3039,15 @@ function renderTodayTimeline(){
     <div class="today-review-label">📝 今日の振り返り</div>
     <textarea class="today-review-ta" placeholder="今日の学び・気づき・感謝など自由に…" oninput="dailyReviewUpdate('${today}',this.value)">${esc(df.review||'')}</textarea>
   </div>`;
-  const html=panel+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
+  const allTodayTasks=(D.gtd.tasks||[]).filter(t=>(t.deadline||'')===today);
+  const doneCount=allTodayTasks.filter(t=>t.done).length;
+  const totalCount=allTodayTasks.length;
+  const pct=totalCount?Math.round(doneCount/totalCount*100):0;
+  const progressBar=totalCount?`<div class="today-progress-wrap">
+    <div class="today-progress-label"><span>今日のタスク</span><span class="tp-done-count">${doneCount}/${totalCount} 完了 (${pct}%)</span></div>
+    <div class="today-progress-bar"><div class="today-progress-fill" style="width:${pct}%"></div></div>
+  </div>`:'';
+  const html=panel+progressBar+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
   setTimeout(()=>injectGcalToTimeline(today),0);
   return html;
 }
