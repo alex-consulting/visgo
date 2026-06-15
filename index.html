@@ -536,7 +536,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .sg-card.do{border-left-color:#248A3D}
 .sg-card.be{border-left-color:#AF52DE}
 .sg-card:hover{box-shadow:0 3px 12px rgba(0,122,255,.1)}
-.sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;margin-top:8px}
+.sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;margin-top:6px}.sg-list+.sg-list{margin-top:4px}
 .sg-ym{font-size:11px;font-weight:600;color:var(--blue);flex:0 0 auto}
 .sg-text{font-size:13px;font-weight:400;color:var(--navy);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sg-dream-label{font-size:11px;color:var(--sub);flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
@@ -1709,15 +1709,25 @@ function renderDreams(){
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
         const nearestSgHtml=(()=>{
           if(!dreamShowSteps) return '';
-          // 全ドリームから「一番期日の近いステップ目標」を探し、そのyearMonthがこの年ならここに表示
-          const cards=items.flatMap(d=>{
+          // この年の全ステップ目標を収集
+          const allCards=items.flatMap(d=>{
             const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
-            if(!sgs.length) return [];
-            const minYM=sgs.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
-            if(minYM.slice(0,4)!==y) return [];
-            return sgs.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
+            return sgs.filter(s=>(s.yearMonth||'').startsWith(y)).map(s=>({sg:s,d}));
           });
-          return cards.length?`<div class="sg-list">${cards.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`:'';
+          if(!allCards.length) return '';
+          // yearMonthでソート
+          allCards.sort((a,b)=>{
+            const ka=a.sg.yearMonth||'9999-12',kb=b.sg.yearMonth||'9999-12';
+            return ka<kb?-1:ka>kb?1:0;
+          });
+          // 月ごとにグループ化し、同月は横並び（sg-list=grid）・月が違えば縦積み
+          const byMonth={};const monthOrder=[];
+          allCards.forEach(({sg,d})=>{
+            const m=sg.yearMonth||'9999-12';
+            if(!byMonth[m]){byMonth[m]=[];monthOrder.push(m);}
+            byMonth[m].push({sg,d});
+          });
+          return monthOrder.map(m=>`<div class="sg-list">${byMonth[m].map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`).join('');
         })();
         return `
       <div class="dream-year-section">
@@ -3356,7 +3366,7 @@ function renderOverdueView(){
     <div class="overdue-move-bar">
       <span style="font-size:13px;opacity:${selCount>0?1:.45}">${selCount>0?selCount+'件を選択中':'タスクを選択'}</span>
       <input type="date" id="overdueTargetDate" class="overdue-move-date" value="${overdueTargetDate}">
-      <button class="overdue-move-btn" onclick="overdueMoveTo()" ${selCount===0?'disabled':''} style="opacity:${selCount>0?1:.45}">この日付に移動 →</button>
+      <button class="overdue-move-btn" onclick="overdueMoveTo()" style="opacity:${selCount>0?1:.5}">この日付に移動 →</button>
     </div>
     <div style="padding:12px 14px;display:flex;flex-direction:column;gap:14px">
       ${Object.entries(byDate).map(([date,items])=>`
