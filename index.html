@@ -1913,15 +1913,37 @@ function openSheetSection(key){
       break;
     case 'quad':
       title='目的・目標の4観点';
-      body=D.quad.map((q,qi)=>`<div style="margin-bottom:14px"><input class="ss-inp" style="font-weight:700;margin-bottom:6px" data-qi="${qi}" data-qf="title" value="${esc(q.title||'')}"><div>${q.items.map((it,ii)=>`<input class="ss-inp" style="margin-bottom:4px" data-qi="${qi}" data-qf="item" data-ii="${ii}" value="${esc(it)}">`).join('')}</div></div>`).join('');
-      onSave=()=>{document.querySelectorAll('[data-qi]').forEach(el=>{const qi=+el.dataset.qi,qf=el.dataset.qf;if(qf==='title')D.quad[qi].title=el.value;else D.quad[qi].items[+el.dataset.ii]=el.value;});};
+      body=D.quad.map((q,qi)=>`
+        <div style="margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px">
+          <input class="ss-inp" style="font-weight:700;margin-bottom:8px" data-qi="${qi}" data-qf="title" value="${esc(q.title||'')}">
+          <div id="ss-qi-${qi}">${q.items.map((it,ii)=>`
+            <div style="display:flex;gap:4px;margin-bottom:4px">
+              <input class="ss-inp" style="flex:1;margin:0" data-qi="${qi}" data-qf="item" data-ii="${ii}" value="${esc(it)}">
+              <button onclick="this.closest('div').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;flex:0 0 auto">✕</button>
+            </div>`).join('')}</div>
+          <button onclick="ssQuadAddItem(${qi})" style="border:1px dashed var(--line);background:none;width:100%;padding:5px;border-radius:6px;color:var(--sub);cursor:pointer;font-size:12px;margin-top:4px">＋ 項目を追加</button>
+        </div>`).join('');
+      onSave=()=>{D.quad.forEach((q,qi)=>{
+        const tEl=document.querySelector(`[data-qi="${qi}"][data-qf="title"]`);
+        if(tEl) q.title=tEl.value;
+        const iEls=document.querySelectorAll(`[data-qi="${qi}"][data-qf="item"]`);
+        q.items=Array.from(iEls).map(el=>el.value);
+        if(!q.items.length) q.items=[''];
+      });};
       break;
     case 'routines':
       title='ルーティン行動';
-      body=`<div>${D.routines.map((r,i)=>`<input class="ss-inp" style="margin-bottom:4px" data-ri="${i}" value="${esc(r.text||'')}"></div>`).join('')}
-        <button onclick="routinesToTodo()" style="margin-top:12px;width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">✅ ToDoに反映する</button>
-      </div>`;
-      onSave=()=>{document.querySelectorAll('[data-ri]').forEach(el=>{const i=+el.dataset.ri;if(D.routines[i])D.routines[i].text=el.value;});};
+      body=`<div id="ss-rt-list">${D.routines.map((r,i)=>`
+        <div style="display:flex;gap:4px;margin-bottom:4px">
+          <input class="ss-inp" style="flex:1;margin:0" data-ri="${i}" value="${esc(r.text||'')}">
+          <button onclick="this.closest('div').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;flex:0 0 auto">✕</button>
+        </div>`).join('')}</div>
+        <button onclick="ssRoutineAdd()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ ルーティンを追加</button>
+        <button onclick="routinesToTodo()" style="margin-top:12px;width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">✅ ToDoに反映する</button>`;
+      onSave=()=>{
+        const els=document.querySelectorAll('#ss-rt-list [data-ri]');
+        D.routines=Array.from(els).map((el,idx)=>({id:D.routines[+el.dataset.ri]?.id||(D.nextRoutineId++),text:el.value})).filter(r=>r.text.trim());
+      };
       break;
     case 'supports':
       title='目標達成のための支援';
@@ -1991,6 +2013,22 @@ function ssAddDl(){
   const li=ti.length-1;
   const dl=document.getElementById('ss-dl');
   if(dl){const div=document.createElement('div');div.className='ss-row2';div.innerHTML=`<input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" value="" onclick="try{this.showPicker()}catch(e){}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="">`;dl.appendChild(div);}
+}
+function ssQuadAddItem(qi){
+  const c=document.getElementById('ss-qi-'+qi); if(!c) return;
+  const ii=c.querySelectorAll('[data-qf="item"]').length;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:4px;margin-bottom:4px';
+  div.innerHTML=`<input class="ss-inp" style="flex:1;margin:0" data-qi="${qi}" data-qf="item" data-ii="${ii}" value=""><button onclick="this.closest('div').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;flex:0 0 auto">✕</button>`;
+  c.appendChild(div); div.querySelector('input').focus();
+}
+function ssRoutineAdd(){
+  const c=document.getElementById('ss-rt-list'); if(!c) return;
+  const ii=c.querySelectorAll('[data-ri]').length;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:4px;margin-bottom:4px';
+  div.innerHTML=`<input class="ss-inp" style="flex:1;margin:0" data-ri="${ii}" value=""><button onclick="this.closest('div').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px;flex:0 0 auto">✕</button>`;
+  c.appendChild(div); div.querySelector('input').focus();
 }
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
 const ANNUAL_PROJECT='🎯年間目標達成';
