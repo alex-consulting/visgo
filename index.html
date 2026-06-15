@@ -310,6 +310,17 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .kstatus{flex:1;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:3px;min-width:0;background:var(--card)}
 .kdel{position:absolute;top:4px;right:4px;border:none;background:none;color:var(--faint);font-size:14px;cursor:pointer;border-radius:6px;width:22px;height:22px;padding:0;line-height:1}
 .kdel:hover{color:var(--red);background:var(--red-l)}
+.kms-toggle-btn{font-size:12px;padding:4px 12px;border:1.5px solid var(--blue);border-radius:20px;background:transparent;color:var(--blue);cursor:pointer;white-space:nowrap;line-height:1.5}
+.kms-toggle-btn.kms-active{background:var(--red-l);border-color:#FF3B30;color:#FF3B30}
+.kms-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1.5px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:10px;z-index:300;box-shadow:0 -3px 16px rgba(0,0,0,.12)}
+.kms-bar-count{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;min-width:70px}
+.kms-bar select{flex:1;max-width:320px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--text);font-size:13px}
+.kms-apply-btn{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--blue);color:#fff;white-space:nowrap}
+.kms-apply-btn:disabled{opacity:.4;cursor:default}
+.kms-cancel-btn{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--fill);color:var(--text);white-space:nowrap}
+.kcard.kms-sel{outline:2px solid var(--blue);background:var(--blue-l)}
+.kms-cb{position:absolute;top:50%;left:8px;transform:translateY(-50%);width:16px;height:16px;cursor:pointer;accent-color:var(--blue);z-index:2}
+.kcard.kms-mode{cursor:pointer;padding-left:32px}
 @media(max-width:1100px){.kanban{}}
 /* ---- OW64 ---- */
 .owbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
@@ -2893,6 +2904,8 @@ const GTD_COLS=[
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
 let gtdCollapsed={category:true,project:true,recur:true,taskGroup:true};
 let gtdView='today'; // 'kanban' | 'today'
+let multiSelectMode=false;
+let multiSelectedIds=new Set();
 function gtdTask(id){ return D.gtd.tasks.find(t=>String(t.id)===String(id)); }
 function gtdListOf(type){ return type==='project'?D.gtd.projects:D.gtd.categories; }
 function gtdHeadAdd(){
@@ -2940,7 +2953,11 @@ function gtdCard(t){
   const quadBadge=q?`<span class="kquad kquad-${q}">${q}</span>`:'';
   const textDisp=t.text?esc(t.text):`<span style="color:var(--faint)">タスク内容を入力...</span>`;
   const annualCardStyle=(t.project===ANNUAL_PROJECT)?'border-left:3px solid rgba(255,105,135,.6);':'';
-  return `<div class="kcard${t.done?' kdone':''}" draggable="true" data-id="${t.id}" style="${annualCardStyle}">
+  const msCb=multiSelectMode?`<input type="checkbox" class="kms-cb" data-id="${t.id}" ${multiSelectedIds.has(String(t.id))?'checked':''}>`:'';
+  const msModeClass=multiSelectMode?' kms-mode':'';
+  const msSelClass=(multiSelectMode&&multiSelectedIds.has(String(t.id)))?' kms-sel':'';
+  return `<div class="kcard${t.done?' kdone':''}${msModeClass}${msSelClass}" draggable="${multiSelectMode?'false':'true'}" data-id="${t.id}" style="${annualCardStyle}">
+    ${msCb}
     <button class="kdel" data-id="${t.id}" title="削除">✕</button>
     <div class="kcard-head" data-open="${t.id}">
       <input type="checkbox" class="kcheck" data-id="${t.id}" ${t.done?'checked':''}>
@@ -3455,7 +3472,7 @@ function renderGTD(){
               if(isAnnual){
                 const rCnt=D.gtd.tasks.filter(t=>!!t.routine&&!t.done).length;
                 const rAct=(gtdFilter.type==='routine'&&gtdView==='kanban')?'act':'';
-                const routineItem=rCnt>0||rAct?`<div class="gf-item ${rAct}" data-f="routine" data-v="" style="padding-left:22px;font-size:12px">🔄 ルーティン<span class="gf-cnt">${rCnt||''}</span></div>`:'';
+                const routineItem=rCnt>0||rAct?`<div class="gf-item ${rAct}" data-f="routine" data-v="" style="border-left:4px solid #30D158;border-radius:0 6px 6px 0;padding-left:6px;">🔄 ルーティン<span class="gf-cnt">${rCnt||''}</span></div>`:'';
                 return main+routineItem;
               }
               return main;
@@ -3496,7 +3513,10 @@ function renderGTD(){
         ? renderTomorrowTimeline()
         : gtdView==='overdue'
         ? renderOverdueView()
-        : `<div class="kcol" style="width:100%;max-width:100%">
+        : `<div style="display:flex;justify-content:flex-end;padding:0 4px 8px">
+            <button class="kms-toggle-btn${multiSelectMode?' kms-active':''}" onclick="toggleMultiSelect()">${multiSelectMode?'✕ キャンセル':'☑ 複数選択'}</button>
+          </div>
+          <div class="kcol" style="width:100%;max-width:100%">
             <div class="kbody" data-col="inbox">
               ${[...vis].sort((a,b)=>{
                 const ad=a.done?1:0, bd=b.done?1:0;
@@ -3506,7 +3526,17 @@ function renderGTD(){
                 return aKey<bKey?-1:aKey>bKey?1:0;
               }).map(gtdCard).join("")||`<div class="kempty">タスクがありません</div>`}
             </div>
-          </div>`}
+          </div>
+          ${multiSelectMode?`<div class="kms-bar" id="kmsBar">
+            <span class="kms-bar-count" id="kmsBarCount">${multiSelectedIds.size}件選択中</span>
+            <select id="kmsProjectSel">
+              <option value="__inbox__">📥 Inbox（プロジェクトなし）</option>
+              ${(D.gtd.projects||[]).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}
+            </select>
+            <button class="kms-apply-btn" id="kmsApplyBtn" onclick="kmsApplyProject()" ${multiSelectedIds.size===0?'disabled':''}>移動</button>
+            <button class="kms-cancel-btn" onclick="toggleMultiSelect()">キャンセル</button>
+          </div>`:''}
+        `}
     </div>
   </div>`;
   bindGTD(root);
@@ -3522,6 +3552,28 @@ function gtdAdd(){
   D.gtd.tasks.unshift(task);
   cap.value=""; save(); renderGTD();
   const c2=document.getElementById("gtdCapture"); if(c2) c2.focus();
+}
+function toggleMultiSelect(){
+  multiSelectMode=!multiSelectMode;
+  if(!multiSelectMode) multiSelectedIds.clear();
+  renderGTD();
+}
+function updateKmsBar(){
+  const countEl=document.getElementById('kmsBarCount');
+  if(countEl) countEl.textContent=multiSelectedIds.size+'件選択中';
+  const applyBtn=document.getElementById('kmsApplyBtn');
+  if(applyBtn) applyBtn.disabled=multiSelectedIds.size===0;
+}
+function kmsApplyProject(){
+  const sel=document.getElementById('kmsProjectSel');
+  if(!sel||!multiSelectedIds.size){alert('タスクを選択してください');return;}
+  const proj=sel.value==='__inbox__'?'':sel.value;
+  const cnt=multiSelectedIds.size;
+  multiSelectedIds.forEach(id=>{const t=gtdTask(id);if(t) t.project=proj;});
+  multiSelectedIds.clear();
+  multiSelectMode=false;
+  save(); renderGTD();
+  toast(cnt+'件のプロジェクトを変更しました');
 }
 function toggleGtdSidebar(){
   const side=document.getElementById('gtdSide');
@@ -3597,6 +3649,7 @@ function bindGTD(root){
       if(it.dataset.view==='today'||it.dataset.view==='tomorrow'||it.dataset.view==='overdue'){
         gtdView=it.dataset.view;
         gtdFilter={type:null,value:null};
+        multiSelectMode=false; multiSelectedIds.clear();
       } else {
         gtdView='kanban';
         const type=it.dataset.f;
@@ -3649,10 +3702,34 @@ function bindGTD(root){
     if(gtdFilter.type===type&&gtdFilter.value===name) gtdFilter={type:null,value:null};
     save(); renderGTD();
   }));
-  // カード本体クリック → 詳細モーダル
+  // カード本体クリック → 詳細モーダル / 複数選択モード
+  root.querySelectorAll(".kcard").forEach(card=>{
+    card.addEventListener("click",e=>{
+      if(!multiSelectMode) return;
+      if(e.target.closest(".kdel")||e.target.closest(".kcheck")||e.target.closest(".ri-check")) return;
+      if(e.target.classList.contains("kms-cb")) return; // checkboxのchangeに任せる
+      const id=String(card.dataset.id);
+      if(multiSelectedIds.has(id)) multiSelectedIds.delete(id); else multiSelectedIds.add(id);
+      card.classList.toggle("kms-sel",multiSelectedIds.has(id));
+      const cb=card.querySelector(".kms-cb");
+      if(cb) cb.checked=multiSelectedIds.has(id);
+      updateKmsBar();
+    });
+  });
+  root.querySelectorAll(".kms-cb").forEach(cb=>{
+    cb.addEventListener("change",e=>{
+      e.stopPropagation();
+      const id=String(cb.dataset.id);
+      if(cb.checked) multiSelectedIds.add(id); else multiSelectedIds.delete(id);
+      const card=cb.closest(".kcard");
+      if(card) card.classList.toggle("kms-sel",cb.checked);
+      updateKmsBar();
+    });
+  });
   root.querySelectorAll(".kcard-head").forEach(area=>{
     area.addEventListener("click",e=>{
       if(e.target.closest(".kcheck")) return;
+      if(multiSelectMode) return; // 複数選択モード中はモーダルを開かない
       openGtdModal(area.dataset.open);
     });
   });
