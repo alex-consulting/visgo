@@ -3002,9 +3002,9 @@ document.addEventListener('click',()=>{ const p=document.getElementById('colorPi
 
 function gtdFolderItems(type){
   const rawList=gtdListOf(type);
-  // 年間目標達成・WAIDsはINBOX直下にピン留めするので通常プロジェクト一覧から除外
+  // 年間目標達成はINBOX直下にピン留めするので通常プロジェクト一覧から除外
   const list=type==='project'
-    ? rawList.filter(name=>name!==ANNUAL_PROJECT&&!name.includes('WAIDs'))
+    ? rawList.filter(name=>name!==ANNUAL_PROJECT)
     : rawList;
   if(!list.length) return `<div class="gf-none">（フォルダなし）</div>`;
   return list.map(name=>{
@@ -3013,7 +3013,6 @@ function gtdFolderItems(type){
       : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
     const act=(gtdFilter.type===type&&gtdFilter.value===name)?'act':'';
     const isAnnual=(type==='project'&&name===ANNUAL_PROJECT);
-    const isWaids=(type==='project'&&name.includes('WAIDs'));
     const dot=type==='project'
       ? ` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`
       : '';
@@ -3021,8 +3020,7 @@ function gtdFolderItems(type){
       ? '' // リネーム・削除ボタン非表示
       : `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`;
-    const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;'
-      :isWaids?'border-left:4px solid #007AFF;border-radius:0 6px 6px 0;padding-left:6px;':'';
+    const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
     return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="true" style="${annualStyle}">
       <span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt}</span>
@@ -3458,14 +3456,12 @@ function renderGTD(){
           <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
           ${(()=>{
             const allProj=D.gtd.projects||[];
-            const pinned=[ANNUAL_PROJECT,...allProj.filter(p=>p.includes('WAIDs'))].filter((p,i,a)=>a.indexOf(p)===i&&allProj.includes(p));
+            const pinned=[ANNUAL_PROJECT].filter(p=>allProj.includes(p));
             return pinned.map(name=>{
               const isAnnual=name===ANNUAL_PROJECT;
-              const isWaids=name.includes('WAIDs');
               const cnt=D.gtd.tasks.filter(t=>(t.project||'')===name&&!t.done).length;
               const act=(gtdFilter.type==='project'&&gtdFilter.value===name&&gtdView==='kanban')?'act':'';
-              const style=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;'
-                :isWaids?'border-left:4px solid #007AFF;border-radius:0 6px 6px 0;padding-left:6px;':'';
+              const style=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
               const dot=`<span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`;
               const main=`<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
               // 年間目標達成の直下にルーティン項目を表示
@@ -3943,6 +3939,15 @@ function startTimelineNowTimer(){
 }
 
 /* ================= 起動 ================= */
+// WAIDsプロジェクトをINBOXに移行（一回限り）
+(function(){
+  if(!D.gtd) return;
+  const waids=(D.gtd.projects||[]).filter(p=>p.includes('WAIDs'));
+  if(!waids.length) return;
+  (D.gtd.tasks||[]).forEach(t=>{ if(waids.includes(t.project||'')) t.project=''; });
+  D.gtd.projects=(D.gtd.projects||[]).filter(p=>!p.includes('WAIDs'));
+  save();
+})();
 showTab("gtd");
 startTimelineNowTimer();
 document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) ? "✓ 保存済み" : "";
