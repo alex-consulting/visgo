@@ -137,8 +137,12 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .ss-inp{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--fill)}
 .ss-ta{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--fill);resize:vertical;min-height:70px}
 .ss-row2{display:flex;gap:8px;margin-bottom:6px}
-.vsec h3,.vgoal-label,.vhead h1{cursor:pointer}
-.vsec h3:hover,.vgoal-label:hover,.vhead h1:hover{opacity:.75}
+.vsec-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.vsec-hd h3{margin:0}
+.vsec-edit{border:1px solid rgba(255,255,255,.5);background:transparent;cursor:pointer;font-size:11px;padding:2px 8px;border-radius:6px;color:var(--card);line-height:1.5}
+.vsec-edit:hover{background:rgba(255,255,255,.2)}
+.vgoal-label{cursor:pointer}
+.vgoal-label:hover{opacity:.75}
 /* ---- read-only view ---- */
 .vsheet{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;max-width:920px;margin:0 auto}
 @media(max-width:700px){.vsheet{padding:16px 14px}}
@@ -2313,8 +2317,9 @@ function renderSheetView(){
   </aside>
   <div class="gtd-main">
   <div class="vsheet">
-    <div class="vhead" onclick="openSheetSection('meta')" title="クリックして編集">
+    <div class="vhead">
       <h1 class="print-only">年間目標達成シート</h1>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px"><button onclick="openSheetSection('meta')" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">✏ 基本情報を編集</button></div>
       <div class="vmeta">
         <span class="print-only"><b>氏名</b>${esc(D.meta.name)||"—"}</span>
         <span class="print-only"><b>記入日</b>${esc(fmtDate(D.meta.writeDate))||"—"}</span>
@@ -2322,7 +2327,7 @@ function renderSheetView(){
         <span><b>更新日</b>${esc(fmtDate(D.meta.updateDate))||"—"}</span>
       </div>
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('service')">奉仕活動</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>奉仕活動</h3><button class="vsec-edit" onclick="openSheetSection('service')">✏ 編集</button></div>
       <p><b>家族：</b>${nl2br(D.service.family)||"—"}</p>
       <p><b>社会：</b>${nl2br(D.service.society)||"—"}</p>
     </div>
@@ -2332,35 +2337,35 @@ function renderSheetView(){
       ${D.goalNote?`<div class="vgoal-note">${nl2br(D.goalNote)}</div>`:""}
       ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('milestones')">経過目標</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>経過目標</h3><button class="vsec-edit" onclick="openSheetSection('milestones')">✏ 編集</button></div>
       <div class="vms">${D.milestones.map(m=>`<div class="vmsbox ${(m.pct||0)>=100?'done100':''}"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('deadlines')">週間期日行動</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>週間期日行動</h3><button class="vsec-edit" onclick="openSheetSection('deadlines')">✏ 編集</button></div>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
         const arr=dlTab==='done'?done:todo;
         const rows=arr.length?arr.map(dl=>`<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${dl.id}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`).join(""):"<p class='vempty'>—</p>";
         const toggle=dlTab==='done'?`<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`:(done.length?`<button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${done.length})</button>`:"");
         return rows+toggle;})()}
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('quad')">目的・目標の4観点</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>目的・目標の4観点</h3><button class="vsec-edit" onclick="openSheetSection('quad')">✏ 編集</button></div>
       <div class="vquads">
         ${D.quad.map(q=>`<div class="vquad"><div class="vquad-t">${esc(q.title)}</div>
           <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
       </div>
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('routines')">ルーティン行動（重要度が高い順）</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>ルーティン行動（重要度が高い順）</h3><button class="vsec-edit" onclick="openSheetSection('routines')">✏ 編集</button></div>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('supports')">目標達成のための支援</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>目標達成のための支援</h3><button class="vsec-edit" onclick="openSheetSection('supports')">✏ 編集</button></div>
       <table class="vtab"><tr><th>支援者</th><th>支援内容</th></tr>
         ${D.supports.filter(s=>s.who||s.what).map(s=>`<tr><td>${esc(s.who)}</td><td>${esc(s.what)}</td></tr>`).join("")||"<tr><td class='vempty'>—</td><td></td></tr>"}</table>
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('analysis')">成功・強み／失敗・弱みの分析</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>成功・強み／失敗・弱みの分析</h3><button class="vsec-edit" onclick="openSheetSection('analysis')">✏ 編集</button></div>
       <table class="vtab vtab3"><tr><th></th><th>成功・強み</th><th>失敗・弱み</th></tr>
         ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.success[i])}</td><td>${nl2br(a.failure[i])}</td></tr>`).join("")}</table>
     </div>
-    <div class="vsec"><h3 onclick="openSheetSection('problems')">予想される問題点と解決策</h3>
+    <div class="vsec"><div class="vsec-hd"><h3>予想される問題点と解決策</h3><button class="vsec-edit" onclick="openSheetSection('problems')">✏ 編集</button></div>
       <table class="vtab vtab3"><tr><th></th><th>予想される問題点</th><th>解決策</th></tr>
         ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.problem[i])}</td><td>${nl2br(a.solution[i])}</td></tr>`).join("")}</table>
     </div>
