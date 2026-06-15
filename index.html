@@ -314,7 +314,8 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .kms-toggle-btn.kms-active{background:var(--red-l);border-color:#FF3B30;color:#FF3B30}
 .kms-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1.5px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:10px;z-index:300;box-shadow:0 -3px 16px rgba(0,0,0,.12)}
 .kms-bar-count{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;min-width:70px}
-.kms-bar select{flex:1;max-width:320px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--text);font-size:13px}
+.kms-bar select{flex:1;max-width:220px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--text);font-size:13px}
+.kms-bar-label{font-size:12px;color:var(--sub);white-space:nowrap}
 .kms-apply-btn{padding:7px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--blue);color:#fff;white-space:nowrap}
 .kms-apply-btn:disabled{opacity:.4;cursor:default}
 .kms-cancel-btn{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--fill);color:var(--text);white-space:nowrap}
@@ -3525,11 +3526,18 @@ function renderGTD(){
           </div>
           ${multiSelectMode?`<div class="kms-bar" id="kmsBar">
             <span class="kms-bar-count" id="kmsBarCount">${multiSelectedIds.size}件選択中</span>
+            <span class="kms-bar-label">📁</span>
             <select id="kmsProjectSel">
-              <option value="__inbox__">📥 Inbox（プロジェクトなし）</option>
+              <option value="">（プロジェクト変更なし）</option>
+              <option value="__inbox__">📥 Inbox（なし）</option>
               ${(D.gtd.projects||[]).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}
             </select>
-            <button class="kms-apply-btn" id="kmsApplyBtn" onclick="kmsApplyProject()" ${multiSelectedIds.size===0?'disabled':''}>移動</button>
+            <span class="kms-bar-label">🏷</span>
+            <select id="kmsCategorySel">
+              <option value="">（カテゴリ変更なし）</option>
+              ${(D.gtd.categories||[]).map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}
+            </select>
+            <button class="kms-apply-btn" id="kmsApplyBtn" onclick="kmsApply()" ${multiSelectedIds.size===0?'disabled':''}>移動</button>
             <button class="kms-cancel-btn" onclick="toggleMultiSelect()">キャンセル</button>
           </div>`:''}
         `}
@@ -3560,16 +3568,27 @@ function updateKmsBar(){
   const applyBtn=document.getElementById('kmsApplyBtn');
   if(applyBtn) applyBtn.disabled=multiSelectedIds.size===0;
 }
-function kmsApplyProject(){
-  const sel=document.getElementById('kmsProjectSel');
-  if(!sel||!multiSelectedIds.size){alert('タスクを選択してください');return;}
-  const proj=sel.value==='__inbox__'?'':sel.value;
+function kmsApply(){
+  const projSel=document.getElementById('kmsProjectSel');
+  const catSel=document.getElementById('kmsCategorySel');
+  if(!multiSelectedIds.size){alert('タスクを選択してください');return;}
+  const projVal=projSel?projSel.value:'';
+  const catVal=catSel?catSel.value:'';
+  if(!projVal&&!catVal){alert('プロジェクトかカテゴリを選択してください');return;}
   const cnt=multiSelectedIds.size;
-  multiSelectedIds.forEach(id=>{const t=gtdTask(id);if(t) t.project=proj;});
+  multiSelectedIds.forEach(id=>{
+    const t=gtdTask(id); if(!t) return;
+    if(projVal) t.project=projVal==='__inbox__'?'':projVal;
+    if(catVal){
+      if(!Array.isArray(t.categories)) t.categories=[];
+      if(!t.categories.includes(catVal)) t.categories.push(catVal);
+    }
+  });
   multiSelectedIds.clear();
   multiSelectMode=false;
   save(); renderGTD();
-  toast(cnt+'件のプロジェクトを変更しました');
+  const what=[projVal?'プロジェクト':'',catVal?'カテゴリ':''].filter(Boolean).join('・');
+  toast(cnt+'件の'+what+'を変更しました');
 }
 function toggleGtdSidebar(){
   const side=document.getElementById('gtdSide');
