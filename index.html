@@ -2962,7 +2962,7 @@ function gtdFolderItems(type){
       : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
     const act=(gtdFilter.type===type&&gtdFilter.value===name)?'act':'';
     const isAnnual=(type==='project'&&name===ANNUAL_PROJECT);
-    const isWaids=(type==='project'&&name==='WAIDs');
+    const isWaids=(type==='project'&&name.includes('WAIDs'));
     const dot=type==='project'
       ? ` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`
       : '';
