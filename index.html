@@ -2339,7 +2339,7 @@ function renderSheetView(){
     <div class="vsec"><h3 onclick="openSheetSection('deadlines')">週間期日行動</h3>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
         const arr=dlTab==='done'?done:todo;
-        const rows=arr.length?arr.map(dl=>`<div class="vdl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join(""):"<p class='vempty'>—</p>";
+        const rows=arr.length?arr.map(dl=>`<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${dl.id}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`).join(""):"<p class='vempty'>—</p>";
         const toggle=dlTab==='done'?`<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`:(done.length?`<button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${done.length})</button>`:"");
         return rows+toggle;})()}
     </div>
@@ -2368,6 +2368,13 @@ function renderSheetView(){
   root.querySelectorAll("[data-gzoom]").forEach(img=>{
     img.onclick=()=>{ document.getElementById("lightboxImg").src=img.src; document.getElementById("lightbox").classList.add("show"); };
   });
+  // ビューモード：週間期日行動チェックボックス
+  root.querySelectorAll(".vdl-chk").forEach(cb=>{
+    cb.addEventListener("change",()=>{
+      const dl=D.deadlines.find(d=>String(d.id)===String(cb.dataset.dlid));
+      if(dl){ dl.done=cb.checked; save(); renderSheet(); }
+    });
+  });
 }
 function setPath(path,val){
   const keys=path.split(".");
@@ -2377,7 +2384,8 @@ function setPath(path,val){
 }
 function bindSheet(root){
   root.querySelectorAll("[data-oi]").forEach(el=>{
-    el.addEventListener("input",()=>{
+    const evName=el.type==="checkbox"?"change":"input";
+    el.addEventListener(evName,()=>{
       const v = el.type==="checkbox" ? el.checked : el.value;
       setPath(el.dataset.oi,v);
       if(el.classList.contains("pctin")){
