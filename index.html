@@ -231,8 +231,8 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-taskedit-panel .gf-all{font-size:14px;font-weight:700;margin-bottom:6px;border-bottom:1px solid var(--line);padding-bottom:6px}
 .gf-taskedit-panel .gf-section{border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px}
 .gf-taskedit-panel .gf-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.gf-taskedit-panel .gf-h{font-size:13px;background:var(--blue-l);padding:5px 8px;border-radius:7px;margin:0 0 5px;color:var(--navy)}
-.gf-taskedit-panel .gf-h:hover{background:rgba(0,122,255,.18)}
+.gf-taskedit-panel .gf-h{font-size:13px;padding:5px 8px;border-radius:7px;margin:0 0 5px;color:var(--navy)}
+.gf-taskedit-panel .gf-h:hover{background:var(--fill)}
 .gf-taskedit-panel .gf-items{padding-left:4px}
 .overdue-hd{padding:10px 16px;background:var(--red-l);border-bottom:1px solid rgba(255,59,48,.35);font-weight:700;font-size:14px;color:#D70015;display:flex;align-items:center;gap:10px}
 .overdue-date-label{font-size:12px;font-weight:700;color:#FF3B30;margin-bottom:5px;padding:2px 6px;background:var(--red-l);border-radius:4px;display:inline-block}
@@ -1208,7 +1208,20 @@ function syncPush(){
 }
 // リモートデータをD・IDB・localStorageに適用する共通処理
 async function _applyRemoteData(remote){
+  // プロジェクト・カテゴリの並び順はローカルを優先し、リモートの新規分を末尾に追加
+  const localProj=Array.isArray(D.gtd?.projects)?[...D.gtd.projects]:[];
+  const localCat=Array.isArray(D.gtd?.categories)?[...D.gtd.categories]:[];
   Object.assign(D,remote);
+  if(localProj.length&&Array.isArray(D.gtd?.projects)){
+    const merged=[...localProj];
+    (D.gtd.projects||[]).forEach(p=>{if(!merged.includes(p))merged.push(p);});
+    D.gtd.projects=merged;
+  }
+  if(localCat.length&&Array.isArray(D.gtd?.categories)){
+    const merged=[...localCat];
+    (D.gtd.categories||[]).forEach(c=>{if(!merged.includes(c))merged.push(c);});
+    D.gtd.categories=merged;
+  }
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
     if(Array.isArray(remote.goalImages)) await idbSet("goalImages",remote.goalImages);
