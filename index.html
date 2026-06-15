@@ -869,6 +869,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <label><input type="checkbox" id="gmImportant"> 重要</label>
       <span id="gmQuadLabel"></span>
     </div>
+    <div class="gm-chk-row" style="margin-top:6px">
+      <label><input type="checkbox" id="gmRoutine"> ルーティン</label>
+    </div>
     <p class="gm-label">所要時間</p>
     <div class="gm-dur" id="gmDurBtns">
       <button class="gm-dur-btn" data-dur="5">5分</button>
@@ -2625,6 +2628,7 @@ function openGtdModal(id){
   document.getElementById("gmMemo").value=t.memo||"";
   document.getElementById("gmUrgent").checked=!!t.urgent;
   document.getElementById("gmImportant").checked=!!t.important;
+  document.getElementById("gmRoutine").checked=!!t.routine;
   updateGmQuadLabel();
   document.getElementById("gmUrgent").onchange=updateGmQuadLabel;
   document.getElementById("gmImportant").onchange=updateGmQuadLabel;
@@ -2666,7 +2670,7 @@ function openGtdModal(id){
     const el=document.getElementById(id);
     if(el) el.disabled=isRoutineTask;
   });
-  ['gmUrgent','gmImportant'].forEach(id=>{
+  ['gmUrgent','gmImportant','gmRoutine'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.disabled=isRoutineTask;
   });
@@ -2696,6 +2700,7 @@ function saveGtdModal(){
   t.categories=[...document.querySelectorAll("#gmCats [data-gcat].act")].map(b=>b.dataset.gcat);
   t.urgent=document.getElementById("gmUrgent").checked;
   t.important=document.getElementById("gmImportant").checked;
+  t.routine=document.getElementById("gmRoutine").checked;
   t.routineItems=JSON.parse(JSON.stringify(gmRoutineItems));
   save(); renderGTD();
   closeGtdModal();
@@ -2954,7 +2959,11 @@ function setProjectColor(name,color){
 document.addEventListener('click',()=>{ const p=document.getElementById('colorPickerPopup'); if(p) p.style.display='none'; });
 
 function gtdFolderItems(type){
-  const list=gtdListOf(type);
+  const rawList=gtdListOf(type);
+  // 年間目標達成・WAIDsはINBOX直下にピン留めするので通常プロジェクト一覧から除外
+  const list=type==='project'
+    ? rawList.filter(name=>name!==ANNUAL_PROJECT&&!name.includes('WAIDs'))
+    : rawList;
   if(!list.length) return `<div class="gf-none">（フォルダなし）</div>`;
   return list.map(name=>{
     const cnt=type==='category'
@@ -3402,6 +3411,20 @@ function renderGTD(){
         <div class="gf-items gf-taskedit-panel">
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
           <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
+          ${(()=>{
+            const allProj=D.gtd.projects||[];
+            const pinned=[ANNUAL_PROJECT,...allProj.filter(p=>p.includes('WAIDs'))].filter((p,i,a)=>a.indexOf(p)===i&&allProj.includes(p));
+            return pinned.map(name=>{
+              const isAnnual=name===ANNUAL_PROJECT;
+              const isWaids=name.includes('WAIDs');
+              const cnt=D.gtd.tasks.filter(t=>(t.project||'')===name&&!t.done).length;
+              const act=(gtdFilter.type==='project'&&gtdFilter.value===name&&gtdView==='kanban')?'act':'';
+              const style=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;'
+                :isWaids?'border-left:4px solid #007AFF;border-radius:0 6px 6px 0;padding-left:6px;':'';
+              const dot=`<span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`;
+              return `<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
+            }).join('');
+          })()}
           <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="project">
               <span><span class="gf-arrow">▾</span>📁 プロジェクト</span>
