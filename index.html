@@ -3431,6 +3431,9 @@ function renderGTD(){
     }
   });
   if(needSave) save();
+  // INBOXは常に複数選択モード
+  const isInbox=gtdView==='kanban'&&gtdFilter.type==='project'&&gtdFilter.value==='';
+  if(isInbox) multiSelectMode=true;
   const vis=gtdVisible();
   root.innerHTML=`
   <div class="page-head">
@@ -3512,9 +3515,9 @@ function renderGTD(){
         ? renderTomorrowTimeline()
         : gtdView==='overdue'
         ? renderOverdueView()
-        : `<div style="display:flex;justify-content:flex-start;padding:0 4px 8px">
+        : `${isInbox?'':`<div style="display:flex;justify-content:flex-start;padding:0 4px 8px">
             <button class="kms-toggle-btn${multiSelectMode?' kms-active':''}" onclick="toggleMultiSelect()">${multiSelectMode?'✕ キャンセル':'☑ 複数選択'}</button>
-          </div>
+          </div>`}
           <div class="kcol" style="width:100%;max-width:100%">
             <div class="kbody" data-col="inbox">
               ${[...vis].sort((a,b)=>{
@@ -3671,6 +3674,9 @@ function bindGTD(root){
         gtdView='kanban';
         const type=it.dataset.f;
         gtdFilter = type ? {type,value:it.dataset.v} : {type:null,value:null};
+        // INBOX以外に切り替えたらmultiSelectをリセット
+        const goingToInbox=type==='project'&&it.dataset.v==='';
+        if(!goingToInbox){ multiSelectMode=false; multiSelectedIds.clear(); }
       }
       closeGtdSidebar();
       renderGTD();
