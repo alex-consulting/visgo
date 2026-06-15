@@ -2896,6 +2896,7 @@ function gtdVisible(){
     if(gtdFilter.type==='recur') return gtdFilter.value
       ? (t.recur||"")===gtdFilter.value
       : !!(t.recur);
+    if(gtdFilter.type==='routine') return !!t.routine;
     return true;
   });
 }
@@ -3436,7 +3437,15 @@ function renderGTD(){
               const style=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;'
                 :isWaids?'border-left:4px solid #007AFF;border-radius:0 6px 6px 0;padding-left:6px;':'';
               const dot=`<span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`;
-              return `<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
+              const main=`<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
+              // 年間目標達成の直下にルーティン項目を表示
+              if(isAnnual){
+                const rCnt=D.gtd.tasks.filter(t=>!!t.routine&&!t.done).length;
+                const rAct=(gtdFilter.type==='routine'&&gtdView==='kanban')?'act':'';
+                const routineItem=rCnt>0||rAct?`<div class="gf-item ${rAct}" data-f="routine" data-v="" style="padding-left:22px;font-size:12px">🔄 ルーティン<span class="gf-cnt">${rCnt||''}</span></div>`:'';
+                return main+routineItem;
+              }
+              return main;
             }).join('');
           })()}
           <div style="border-top:1px dashed var(--line);margin:4px 0 2px"></div>
