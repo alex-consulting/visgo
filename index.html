@@ -418,6 +418,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .gm-routine-area{margin-top:6px;padding:8px;background:var(--green-l);border:1px solid rgba(52,199,89,.30);border-radius:8px}
 .gm-ri-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .gm-ri-row:last-child{border-bottom:none}
+.gm-ri-input{flex:1;min-width:0;border:none;background:transparent;font-size:13px;color:var(--navy);font-family:inherit;padding:2px 4px;border-radius:4px;outline:none}.gm-ri-input:focus{background:var(--card);outline:1px solid var(--blue)}.gm-ri-input:disabled{color:var(--sub);cursor:default}
 .gm-ri-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:0 3px;flex:0 0 auto;line-height:1}
 .ri-btns{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
 .ri-mv{background:none;border:1px solid var(--line);border-radius:4px;color:var(--sub);font-size:10px;padding:2px 5px;cursor:pointer;line-height:1;min-width:28px;min-height:22px}
@@ -869,8 +870,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <label><input type="checkbox" id="gmImportant"> 重要</label>
       <span id="gmQuadLabel"></span>
     </div>
-    <div class="gm-chk-row" style="margin-top:6px">
-      <label><input type="checkbox" id="gmRoutine"> ルーティン</label>
+    <p class="gm-label">ルーティン</p>
+    <div class="gm-chk-row">
+      <label><input type="checkbox" id="gmRoutine"> ルーティンタスクに設定する</label>
     </div>
     <p class="gm-label">所要時間</p>
     <div class="gm-dur" id="gmDurBtns">
@@ -1709,24 +1711,19 @@ function renderDreams(){
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
         const nearestSgHtml=(()=>{
           if(!dreamShowSteps) return '';
-          // この年の全ステップ目標を収集
-          const allCards=items.flatMap(d=>{
+          // 各ドリームの「最も近いステップ目標」1つをこの年に表示
+          const cards=items.flatMap(d=>{
             const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
-            return sgs.filter(s=>(s.yearMonth||'').startsWith(y)).map(s=>({sg:s,d}));
+            if(!sgs.length) return [];
+            const minYM=sgs.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
+            if(minYM.slice(0,4)!==y) return [];
+            return sgs.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
           });
-          if(!allCards.length) return '';
-          // yearMonthでソート
-          allCards.sort((a,b)=>{
-            const ka=a.sg.yearMonth||'9999-12',kb=b.sg.yearMonth||'9999-12';
-            return ka<kb?-1:ka>kb?1:0;
-          });
-          // 月ごとにグループ化し、同月は横並び（sg-list=grid）・月が違えば縦積み
+          if(!cards.length) return '';
+          // yearMonthでソート、同月は横並び・月が変わると縦積み
+          cards.sort((a,b)=>{const ka=a.sg.yearMonth||'9999-12',kb=b.sg.yearMonth||'9999-12';return ka<kb?-1:ka>kb?1:0;});
           const byMonth={};const monthOrder=[];
-          allCards.forEach(({sg,d})=>{
-            const m=sg.yearMonth||'9999-12';
-            if(!byMonth[m]){byMonth[m]=[];monthOrder.push(m);}
-            byMonth[m].push({sg,d});
-          });
+          cards.forEach(({sg,d})=>{const m=sg.yearMonth||'9999-12';if(!byMonth[m]){byMonth[m]=[];monthOrder.push(m);}byMonth[m].push({sg,d});});
           return monthOrder.map(m=>`<div class="sg-list">${byMonth[m].map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`).join('');
         })();
         return `
@@ -2604,9 +2601,13 @@ function gmRenderRoutineItems(){
         <button class="ri-mv" onclick="riMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
         <button class="ri-mv" onclick="riMove(${i},1)" ${i===gmRoutineItems.length-1?'disabled':''}>▼</button>
       </div>
-      <span style="flex:1;min-width:0">${esc(it.text)}</span>
+      <input type="text" class="gm-ri-input" value="${esc(it.text)}" ${isAnn?'disabled':''} oninput="gmEditRoutineItem('${it.id}',this.value)">
       <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')" style="${isAnn?'display:none':''}">✕</button>
     </div>`).join('');
+}
+function gmEditRoutineItem(id,val){
+  const it=gmRoutineItems.find(x=>String(x.id)===String(id));
+  if(it) it.text=val;
 }
 function riMove(i,dir){
   const j=i+dir;
@@ -3334,9 +3335,12 @@ function overdueMoveTo(){
   if(el) overdueTargetDate=el.value;
   const date=overdueTargetDate;
   if(!date){alert('移動先の日付を選択してください');return;}
-  if(!overdueSelected.size){alert('タスクを選択してください');return;}
+  // overdueSelectedとDOM両方から選択IDを収集（状態不一致のフォールバック）
+  const domIds=new Set([...document.querySelectorAll('.overdue-cb:checked')].map(cb=>String(cb.dataset.id)).filter(id=>id&&id!=='undefined'));
+  const allIds=new Set([...overdueSelected,...domIds]);
+  if(!allIds.size){alert('タスクを選択してください');return;}
   let count=0;
-  overdueSelected.forEach(id=>{const t=gtdTask(id);if(t){t.deadline=date;count++;}});
+  allIds.forEach(id=>{const t=gtdTask(id);if(t){t.deadline=date;count++;}});
   overdueSelected.clear();
   save(); renderGTD();
   toast(count+'件を '+date+' に移動しました');
@@ -3374,7 +3378,7 @@ function renderOverdueView(){
           <div style="margin-bottom:6px"><span class="overdue-date-label">📅 ${date}（${daysDiff(date)}）</span></div>
           <div style="display:flex;flex-direction:column;gap:6px">
             ${items.map(t=>`<div class="overdue-card-wrap${overdueSelected.has(String(t.id))?' oc-selected':''}">
-              <input type="checkbox" class="overdue-cb" ${overdueSelected.has(String(t.id))?'checked':''} onchange="overdueToggle(${t.id})">
+              <input type="checkbox" class="overdue-cb" data-id="${t.id}" ${overdueSelected.has(String(t.id))?'checked':''} onchange="overdueToggle(${t.id})">
               ${gtdCard(t)}
             </div>`).join('')}
           </div>
@@ -3435,6 +3439,7 @@ function renderGTD(){
               return `<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
             }).join('');
           })()}
+          <div style="border-top:1px dashed var(--line);margin:4px 0 2px"></div>
           <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="project">
               <span><span class="gf-arrow">▾</span>📁 プロジェクト</span>
@@ -3451,7 +3456,7 @@ function renderGTD(){
           </div>
           <div class="gf-section ${gtdCollapsed.recur?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="recur">
-              <span><span class="gf-arrow">▾</span>🔁 ルーティン</span>
+              <span><span class="gf-arrow">▾</span>🔁 繰り返し</span>
             </div>
             <div class="gf-items">
               <div class="gf-item ${gtdFilter.type==='recur'&&!gtdFilter.value&&gtdView!=='today'?'act':''}" data-f="recur" data-v="">すべて <span class="gf-cnt">${D.gtd.tasks.filter(t=>!!t.recur&&!t.done).length||''}</span></div>
