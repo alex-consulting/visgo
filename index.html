@@ -3311,7 +3311,16 @@ function renderTodayTimeline(){
     <div class="today-progress-label"><span>今日のタスク</span><span class="tp-done-count">${doneCount}/${totalCount} 完了 (${pct}%)</span></div>
     <div class="today-progress-bar"><div class="today-progress-fill" style="width:${pct}%"></div></div>
   </div>`:'';
-  const html=panel+progressBar+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
+  // ルーティン進捗バー
+  const routineTasks=(D.gtd.tasks||[]).filter(t=>!!t.routine&&!t.done);
+  const rTotal=routineTasks.reduce((s,t)=>s+(Array.isArray(t.routineItems)&&t.routineItems.length?t.routineItems.length:1),0);
+  const rDone=routineTasks.reduce((s,t)=>s+(Array.isArray(t.routineItems)&&t.routineItems.length?t.routineItems.filter(i=>i.done).length:0),0);
+  const rPct=rTotal?Math.round(rDone/rTotal*100):0;
+  const routineBar=rTotal?`<div class="today-progress-wrap" style="margin-top:6px">
+    <div class="today-progress-label"><span>🔄 ルーティン</span><span class="tp-done-count">${rDone}/${rTotal} 完了 (${rPct}%)</span></div>
+    <div class="today-progress-bar"><div class="today-progress-fill" style="width:${rPct}%;background:#30D158"></div></div>
+  </div>`:'';
+  const html=panel+progressBar+routineBar+renderTimeline(today,'☀️ 1日をスタート！',true)+reviewSection;
   setTimeout(()=>injectGcalToTimeline(today),0);
   return html;
 }
