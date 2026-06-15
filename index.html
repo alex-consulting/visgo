@@ -546,6 +546,17 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-del{position:absolute;top:8px;right:10px;background:rgba(255,255,255,.75);border:none;color:var(--faint);font-size:15px;cursor:pointer;padding:2px 4px;line-height:1;border-radius:50%;z-index:1}
 .dream-del:hover{color:var(--red);background:rgba(255,255,255,.95)}
 .dream-empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px}
+.dream-mission{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.dream-mission-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none}
+.dream-mission-hd-left{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--navy)}
+.dream-mission-arrow{font-size:11px;color:var(--sub);transition:transform .2s}
+.dream-mission.collapsed .dream-mission-arrow{transform:rotate(-90deg)}
+.dream-mission-body{padding:0 14px 14px;display:block}
+.dream-mission.collapsed .dream-mission-body{display:none}
+.dream-mission-ta{width:100%;min-height:80px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.7;background:var(--fill);color:var(--text);font-family:inherit;resize:vertical;box-sizing:border-box}
+.dream-mission-ta:focus{outline:none;border-color:var(--blue);background:var(--card)}
+.dream-mission-preview{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;cursor:text;min-height:24px}
+.dream-mission-preview.empty{color:var(--faint)}
 .dream-year-section{margin-bottom:22px}
 .dream-year-heading{font-size:14px;font-weight:700;color:var(--sub);margin:0 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
 .dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;height:140px;object-fit:cover;border-radius:14px 12px 0 0;display:block}
@@ -1119,6 +1130,7 @@ catch(e){ D = structuredClone(DEFAULT_DATA); }
 if(!Array.isArray(D.goalImages)) D.goalImages=[]; // 旧データ互換
 if(!D.gtd||!Array.isArray(D.gtd.tasks)) D.gtd={tasks:[],nextId:1}; // GTDタスク（PC版）
 if(!D.dreams||!Array.isArray(D.dreams.items)) D.dreams={items:[],nextId:1}; // 夢リスト
+if(!('mission' in D.dreams)) D.dreams.mission='';
 // gcalUrls: D.gcalUrls が正規ストア（sync対象）。旧keyからマイグレーション
 (()=>{
   if(Array.isArray(D.gcalUrls)&&D.gcalUrls.length){ gcalUrls=D.gcalUrls; return; }
@@ -1494,6 +1506,7 @@ function fitAll(root){root.querySelectorAll("textarea").forEach(fit);}
 let dreamFilter='all'; // 'all'|'Have'|'Do'|'Be'
 let dreamShowSteps=true;
 let dreamEditId=null;
+let dreamMissionCollapsed=true;
 let dmSteps=[]; // モーダル編集中の一時ステップ配列
 let dmStepGoals=[]; // モーダル編集中のステップ目標配列
 let dmImage=null; // モーダル編集中の画像データURL
@@ -1736,6 +1749,18 @@ function renderDreams(){
     <div class="gf-item" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
   </aside>
   <div class="gtd-main">
+  <div class="dream-mission${dreamMissionCollapsed?' collapsed':''}">
+    <div class="dream-mission-hd" onclick="dreamMissionCollapsed=!dreamMissionCollapsed;renderDreams()">
+      <div class="dream-mission-hd-left">🧭 ミッション（自分の使命・存在意義）</div>
+      <span class="dream-mission-arrow">▾</span>
+    </div>
+    <div class="dream-mission-body">
+      ${(()=>{
+        const mission=D.dreams.mission||'';
+        return `<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="D.dreams.mission=this.value;save()">${esc(mission)}</textarea>`;
+      })()}
+    </div>
+  </div>
   ${items.length
     ? years.map(y=>{
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
