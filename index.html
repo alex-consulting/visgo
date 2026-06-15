@@ -2032,7 +2032,8 @@ function ssRoutineAdd(){
   c.appendChild(div); div.querySelector('input').focus();
 }
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
-const ANNUAL_PROJECT='🎯年間目標達成';
+const ANNUAL_PROJECT='🎯年間目標達成シート';
+const ANNUAL_PROJECT_OLD='🎯年間目標達成'; // 移行用
 function routinesToTodo(){
   const items=[];
   document.querySelectorAll('[data-ri]').forEach(el=>{
@@ -3965,6 +3966,15 @@ function startTimelineNowTimer(){
   if(!waids.length) return;
   (D.gtd.tasks||[]).forEach(t=>{ if(waids.includes(t.project||'')) t.project=''; });
   D.gtd.projects=(D.gtd.projects||[]).filter(p=>!p.includes('WAIDs'));
+  save();
+})();
+// 年間目標達成 → 年間目標達成シート リネーム移行（一回限り）
+(function(){
+  if(!D.gtd) return;
+  const idx=(D.gtd.projects||[]).indexOf(ANNUAL_PROJECT_OLD);
+  if(idx<0) return;
+  D.gtd.projects[idx]=ANNUAL_PROJECT;
+  (D.gtd.tasks||[]).forEach(t=>{ if(t.project===ANNUAL_PROJECT_OLD) t.project=ANNUAL_PROJECT; });
   save();
 })();
 showTab("gtd");
