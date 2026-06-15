@@ -2962,6 +2962,7 @@ function gtdFolderItems(type){
       : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
     const act=(gtdFilter.type===type&&gtdFilter.value===name)?'act':'';
     const isAnnual=(type==='project'&&name===ANNUAL_PROJECT);
+    const isWaids=(type==='project'&&name==='WAIDs');
     const dot=type==='project'
       ? ` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`
       : '';
@@ -2969,7 +2970,8 @@ function gtdFolderItems(type){
       ? '' // リネーム・削除ボタン非表示
       : `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`;
-    const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
+    const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;'
+      :isWaids?'border-left:4px solid #007AFF;border-radius:0 6px 6px 0;padding-left:6px;':'';
     return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="true" style="${annualStyle}">
       <span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt}</span>
