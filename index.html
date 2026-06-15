@@ -3511,7 +3511,7 @@ function renderGTD(){
         ? renderTomorrowTimeline()
         : gtdView==='overdue'
         ? renderOverdueView()
-        : `<div style="display:flex;justify-content:flex-end;padding:0 4px 8px">
+        : `<div style="display:flex;justify-content:flex-start;padding:0 4px 8px">
             <button class="kms-toggle-btn${multiSelectMode?' kms-active':''}" onclick="toggleMultiSelect()">${multiSelectMode?'✕ キャンセル':'☑ 複数選択'}</button>
           </div>
           <div class="kcol" style="width:100%;max-width:100%">
