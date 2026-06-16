@@ -1623,7 +1623,12 @@ function dmAddStepGoal(){
 }
 function dmToggleStepGoal(cb,id){
   const s=dmStepGoals.find(x=>String(x.id)===String(id));
-  if(s){ s.done=cb.checked; renderDmStepGoals(); }
+  if(!s) return;
+  s.done=cb.checked;
+  // 編集中のドリームデータに即反映してリスト更新
+  const d=D.dreams.items&&D.dreams.items.find(x=>String(x.id)===String(dreamEditId));
+  if(d){ d.stepGoals=JSON.parse(JSON.stringify(dmStepGoals)); save(); renderDreams(); }
+  renderDmStepGoals();
 }
 function dmDeleteStepGoal(id){
   dmStepGoals=dmStepGoals.filter(x=>String(x.id)!==String(id));
@@ -1771,10 +1776,11 @@ ${imgsHtml}
           // 各ドリームの「最も近いステップ目標」1つをこの年に表示
           const cards=items.flatMap(d=>{
             const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
-            if(!sgs.length) return [];
-            const minYM=sgs.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
+            const pending=sgs.filter(s=>!s.done);
+            if(!pending.length) return [];
+            const minYM=pending.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
             if(minYM.slice(0,4)!==y) return [];
-            return sgs.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
+            return pending.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
           });
           if(!cards.length) return '';
           // yearMonthでソート、同月は横並び・月が変わると縦積み
