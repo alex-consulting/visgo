@@ -2506,12 +2506,13 @@ function renderSheetView(){
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
       <button class="vsec-add-btn" onclick="ssMilestoneAdd()">＋ 経過目標と進捗を追加</button>
     </div>
-    <div class="vsec"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">週間期日行動</h3><button onclick="deadlinesToTodo()" style="font-size:12px;padding:4px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">✅ ToDoに反映</button></div>
+    <div class="vsec"><h3>週間期日行動</h3>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
         const arr=dlTab==='done'?done:todo;
         const rows=arr.length?arr.map(dl=>{const ri=D.deadlines.indexOf(dl);return `<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${ri}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`;}).join(""):"<p class='vempty'>—</p>";
         const toggle=dlTab==='done'?`<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`:(done.length?`<button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${done.length})</button>`:"");
         return rows+toggle;})()}
+      <button onclick="deadlinesToTodo()" style="margin-top:10px;width:100%;padding:9px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✅ ToDoに反映する</button>
     </div>
     <div class="vsec"><h3>目的・目標の4観点</h3>
       <div class="vquads">
@@ -2519,8 +2520,9 @@ function renderSheetView(){
           <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
       </div>
     </div>
-    <div class="vsec"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">ルーティン行動（重要度が高い順）</h3><button onclick="routinesToTodo()" style="font-size:12px;padding:4px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">✅ ToDoに反映</button></div>
+    <div class="vsec"><h3>ルーティン行動（重要度が高い順）</h3>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
+      <button onclick="routinesToTodo()" style="margin-top:10px;width:100%;padding:9px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✅ ToDoに反映する</button>
     </div>
     <div class="vsec"><h3>目標達成のための支援</h3>
       <table class="vtab"><tr><th style="width:30%">支援者</th><th>支援内容</th></tr>
