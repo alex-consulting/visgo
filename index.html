@@ -1265,10 +1265,24 @@ async function syncPushNow(){
   D._syncAt=now;
   try{
     // 画像（goalImages・dream images）を含めて送信
+    // IDBロード前にsave()が走った場合、missionImages/goalImagesが[]のままになるのを防ぐ
+    const payload={...D, dreams:{...D.dreams, items:(D.dreams?.items||[]).map(d=>({...d}))}};
+    if(!payload.goalImages?.length){try{payload.goalImages=await idbGet("goalImages")||[];}catch(e){}}
+    if(!payload.missionImages?.length){try{payload.missionImages=await idbGet("missionImages")||[];}catch(e){}}
+    // 夢カード画像: IDBから復元して各dreamにマージ
+    try{
+      const dreamImgs=await idbGet("dreamImages");
+      if(dreamImgs&&typeof dreamImgs==='object'){
+        payload.dreams.items=payload.dreams.items.map(d=>{
+          if(!d.image&&dreamImgs[String(d.id)]) return {...d,image:dreamImgs[String(d.id)]};
+          return d;
+        });
+      }
+    }catch(e){}
     const res=await fetch(WORKER_URL,{
       method:"PUT",
       headers:{"Content-Type":"application/json","X-Sync-Code":getSyncCode()},
-      body:JSON.stringify(D)
+      body:JSON.stringify(payload)
     });
     if(!res.ok) throw new Error();
     // プッシュ成功時のみ _syncAt をローカルストレージに永続化
@@ -1764,7 +1778,7 @@ function renderDreams(){
         return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="D.dreams.missionTitle=this.value;save();dmSyncMissionTitle(this.value)">
 <textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
 ${imgsHtml}
-<div style="margin-top:8px"><button onclick="document.getElementById('dmMissionImgFile').click()" style="border:1px dashed var(--line);background:none;padding:7px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button><input type="file" id="dmMissionImgFile" accept="image/*" multiple style="display:none" onchange="dmMissionAddImgs(this)"></div>`;
+<div style="margin-top:8px;display:flex;gap:8px;align-items:center"><button onclick="document.getElementById('dmMissionImgFile').click()" style="border:1px dashed var(--line);background:none;padding:7px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button><input type="file" id="dmMissionImgFile" accept="image/*" multiple style="display:none" onchange="dmMissionAddImgs(this)"><button onclick="save();toast('ミッションを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
       })()}
     </div>
   </div>
