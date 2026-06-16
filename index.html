@@ -137,11 +137,11 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .ss-inp{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--fill)}
 .ss-ta{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--fill);resize:vertical;min-height:70px}
 .ss-row2{display:flex;gap:8px;margin-bottom:6px}
-.vsec-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.vsec-hd h3{margin:0}
-.vsec-edit{border:1px solid var(--blue);background:var(--blue-l);cursor:pointer;font-size:11px;padding:2px 10px;border-radius:6px;color:var(--blue);line-height:1.5;font-weight:600}
-.vsec-edit:hover{background:var(--blue);color:#fff}
-.vsec-edit:hover{background:rgba(255,255,255,.2)}
+.vsec-title-btn{cursor:pointer;margin:0 0 10px;display:inline-flex;align-items:center;gap:6px}
+.vsec-title-btn:hover .vsec-pencil{opacity:1}
+.vsec-pencil{font-size:12px;color:var(--blue);opacity:.6;transition:opacity .15s;font-weight:400}
+.vsec-add-btn{margin-top:8px;border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px}
+.vsec-add-btn:hover{border-color:var(--blue);color:var(--blue)}
 .vgoal-label{cursor:pointer}
 .vgoal-label:hover{opacity:.75}
 /* ---- read-only view ---- */
@@ -549,7 +549,14 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px}
 .dream-mission{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:18px;overflow:hidden}
 .dream-mission-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none}
-.dream-mission-hd-left{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--navy)}
+.dream-mission-hd-left{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--navy);white-space:nowrap}
+.dream-mission-title{font-size:13px;font-weight:600;color:var(--text);flex:1;margin:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dream-mission-title.empty{color:var(--faint);font-weight:400}
+.dream-mission-title-inp{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-weight:700;color:var(--navy);background:var(--fill);margin-bottom:8px;box-sizing:border-box;font-family:inherit}
+.dream-mission-title-inp:focus{outline:none;border-color:var(--blue);background:var(--card)}
+.dream-mission-imgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dm-img-thumb{height:90px;border-radius:8px;cursor:zoom-in;border:1px solid var(--line)}
+.dm-img-del{position:absolute;top:-5px;right:-5px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0}
 .dream-mission-arrow{font-size:11px;color:var(--sub);transition:transform .2s}
 .dream-mission.collapsed .dream-mission-arrow{transform:rotate(-90deg)}
 .dream-mission-body{padding:0 14px 14px;display:block}
@@ -566,6 +573,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .sg-card.do{border-left-color:#248A3D}
 .sg-card.be{border-left-color:#AF52DE}
 .sg-card:hover{box-shadow:0 3px 12px rgba(0,122,255,.1)}
+.sg-card.sg-done{opacity:.6;background:var(--fill)}
+.sg-text-done{text-decoration:line-through;color:var(--sub)}
 .sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;margin-top:6px}.sg-list+.sg-list{margin-top:4px}
 .sg-ym{font-size:11px;font-weight:600;color:var(--blue);flex:0 0 auto}
 .sg-text{font-size:13px;font-weight:400;color:var(--navy);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -811,7 +820,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   <button id="tb-gtd" onclick="showTab('gtd')"><span class="tab-icon">✅</span>ToDo</button>
   <button id="tb-dream" onclick="showTab('dream')"><span class="tab-icon">🏝️</span>夢リスト</button>
   <button id="tb-sheet" onclick="showTab('sheet')"><span class="tab-icon">🎯</span>年間目標</button>
-  <button id="tb-ow" onclick="showTab('ow')"><span class="tab-icon">🪟</span>OW64</button>
+  <button id="tb-ow" onclick="showTab('ow')"><span class="tab-icon">📋</span>OW64</button>
 </nav>
 
 <main>
@@ -954,6 +963,7 @@ const DEFAULT_DATA = {
     ]
   },
   goalImages:[],
+  missionImages:[],
   profile:{birthday:'',lifespan:90},
   weekly:{}
 };
@@ -1106,6 +1116,8 @@ if(!Array.isArray(D.goalImages)) D.goalImages=[]; // 旧データ互換
 if(!D.gtd||!Array.isArray(D.gtd.tasks)) D.gtd={tasks:[],nextId:1}; // GTDタスク（PC版）
 if(!D.dreams||!Array.isArray(D.dreams.items)) D.dreams={items:[],nextId:1}; // 夢リスト
 if(!('mission' in D.dreams)) D.dreams.mission='';
+if(!('missionTitle' in D.dreams)) D.dreams.missionTitle='';
+if(!Array.isArray(D.missionImages)) D.missionImages=[];
 // gcalUrls: D.gcalUrls が正規ストア（sync対象）。旧keyからマイグレーション
 (()=>{
   if(Array.isArray(D.gcalUrls)&&D.gcalUrls.length){ gcalUrls=D.gcalUrls; return; }
@@ -1182,6 +1194,7 @@ function idbGet(k){
 }
 let saveTimer=null;
 let goalImagesReady=false; // IDBからの初回ロード完了前にsave()がgoalImagesを上書きするのを防ぐ
+let missionImagesReady=false;
 function save(){
   clearTimeout(saveTimer);
   document.getElementById("saveState").textContent="保存中…";
@@ -1190,11 +1203,12 @@ function save(){
       // 夢画像をIDB用に抽出（localStorageの容量節約）
       const dreamImgs={};
       (D.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs[String(d.id)]=d.image; });
-      const {goalImages, ...rest}=D;
+      const {goalImages, missionImages, ...rest}=D;
       const lsData={...rest, dreams:{...rest.dreams,
         items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
       localStorage.setItem(LS_KEY, JSON.stringify(lsData));
       if(goalImagesReady) await idbSet("goalImages", D.goalImages||[]);
+      if(missionImagesReady) await idbSet("missionImages", D.missionImages||[]);
       await idbSet("dreamImages", dreamImgs);
       document.getElementById("saveState").textContent="✓ 保存済み";
       syncPush();
@@ -1229,11 +1243,12 @@ async function _applyRemoteData(remote){
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
     if(Array.isArray(remote.goalImages)) await idbSet("goalImages",remote.goalImages);
+    if(Array.isArray(remote.missionImages)) await idbSet("missionImages",remote.missionImages);
     const dreamImgs={};
     (remote.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs[String(d.id)]=d.image; });
     await idbSet("dreamImages",dreamImgs);
   }catch(e){}
-  const {goalImages,...rest}=D;
+  const {goalImages,missionImages,...rest}=D;
   const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
   localStorage.setItem(LS_KEY,JSON.stringify(lsData));
 }
@@ -1528,9 +1543,9 @@ function dmClearImage(){
 }
 
 function dreamProgress(d){
-  const steps=Array.isArray(d.steps)?d.steps:[];
-  if(!steps.length) return 0;
-  return Math.round(steps.filter(s=>s.done).length/steps.length*100);
+  const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
+  if(!sgs.length) return 0;
+  return Math.round(sgs.filter(s=>s.done).length/sgs.length*100);
 }
 function renderDmSteps(){
   const list=document.getElementById('dmStepList'); if(!list) return;
@@ -1584,8 +1599,9 @@ function renderDmStepGoals(){
   const list=document.getElementById('dmStepGoalList'); if(!list) return;
   list.innerHTML=dmStepGoals.length
     ? dmStepGoals.map(s=>`<div class="dm-step-item">
+        <input type="checkbox" class="dm-step-check" ${s.done?'checked':''} onchange="dmToggleStepGoal(this,'${s.id}')">
         <div class="dm-step-body">
-          <input type="text" class="dm-step-text-input" value="${esc(s.text)}" placeholder="ステップ目標"
+          <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="ステップ目標"
             oninput="dmUpdateStepGoal('${s.id}','text',this.value)">
           <input type="month" class="dm-step-date" value="${s.yearMonth||''}" title="目標年月"
             onchange="dmUpdateStepGoal('${s.id}','yearMonth',this.value)">
@@ -1604,6 +1620,10 @@ function dmAddStepGoal(){
   const text=(inp.value||'').trim(); if(!text) return;
   dmStepGoals.push({id:Date.now(),text,yearMonth:monthInp?monthInp.value:''});
   inp.value=''; if(monthInp) monthInp.value=''; renderDmStepGoals();
+}
+function dmToggleStepGoal(cb,id){
+  const s=dmStepGoals.find(x=>String(x.id)===String(id));
+  if(s){ s.done=cb.checked; renderDmStepGoals(); }
 }
 function dmDeleteStepGoal(id){
   dmStepGoals=dmStepGoals.filter(x=>String(x.id)!==String(id));
@@ -1657,20 +1677,20 @@ function renderDreams(){
         <span class="dream-title">${esc(d.title)}</span>
       </div>
       ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
-      ${(()=>{const pct=dreamProgress(d);const steps=Array.isArray(d.steps)?d.steps:[];const first=steps.find(s=>!s.done)||steps[0];return steps.length?`
-      ${first?`<div class="dream-first-step${first.done?' dream-first-step-done':''}">▶ ${esc(first.text)}</div>`:''}
+      ${(()=>{const pct=dreamProgress(d);const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];if(!sgs.length) return '';return `
       <div class="dream-progress-wrap">
-        <div class="dream-progress-label"><span>進捗 ${steps.filter(s=>s.done).length}/${steps.length}</span><span>${pct}%</span></div>
+        <div class="dream-progress-label"><span>ステップ ${sgs.filter(s=>s.done).length}/${sgs.length}</span><span>${pct}%</span></div>
         <div class="dream-progress-bar"><div class="dream-progress-fill" style="width:${pct}%"></div></div>
-      </div>`:'';})()}
+      </div>`;})()}
     </div>`;
   }
   function sgCardHtml(sg, d){
     const month=sg.yearMonth?String(Number(sg.yearMonth.slice(5)))+'月':'—';
     const catCls=dreamCatClass(d.category);
-    return `<div class="sg-card ${catCls}" onclick="openDreamModal('${d.id}')">
+    return `<div class="sg-card ${catCls}${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')">
+      ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''}
       <span class="sg-ym">${month}</span>
-      <span class="sg-text">${esc(sg.text)}</span>
+      <span class="sg-text${sg.done?' sg-text-done':''}">${esc(sg.text)}</span>
     </div>`;
   }
 
@@ -1703,7 +1723,7 @@ function renderDreams(){
           </div>
         </div>`;
       }
-      return barHtml+`<div style="display:flex;justify-content:flex-end;margin-top:4px"><button onclick="openDreamProfile()" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">✏ 基本情報を編集</button></div>`;
+      return barHtml+`<div style="display:flex;justify-content:flex-end;margin-top:4px;width:100%"><button onclick="openDreamProfile()" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">基本情報を編集</button></div>`;
     })()}
   </div>
   <div class="dream-toolbar">
@@ -1728,13 +1748,20 @@ function renderDreams(){
   <div class="gtd-main">
   <div class="dream-mission${dreamMissionCollapsed?' collapsed':''}">
     <div class="dream-mission-hd" onclick="dreamMissionCollapsed=!dreamMissionCollapsed;renderDreams()">
-      <div class="dream-mission-hd-left">🧭 ミッション（自分の使命・存在意義）</div>
+      <div class="dream-mission-hd-left">💡 ミッション</div>
+      ${(()=>{const t=D.dreams.missionTitle||'';return `<span class="dream-mission-title${t?'':' empty'}">${esc(t)||'（タイトル未設定）'}</span>`;})()}
       <span class="dream-mission-arrow">▾</span>
     </div>
     <div class="dream-mission-body">
       ${(()=>{
         const mission=D.dreams.mission||'';
-        return `<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.mission=this.value;save()">${esc(mission)}</textarea>`;
+        const mTitle=D.dreams.missionTitle||'';
+        const imgs=(D.missionImages||[]);
+        const imgsHtml=imgs.length?`<div class="dream-mission-imgs">${imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('')}</div>`:'';
+        return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="D.dreams.missionTitle=this.value;save();dmSyncMissionTitle(this.value)">
+<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
+${imgsHtml}
+<div style="margin-top:8px"><button onclick="document.getElementById('dmMissionImgFile').click()" style="border:1px dashed var(--line);background:none;padding:7px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button><input type="file" id="dmMissionImgFile" accept="image/*" multiple style="display:none" onchange="dmMissionAddImgs(this)"></div>`;
       })()}
     </div>
   </div>
@@ -1803,7 +1830,7 @@ function openDreamModal(id){
       <textarea id="dmMemo" rows="3" placeholder="達成したときどんな気持ちになるか、どんな景色が見えるか...">${esc(d.memo||'')}</textarea>
     </div>
     <div class="dm-field">
-      <label>🪜 ステップ目標</label>
+      <label>🚩 ステップ目標</label>
       <div class="dm-step-list" id="dmStepGoalList"></div>
       <div class="dm-step-addrow">
         <input type="text" id="dmStepGoalInput" placeholder="ステップ目標を追加..."
@@ -1875,6 +1902,46 @@ function saveDream(){
   save(); closeDreamModal(); renderDreams();
 }
 
+function dmSyncMissionTitle(val){
+  const sp=document.querySelector('.dream-mission-title');
+  if(!sp) return;
+  if(val){sp.textContent=val;sp.classList.remove('empty');}
+  else{sp.textContent='（タイトル未設定）';sp.classList.add('empty');}
+}
+function dmMissionRenderImgs(){
+  const wrap=document.querySelector('.dream-mission-imgs');
+  const btn=document.getElementById('dmMissionImgFile');
+  const imgs=D.missionImages||[];
+  if(!wrap){renderDreams();return;}
+  const parent=wrap.parentNode;
+  if(imgs.length){
+    wrap.innerHTML=imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('');
+  } else {
+    wrap.innerHTML='';
+  }
+}
+function dmMissionDelImg(i){
+  D.missionImages.splice(i,1);
+  save();
+  dmMissionRenderImgs();
+}
+function dmMissionZoom(i){
+  document.getElementById("lightboxImg").src=D.missionImages[i];
+  document.getElementById("lightbox").classList.add("show");
+}
+async function dmMissionAddImgs(input){
+  const files=[...input.files]; if(!files.length) return;
+  input.value='';
+  for(const f of files){
+    try{
+      const url=await compressImage(f);
+      D.missionImages.push(url);
+    }catch(e){ alert("画像の読み込みに失敗しました: "+f.name); }
+  }
+  try{ await idbSet("missionImages", D.missionImages); }catch(e){}
+  save();
+  dmMissionRenderImgs();
+}
 function deleteDream(id){
   if(!confirm('この夢を削除しますか？')) return;
   D.dreams.items=(D.dreams.items||[]).filter(x=>String(x.id)!==String(id));
@@ -2015,6 +2082,10 @@ function ssGoalAddImgs(input){
     reader.readAsDataURL(file);
   });
   input.value='';
+}
+function ssMilestoneAdd(){
+  D.milestones.push({date:'',text:'',pct:0});
+  openSheetSection('milestones');
 }
 function ssAddDl(){
   D.deadlines.push({month:'',text:'',done:false});
@@ -2335,7 +2406,7 @@ function renderSheetView(){
   <div class="vsheet">
     <div class="vhead">
       <h1 class="print-only">年間目標達成シート</h1>
-      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px"><button onclick="openSheetSection('meta')" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">✏ 基本情報を編集</button></div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px"><button onclick="openSheetSection('meta')" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">基本情報を編集</button></div>
       <div class="vmeta">
         <span class="print-only"><b>氏名</b>${esc(D.meta.name)||"—"}</span>
         <span class="print-only"><b>記入日</b>${esc(fmtDate(D.meta.writeDate))||"—"}</span>
@@ -2343,45 +2414,46 @@ function renderSheetView(){
         <span><b>更新日</b>${esc(fmtDate(D.meta.updateDate))||"—"}</span>
       </div>
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>奉仕活動</h3><button class="vsec-edit" onclick="openSheetSection('service')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('service')">奉仕活動 <span class="vsec-pencil">✏</span></h3>
       <p><b>家族：</b>${nl2br(D.service.family)||"—"}</p>
       <p><b>社会：</b>${nl2br(D.service.society)||"—"}</p>
     </div>
     <div class="vgoal">
-      <div class="vgoal-label" onclick="openSheetSection('goal')">達成目標 ✏️</div>
+      <div class="vgoal-label" onclick="openSheetSection('goal')" style="cursor:pointer;margin-bottom:8px">達成目標 <span style="font-size:11px;opacity:.6">✏</span></div>
       <div class="vgoal-main">${nl2br(D.goal)||"—"}</div>
       ${D.goalNote?`<div class="vgoal-note">${nl2br(D.goalNote)}</div>`:""}
       ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>経過目標</h3><button class="vsec-edit" onclick="openSheetSection('milestones')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('milestones')">経過目標 <span class="vsec-pencil">✏</span></h3>
       <div class="vms">${D.milestones.map(m=>`<div class="vmsbox ${(m.pct||0)>=100?'done100':''}"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
+      <button class="vsec-add-btn" onclick="ssMilestoneAdd()">＋ 経過目標を追加</button>
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>週間期日行動</h3><button class="vsec-edit" onclick="openSheetSection('deadlines')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('deadlines')">週間期日行動 <span class="vsec-pencil">✏</span></h3>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
         const arr=dlTab==='done'?done:todo;
-        const rows=arr.length?arr.map(dl=>`<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${dl.id}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`).join(""):"<p class='vempty'>—</p>";
+        const rows=arr.length?arr.map(dl=>{const ri=D.deadlines.indexOf(dl);return `<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${ri}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`;}).join(""):"<p class='vempty'>—</p>";
         const toggle=dlTab==='done'?`<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`:(done.length?`<button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${done.length})</button>`:"");
         return rows+toggle;})()}
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>目的・目標の4観点</h3><button class="vsec-edit" onclick="openSheetSection('quad')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('quad')">目的・目標の4観点 <span class="vsec-pencil">✏</span></h3>
       <div class="vquads">
         ${D.quad.map(q=>`<div class="vquad"><div class="vquad-t">${esc(q.title)}</div>
           <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
       </div>
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>ルーティン行動（重要度が高い順）</h3><button class="vsec-edit" onclick="openSheetSection('routines')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('routines')">ルーティン行動（重要度が高い順） <span class="vsec-pencil">✏</span></h3>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>目標達成のための支援</h3><button class="vsec-edit" onclick="openSheetSection('supports')">✏ 編集</button></div>
-      <table class="vtab"><tr><th>支援者</th><th>支援内容</th></tr>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('supports')">目標達成のための支援 <span class="vsec-pencil">✏</span></h3>
+      <table class="vtab"><tr><th style="width:30%">支援者</th><th>支援内容</th></tr>
         ${D.supports.filter(s=>s.who||s.what).map(s=>`<tr><td>${esc(s.who)}</td><td>${esc(s.what)}</td></tr>`).join("")||"<tr><td class='vempty'>—</td><td></td></tr>"}</table>
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>成功・強み／失敗・弱みの分析</h3><button class="vsec-edit" onclick="openSheetSection('analysis')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('analysis')">成功・強み／失敗・弱みの分析 <span class="vsec-pencil">✏</span></h3>
       <table class="vtab vtab3"><tr><th></th><th>成功・強み</th><th>失敗・弱み</th></tr>
         ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.success[i])}</td><td>${nl2br(a.failure[i])}</td></tr>`).join("")}</table>
     </div>
-    <div class="vsec"><div class="vsec-hd"><h3>予想される問題点と解決策</h3><button class="vsec-edit" onclick="openSheetSection('problems')">✏ 編集</button></div>
+    <div class="vsec"><h3 class="vsec-title-btn" onclick="openSheetSection('problems')">予想される問題点と解決策 <span class="vsec-pencil">✏</span></h3>
       <table class="vtab vtab3"><tr><th></th><th>予想される問題点</th><th>解決策</th></tr>
         ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${nl2br(a.problem[i])}</td><td>${nl2br(a.solution[i])}</td></tr>`).join("")}</table>
     </div>
@@ -2392,8 +2464,8 @@ function renderSheetView(){
   // ビューモード：週間期日行動チェックボックス
   root.querySelectorAll(".vdl-chk").forEach(cb=>{
     cb.addEventListener("change",()=>{
-      const dl=D.deadlines.find(d=>String(d.id)===String(cb.dataset.dlid));
-      if(dl){ dl.done=cb.checked; save(); renderSheet(); }
+      const dl=D.deadlines[+cb.dataset.dlid];
+      if(dl!=null){ dl.done=cb.checked; save(); renderSheet(); }
     });
   });
 }
@@ -2551,7 +2623,7 @@ function renderOW(){
   }
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">🪟 OW64</h1><p class="ph-sub">オープンウインドウ６４・マンダラチャート</p></div>
+    <div><h1 class="ph-title">📋 OW64</h1><p class="ph-sub">オープンウインドウ６４・マンダラチャート</p></div>
   </div>
   <div class="mob-chips">
     <button id="owAllM" class="${owMode==="all"?"act":""}">全体表示</button>
@@ -2560,7 +2632,7 @@ function renderOW(){
   </div>
   <div class="gtd-wrap">
   <aside class="gtd-side side-static">
-    <div class="gf-item ${owMode==="all"?"act":""}" id="owAll">🪟 全体表示</div>
+    <div class="gf-item ${owMode==="all"?"act":""}" id="owAll">📋 全体表示</div>
     <div class="gf-item ${owMode==="block"?"act":""}" id="owBlk">🔍 ブロック表示</div>
     <div class="gf-item" onclick="printOW()">🖨 A4印刷 / PDF</div>
   </aside>
@@ -3073,9 +3145,12 @@ function advanceRecurDeadline(t){
   }
   t.deadline=localDateStr(next);
   t.done=false;
-  // サブタスクを即時リセット
-  if(Array.isArray(t.routineItems)) t.routineItems.forEach(it=>it.done=false);
-  delete t._subResetDate;
+  // サブタスクは次の期日にリセット（当日中は完了状態を維持する）
+  if(Array.isArray(t.routineItems)&&t.routineItems.length){
+    t._subResetDate=t.deadline;
+  } else {
+    delete t._subResetDate;
+  }
 }
 let tlCollapsed=false;
 let tpFeelingCollapsed=false;
@@ -3340,10 +3415,13 @@ function renderTodayTimeline(){
     <div class="today-progress-label"><span>今日のタスク</span><span class="tp-done-count">${doneCount}/${totalCount} 完了 (${pct}%)</span></div>
     <div class="today-progress-bar"><div class="today-progress-fill" style="width:${pct}%"></div></div>
   </div>`:'';
-  // ルーティン進捗バー
-  const routineTasks=(D.gtd.tasks||[]).filter(t=>!!t.routine&&!t.done);
+  // ルーティン進捗バー（当日完了済みで翌日分に移動したものも含む）
+  const routineTasks=(D.gtd.tasks||[]).filter(t=>!!t.routine&&(!t.done||t._subResetDate));
   const rTotal=routineTasks.reduce((s,t)=>s+(Array.isArray(t.routineItems)&&t.routineItems.length?t.routineItems.length:1),0);
-  const rDone=routineTasks.reduce((s,t)=>s+(Array.isArray(t.routineItems)&&t.routineItems.length?t.routineItems.filter(i=>i.done).length:0),0);
+  const rDone=routineTasks.reduce((s,t)=>{
+    if(Array.isArray(t.routineItems)&&t.routineItems.length) return s+t.routineItems.filter(i=>i.done).length;
+    return s+(t.done||t._subResetDate?1:0);
+  },0);
   const rPct=rTotal?Math.round(rDone/rTotal*100):0;
   const routineBar=rTotal?`<div class="today-progress-wrap" style="margin-top:6px">
     <div class="today-progress-label"><span>🔄 ルーティン</span><span class="tp-done-count">${rDone}/${rTotal} 完了 (${rPct}%)</span></div>
@@ -4027,6 +4105,15 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
     }
     goalImagesReady=true;
   }catch(e){ goalImagesReady=true; }
+  // ミッション画像をIndexedDBから読み込み
+  try{
+    const mimgs=await idbGet("missionImages");
+    if(Array.isArray(mimgs)&&mimgs.length){
+      D.missionImages=mimgs;
+      if(document.getElementById("tab-dream").classList.contains("act")) renderDreams();
+    }
+    missionImagesReady=true;
+  }catch(e){ missionImagesReady=true; }
   // 夢画像をIndexedDBから復元
   try{
     const dreamImgs=await idbGet("dreamImages");
@@ -4045,7 +4132,7 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
   try{
     const dreamImgs2={};
     (D.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs2[String(d.id)]=d.image; });
-    const {goalImages,...rest}=D;
+    const {goalImages,missionImages,...rest}=D;
     const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
     localStorage.setItem(LS_KEY,JSON.stringify(lsData));
   }catch(e){}
