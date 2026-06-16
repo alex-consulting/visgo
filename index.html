@@ -2174,11 +2174,11 @@ function openDreamProfile(){
 const ANNUAL_PROJECT='🎯年間目標達成シート';
 const ANNUAL_PROJECT_OLD='🎯年間目標達成'; // 移行用
 function routinesToTodo(){
-  const items=[];
-  document.querySelectorAll('[data-ri]').forEach(el=>{
-    const text=el.value.trim();
-    if(text) items.push({id:Date.now()+Math.random(),text,done:false});
-  });
+  // モーダル編集中なら[data-ri]入力欄から、表示モードならD.routinesから読む
+  const inputEls=document.querySelectorAll('[data-ri]');
+  const items=inputEls.length
+    ? Array.from(inputEls).map(el=>el.value.trim()).filter(Boolean).map(text=>({id:Date.now()+Math.random(),text,done:false}))
+    : D.routines.filter(r=>r.text.trim()).map(r=>({id:Date.now()+Math.random(),text:r.text,done:false}));
   if(!items.length){alert('ルーティン行動が登録されていません。');return;}
   // プロジェクトがなければ追加
   if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
@@ -2212,18 +2212,24 @@ function routinesToTodo(){
   alert('ToDoに「ルーティン行動」タスクを反映しました。');
 }
 function deadlinesToTodo(){
-  // 入力中の最新値を取得
-  const items=[];
-  const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});
-  document.querySelectorAll('[data-dli]').forEach(el=>{
-    const li=+el.dataset.dli,f=el.dataset.dlf;
-    if(ti[li]!=null){
-      if(!items[li]) items[li]={text:'',deadline:''};
-      if(f==='text') items[li].text=el.value.trim();
-      if(f==='month') items[li].deadline=el.value;
-    }
-  });
-  const validItems=items.filter(it=>it&&it.text);
+  // モーダル編集中なら[data-dli]入力欄から、表示モードならD.deadlinesから読む
+  const inputEls=document.querySelectorAll('[data-dli]');
+  let validItems=[];
+  if(inputEls.length){
+    const items=[];
+    const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});
+    inputEls.forEach(el=>{
+      const li=+el.dataset.dli,f=el.dataset.dlf;
+      if(ti[li]!=null){
+        if(!items[li]) items[li]={text:'',deadline:''};
+        if(f==='text') items[li].text=el.value.trim();
+        if(f==='month') items[li].deadline=el.value;
+      }
+    });
+    validItems=items.filter(it=>it&&it.text);
+  } else {
+    validItems=D.deadlines.filter(d=>!d.done&&d.text.trim()).map(d=>({text:d.text,deadline:d.month||''}));
+  }
   if(!validItems.length){alert('週間期日行動が登録されていません。');return;}
   if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
   if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
@@ -2500,7 +2506,7 @@ function renderSheetView(){
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
       <button class="vsec-add-btn" onclick="ssMilestoneAdd()">＋ 経過目標と進捗を追加</button>
     </div>
-    <div class="vsec"><h3>週間期日行動</h3>
+    <div class="vsec"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">週間期日行動</h3><button onclick="deadlinesToTodo()" style="font-size:12px;padding:4px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">✅ ToDoに反映</button></div>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
         const arr=dlTab==='done'?done:todo;
         const rows=arr.length?arr.map(dl=>{const ri=D.deadlines.indexOf(dl);return `<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${ri}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`;}).join(""):"<p class='vempty'>—</p>";
@@ -2513,7 +2519,7 @@ function renderSheetView(){
           <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
       </div>
     </div>
-    <div class="vsec"><h3>ルーティン行動（重要度が高い順）</h3>
+    <div class="vsec"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h3 style="margin:0">ルーティン行動（重要度が高い順）</h3><button onclick="routinesToTodo()" style="font-size:12px;padding:4px 12px;background:var(--blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">✅ ToDoに反映</button></div>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
     </div>
     <div class="vsec"><h3>目標達成のための支援</h3>
