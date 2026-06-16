@@ -656,9 +656,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-tb-add{margin-left:auto}
 #appFooter{grid-column:1/-1}
 @media(min-width:701px){
-  body{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto 1fr}
-  header{grid-column:1/-1}
-  nav{grid-column:1;grid-row:2;position:static;flex-direction:column;justify-content:flex-start;gap:4px;padding:12px 8px;border-bottom:none;border-right:1px solid var(--line);background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;overflow:visible}
+  body{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh}
+  header{grid-column:1/-1;position:sticky;top:0;z-index:200}
+  nav{grid-column:1;grid-row:2;position:sticky;top:var(--header-h,56px);height:calc(100vh - var(--header-h,56px));overflow-y:auto;align-self:start;flex-direction:column;justify-content:flex-start;gap:4px;padding:12px 8px;border-bottom:none;border-right:1px solid var(--line);background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}
   nav button{flex:0 0 auto;border-bottom:none;border-radius:10px;padding:10px 2px;font-size:11px;gap:5px}
   nav button .tab-icon{font-size:21px}
   nav button.act{background:var(--blue-l);border-bottom-color:transparent}
@@ -1993,7 +1993,7 @@ function openSheetSection(key){
       title='達成目標';
       body=fld('達成目標',ta('goal',D.goal,5))+fld('ご褒美・補足',ta('goalNote',D.goalNote,3))+
         `<div class="ss-field"><label class="ss-lbl">達成条件（項目・数字）</label>
-        <div id="ss-gc-list">${(D.goalCriteria||[]).map((c,i)=>`<div class="ss-row2"><input class="ss-inp" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）" value="${esc(c.label||'')}"><input class="ss-inp" style="max-width:120px" data-gci="${i}" data-gcf="value" placeholder="数字（例：70kg）" value="${esc(c.value||'')}"><button onclick="ssGcDel(${i})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>`).join('')}</div>
+        <div id="ss-gc-list">${(D.goalCriteria||[]).map((c,i)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px"><div class="ss-row2" style="margin-bottom:6px"><input class="ss-inp" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）" value="${esc(c.label||'')}"><input class="ss-inp" style="max-width:120px" data-gci="${i}" data-gcf="value" placeholder="目標値（例：70kg）" value="${esc(c.value||'')}"><button onclick="ssGcDel(${i})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">進捗</span><input type="range" min="0" max="100" step="1" style="flex:1" data-gci="${i}" data-gcf="pct" value="${+(c.pct||0)}" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:13px;font-weight:700;color:var(--blue);min-width:36px;text-align:right">${+(c.pct||0)}%</span></div></div>`).join('')}</div>
         <button onclick="ssGcAdd()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 条件を追加</button></div>`+
         `<div class="ss-field"><label class="ss-lbl">イメージ画像</label><div id="ssGoalImgWrap"></div><input type="file" id="ssGoalImgFile" accept="image/*" multiple style="display:none" onchange="ssGoalAddImgs(this)"></div>`;
       onSave=()=>{
@@ -2002,15 +2002,15 @@ function openSheetSection(key){
         D.goalCriteria=[];
         document.querySelectorAll('[data-gci]').forEach(el=>{
           const i=+el.dataset.gci,f=el.dataset.gcf;
-          if(!D.goalCriteria[i]) D.goalCriteria[i]={label:'',value:''};
-          D.goalCriteria[i][f]=el.value;
+          if(!D.goalCriteria[i]) D.goalCriteria[i]={label:'',value:'',pct:0};
+          D.goalCriteria[i][f]=f==='pct'?+(el.value||0):el.value;
         });
         D.goalCriteria=D.goalCriteria.filter(c=>c.label||c.value);
       };
       setTimeout(()=>ssGoalRenderImgs(),0);
       break;
     case 'milestones':
-      title='経過目標';
+      title='経過目標と進捗';
       body=`<div id="ss-ms">${D.milestones.map((m,i)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;overflow:hidden">${fld('期日',`<input class="ss-inp" id="ss-ms-d${i}" type="date" value="${esc(m.date||'')}" style="max-width:100%">`)}${fld('内容',ta('ms-t'+i,m.text||'',2))}${fld('進捗%',`<input class="ss-inp" id="ss-ms-p${i}" type="number" min="0" max="100" value="${m.pct||0}" style="width:80px">`)}</div>`).join('')}</div>`;
       onSave=()=>{D.milestones.forEach((_,i)=>{D.milestones[i].date=document.getElementById('ss-ms-d'+i).value;D.milestones[i].text=document.getElementById('ss-ms-t'+i).value;D.milestones[i].pct=+(document.getElementById('ss-ms-p'+i).value||0);});};
       break;
@@ -2085,9 +2085,11 @@ function openSheetSection(key){
 }
 function ssGcAdd(){
   const list=document.getElementById('ss-gc-list'); if(!list) return;
-  const i=list.querySelectorAll('[data-gci]').length/2;
-  const row=document.createElement('div'); row.className='ss-row2';
-  row.innerHTML=`<input class="ss-inp" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）"><input class="ss-inp" style="max-width:120px" data-gci="${i}" data-gcf="value" placeholder="数字（例：70kg）"><button onclick="this.closest('.ss-row2').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button>`;
+  const existing=list.querySelectorAll('[data-gci][data-gcf="label"]');
+  const i=existing.length;
+  const row=document.createElement('div');
+  row.style.cssText='border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px';
+  row.innerHTML=`<div class="ss-row2" style="margin-bottom:6px"><input class="ss-inp" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）"><input class="ss-inp" style="max-width:120px" data-gci="${i}" data-gcf="value" placeholder="目標値（例：70kg）"><button onclick="this.closest('div[style]').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">進捗</span><input type="range" min="0" max="100" step="1" style="flex:1" data-gci="${i}" data-gcf="pct" value="0" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:13px;font-weight:700;color:var(--blue);min-width:36px;text-align:right">0%</span></div>`;
   list.appendChild(row);
 }
 function ssGcDel(i){
@@ -2253,6 +2255,11 @@ function deadlinesToTodo(){
 }
 
 /* ================= タブ ================= */
+(()=>{
+  const setHeaderH=()=>{const h=document.querySelector('header');if(h) document.documentElement.style.setProperty('--header-h',h.offsetHeight+'px');};
+  setHeaderH();
+  new ResizeObserver(setHeaderH).observe(document.querySelector('header')||document.body);
+})();
 function showTab(name){
   document.querySelectorAll(".tab").forEach(s=>s.classList.remove("act"));
   document.querySelectorAll("nav button").forEach(b=>b.classList.remove("act"));
@@ -2312,10 +2319,18 @@ function renderSheetEdit(){
     <label class="fl">ご褒美・補足</label>
     ${ta(D.goalNote,"goalNote")}
     <label class="fl" style="margin-top:10px">達成条件（項目・数字）</label>
-    <div id="gcList">${D.goalCriteria.map((c,i)=>`<div class="listrow" style="margin-bottom:4px">
-      <input type="text" class="small" style="flex:2" placeholder="項目（例：体重）" data-oi="goalCriteria.${i}.label" value="${esc(c.label||'')}">
-      <input type="text" class="small" style="flex:1" placeholder="数字（例：70kg）" data-oi="goalCriteria.${i}.value" value="${esc(c.value||'')}">
-      <button class="del" data-act="delGc" data-i="${i}" title="削除">✕</button></div>`).join('')}</div>
+    <div id="gcList">${D.goalCriteria.map((c,i)=>`<div style="margin-bottom:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px">
+      <div class="listrow" style="margin-bottom:6px">
+        <input type="text" class="small" style="flex:2" placeholder="項目（例：体重）" data-oi="goalCriteria.${i}.label" value="${esc(c.label||'')}">
+        <input type="text" class="small" style="flex:1" placeholder="目標値（例：70kg）" data-oi="goalCriteria.${i}.value" value="${esc(c.value||'')}">
+        <button class="del" data-act="delGc" data-i="${i}" title="削除">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--sub);flex:0 0 auto">進捗</span>
+        <input type="range" min="0" max="100" step="1" style="flex:1" data-oi="goalCriteria.${i}.pct" value="${+(c.pct||0)}">
+        <span style="font-size:13px;font-weight:700;color:var(--blue);flex:0 0 auto;min-width:36px;text-align:right">${+(c.pct||0)}%</span>
+      </div>
+    </div>`).join('')}</div>
     <button class="add" data-act="addGc">＋ 条件を追加</button>
     <div class="gimgs">${D.goalImages.map((src,i)=>`
       <div class="gimg"><img src="${src}" data-gzoom="${i}" alt="目標イメージ${i+1}">
@@ -2325,7 +2340,7 @@ function renderSheetEdit(){
     <input type="file" id="goalImgFile" accept="image/*" multiple style="display:none">
   </div>
   <div class="card">
-    <h2>経過目標</h2>
+    <h2>経過目標と進捗</h2>
     <div id="msList">
     ${D.milestones.map((m,i)=>`<div class="msitem ${(m.pct||0)>=100?'done100':''}">
       <div class="listrow">
@@ -2341,7 +2356,7 @@ function renderSheetEdit(){
       </div>
     </div>`).join("")}
     </div>
-    <button class="add" data-act="addMs">＋ 経過目標を追加</button>
+    <button class="add" data-act="addMs">＋ 経過目標と進捗を追加</button>
   </div>
   <div class="card">
     <h2>週間期日行動（発生期日順）</h2>
@@ -2477,13 +2492,13 @@ function renderSheetView(){
       <div class="vgoal-label" style="margin-bottom:8px">達成目標</div>
       <div class="vgoal-main">${nl2br(D.goal)||"—"}</div>
       ${D.goalNote?`<div class="vgoal-note">${nl2br(D.goalNote)}</div>`:""}
-      ${(D.goalCriteria||[]).filter(c=>c.label||c.value).length?`<table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:13px">${(D.goalCriteria||[]).filter(c=>c.label||c.value).map(c=>`<tr><td style="padding:4px 10px 4px 0;color:var(--sub);width:55%">${esc(c.label)}</td><td style="padding:4px 0;font-weight:700;color:var(--navy)">${esc(c.value)}</td></tr>`).join('')}</table>`:''}
+      ${(D.goalCriteria||[]).filter(c=>c.label||c.value).length?`<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">${(D.goalCriteria||[]).filter(c=>c.label||c.value).map(c=>{const pct=Math.max(0,Math.min(100,+(c.pct||0)));return `<div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;color:var(--navy);font-weight:600">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">${esc(c.value)}&nbsp;<strong style="color:var(--blue)">${pct}%</strong></span></div><div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pct>=100?'#30D158':'var(--blue)'};border-radius:3px;transition:width .3s"></div></div></div>`;}).join('')}</div>`:''}
       ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
-    <div class="vsec"><h3>経過目標</h3>
+    <div class="vsec"><h3>経過目標と進捗</h3>
       <div class="vms">${D.milestones.map(m=>`<div class="vmsbox ${(m.pct||0)>=100?'done100':''}"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
-      <button class="vsec-add-btn" onclick="ssMilestoneAdd()">＋ 経過目標を追加</button>
+      <button class="vsec-add-btn" onclick="ssMilestoneAdd()">＋ 経過目標と進捗を追加</button>
     </div>
     <div class="vsec"><h3>週間期日行動</h3>
       ${(()=>{const todo=D.deadlines.filter(d=>!d.done&&(d.text.trim()||d.month));const done=D.deadlines.filter(d=>d.done&&(d.text.trim()||d.month));
@@ -2544,6 +2559,10 @@ function bindSheet(root){
         if(bar) bar.style.width=pv+"%";
         if(item) item.classList.toggle("done100", pv>=100);
       }
+      if(el.type==="range"&&el.dataset.oi&&el.dataset.oi.includes('goalCriteria')){
+        const span=el.nextElementSibling;
+        if(span) span.textContent=el.value+'%';
+      }
       if(el.tagName==="TEXTAREA") fit(el);
       save();
       if(el.type==="checkbox") renderSheet();
@@ -2561,13 +2580,13 @@ function bindSheet(root){
           if(D.quad[i].items.length===0) D.quad[i].items.push("");
           break;
         case "addMs": D.milestones.push({date:"",text:""}); break;
-        case "delMs": if(confirm("この経過目標を削除しますか？")) D.milestones.splice(i,1); else return; break;
+        case "delMs": if(confirm("この経過目標と進捗を削除しますか？")) D.milestones.splice(i,1); else return; break;
         case "addRt": D.routines.push({id:D.nextRoutineId++,text:""}); break;
         case "delRt": if(confirm("このルーティンを削除しますか？（過去のチェック履歴も非表示になります）")) D.routines.splice(i,1); else return; break;
         case "addDl": D.deadlines.push({id:D.nextDeadlineId++,month:"",text:"",done:false}); break;
         case "delDl": if(confirm("この期日行動を削除しますか？")) D.deadlines.splice(i,1); else return; break;
         case "delImg": if(confirm("この画像を削除しますか？")) D.goalImages.splice(i,1); else return; break;
-        case "addGc": D.goalCriteria.push({label:"",value:""}); break;
+        case "addGc": D.goalCriteria.push({label:"",value:"",pct:0}); break;
         case "delGc": if(confirm("この条件を削除しますか？")) D.goalCriteria.splice(i,1); else return; break;
         case "addSp": D.supports.push({who:"",what:""}); break;
         case "delSp": if(confirm("この支援者の行を削除しますか？")) D.supports.splice(i,1); else return; break;
@@ -2996,9 +3015,9 @@ function printSheet(){
     <div class="srow"><b>（家族）</b>${esc(D.service.family)}　<b>（社会）</b>${esc(D.service.society)}</div></div>
   <div class="sec goalsec"><div class="sttl red">達成目標</div>
     <div class="goal">${esc(D.goal)}</div>${pre(D.goalNote)}
-    ${(D.goalCriteria||[]).filter(c=>c.label||c.value).length?`<table style="margin-top:6px;border-collapse:collapse;font-size:8pt;width:auto">${(D.goalCriteria||[]).filter(c=>c.label||c.value).map(c=>`<tr><td style="padding:2px 12px 2px 0;color:#666">${esc(c.label)}</td><td style="padding:2px 0;font-weight:700">${esc(c.value)}</td></tr>`).join('')}</table>`:''}
+    ${(D.goalCriteria||[]).filter(c=>c.label||c.value).length?`<div style="margin-top:6px">${(D.goalCriteria||[]).filter(c=>c.label||c.value).map(c=>{const pct=Math.max(0,Math.min(100,+(c.pct||0)));return `<div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:8pt;margin-bottom:2px"><span>${esc(c.label)}</span><span>${esc(c.value)}&nbsp;<b>${pct}%</b></span></div><div style="height:4px;background:#e3e9f2;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pct>=100?'#30D158':'#2563c4'};border-radius:2px"></div></div></div>`;}).join('')}</div>`:''}
     ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map(src=>`<img src="${src}">`).join("")}</div>`:""}</div>
-  <div class="sec"><div class="sttl">経過目標</div>
+  <div class="sec"><div class="sttl">経過目標と進捗</div>
     <div class="ms">${D.milestones.map(m=>`<div class="msbox ${(m.pct||0)>=100?'done100':''}"><div class="msd">${esc(m.date)}　達成${m.pct||0}%</div>${pre(m.text)}<div class="pbar"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div></div>`).join("")}</div></div>
   <div class="sec"><div class="sttl">週間期日行動（発生期日順）</div>
     ${D.deadlines.map(dl=>`<div class="dl">${dl.done?"☑":"☐"} <b>${esc(fmtMD(dl.month))}</b> ${esc(dl.text)}</div>`).join("")}</div>
