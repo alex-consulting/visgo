@@ -1696,7 +1696,7 @@ function renderDreams(){
 
   root.innerHTML=`
   <div class="page-head dream-page-head">
-    <div>
+    <div style="flex-shrink:0">
       <h1 class="ph-title">🏝️ 夢リスト</h1>
       <p class="ph-sub">夢あるところに行動がある。人生一度きり。</p>
     </div>
@@ -1713,17 +1713,15 @@ function renderDreams(){
         const ageMs=now-birth;
         const totalMs=goalDate-birth;
         const pct=Math.min(100,Math.max(0,(ageMs/totalMs*100)));
-        barHtml=`<div class="dream-age-bar">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
-            <span style="font-size:12px;color:var(--sub)">今日は <strong style="color:var(--navy);font-size:15px">${Math.floor(ageMs/(1000*60*60*24)).toLocaleString()}</strong> 日目</span>
-            <span style="font-size:12px;color:var(--sub)">${ls}歳まであと <strong style="color:var(--blue);font-size:15px">${daysLeft.toLocaleString()}</strong> 日</span>
-          </div>
-          <div style="height:4px;background:#D1D1D6;border-radius:2px;overflow:hidden">
+        barHtml=`<div style="height:4px;background:#D1D1D6;border-radius:2px;overflow:hidden;margin-top:5px">
             <div style="height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,var(--blue),#AF52DE);border-radius:2px;transition:width .3s"></div>
           </div>
-        </div>`;
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px">
+            <span style="font-size:12px;color:var(--sub)">今日は <strong style="color:var(--navy);font-size:15px">${Math.floor(ageMs/(1000*60*60*24)).toLocaleString()}</strong> 日目</span>
+            <span style="font-size:12px;color:var(--sub)">${ls}歳まであと <strong style="color:var(--blue);font-size:15px">${daysLeft.toLocaleString()}</strong> 日</span>
+          </div>`;
       }
-      return barHtml+`<div style="display:flex;justify-content:flex-end;margin-top:4px;width:100%"><button onclick="openDreamProfile()" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">基本情報を編集</button></div>`;
+      return `<div class="dream-age-bar">${barHtml}<div style="display:flex;justify-content:flex-end;margin-top:6px"><button onclick="openDreamProfile()" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">基本情報を編集</button></div></div>`;
     })()}
   </div>
   <div class="dream-toolbar">
