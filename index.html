@@ -2142,6 +2142,7 @@ function routinesToTodo(){
     task.routineItems=items;
     task.deadline=today;
     task.important=true;
+    task.routine=true;
     task.memo='年間目標のルーティン行動（重要度が高い順）';
   } else {
     task={
@@ -2154,6 +2155,7 @@ function routinesToTodo(){
       deadline:today,
       recur:'daily',
       important:true,
+      routine:true,
       memo:'年間目標のルーティン行動（重要度が高い順）',
       routineItems:items
     };
