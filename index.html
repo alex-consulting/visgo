@@ -2366,10 +2366,6 @@ function renderSheetEdit(){
     <input type="file" id="goalImgFile" accept="image/*" multiple style="display:none">
   </div>
   <div class="card">
-    <h2>経過目標と進捗</h2>
-    ${(()=>{const gc=(D.goalCriteria||[]).filter(c=>c.label||c.targetNum);if(!gc.length)return `<p class="hint">達成目標に達成条件を追加すると進捗を入力できます</p>`;return gc.map((c,i)=>{const tgt=+c.targetNum||0;const cur=+c.currentNum||0;const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;const col=pct>=100?'#30D158':'var(--blue)';return `<div class="gc-progress-row" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:600;color:var(--navy)">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">目標: ${esc(c.targetNum)}${esc(c.unit)}</span></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">現在</span><input type="number" data-gci="${i}" oninput="gcSetCurrent(this)" value="${esc(c.currentNum||'')}" style="width:72px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px;background:var(--fill);color:var(--navy);text-align:right"><span style="font-size:12px;color:var(--sub)">${esc(c.unit)}</span><span class="gc-pct" style="font-size:13px;font-weight:700;color:${col};margin-left:auto">${pct}%</span></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div class="gc-bar" style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .3s"></div></div></div>`;}).join('');})()}
-  </div>
-  <div class="card">
     <h2>週間期日行動（発生期日順）</h2>
     ${D.deadlines.map((dl,i)=>({dl,i})).filter(o=>dlTab==='done'?o.dl.done:!o.dl.done).map(({dl,i})=>`<div class="listrow">
       <input type="checkbox" class="chk" data-oi="deadlines.${i}.done" ${dl.done?"checked":""}>
