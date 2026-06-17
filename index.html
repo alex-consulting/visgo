@@ -2483,7 +2483,6 @@ function renderSheetView(){
   <div class="vsheet">
     <div class="vhead">
       <h1 class="print-only">年間目標達成シート</h1>
-      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:4px"><button onclick="openSheetSection('meta')" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">基本情報を編集</button></div>
       <div class="vmeta">
         <span class="print-only"><b>氏名</b>${esc(D.meta.name)||"—"}</span>
         <span class="print-only"><b>記入日</b>${esc(fmtDate(D.meta.writeDate))||"—"}</span>
@@ -2499,7 +2498,7 @@ function renderSheetView(){
       <div class="vgoal-label" style="margin-bottom:8px">達成目標</div>
       <div class="vgoal-main">${nl2br(D.goal)||"—"}</div>
       ${D.goalNote?`<div style="margin-top:8px"><span style="font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.05em">ご褒美・補足</span><div class="vgoal-note">${nl2br(D.goalNote)}</div></div>`:""}
-      ${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).length?`<div style="margin-top:10px"><span style="font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.05em">達成条件（項目・数字）</span><div style="margin-top:6px;display:flex;flex-direction:column;gap:5px">${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px"><span style="color:var(--navy);font-weight:600">${esc(c.label)}</span><span style="color:var(--sub)">${esc(c.targetNum)}${esc(c.unit)}</span></div>`).join('')}</div></div>`:''}
+      ${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).length?`<div style="margin-top:12px"><div style="display:inline-block;background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:5px;margin-bottom:8px;letter-spacing:.04em">達成条件（項目・数字）</div><div style="display:flex;flex-direction:column;gap:6px">${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).map(c=>`<div style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><span style="font-weight:700;color:var(--navy)">${esc(c.label)}</span><span style="color:var(--sub)">：</span><span style="color:var(--navy)">${esc(c.targetNum)}${esc(c.unit)}</span></div>`).join('')}</div></div>`:''}
       ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
     <div class="vsec"><h3>経過目標と進捗</h3>
