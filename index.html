@@ -1120,6 +1120,7 @@ if(!('mission' in D.dreams)) D.dreams.mission='';
 if(!('missionTitle' in D.dreams)) D.dreams.missionTitle='';
 if(!Array.isArray(D.missionImages)) D.missionImages=[];
 if(!Array.isArray(D.goalCriteria)) D.goalCriteria=[];
+D.goalCriteria.forEach(c=>{if(!('targetNum' in c)){c.targetNum=c.value||'';}if(!('unit' in c))c.unit='';if(!('currentNum' in c))c.currentNum='';});
 // gcalUrls: D.gcalUrls が正規ストア（sync対象）。旧keyからマイグレーション
 (()=>{
   if(Array.isArray(D.gcalUrls)&&D.gcalUrls.length){ gcalUrls=D.gcalUrls; return; }
@@ -1993,19 +1994,22 @@ function openSheetSection(key){
       title='達成目標';
       body=fld('達成目標',ta('goal',D.goal,5))+fld('ご褒美・補足',ta('goalNote',D.goalNote,3))+
         `<div class="ss-field"><label class="ss-lbl">達成条件（項目・数字）</label>
-        <div id="ss-gc-list">${(D.goalCriteria||[]).map((c,i)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px"><div class="ss-row2" style="margin-bottom:6px"><input class="ss-inp" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）" value="${esc(c.label||'')}"><input class="ss-inp" style="max-width:120px" data-gci="${i}" data-gcf="value" placeholder="目標値（例：70kg）" value="${esc(c.value||'')}"><button onclick="ssGcDel(${i})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">進捗</span><input type="range" min="0" max="100" step="1" style="flex:1" data-gci="${i}" data-gcf="pct" value="${+(c.pct||0)}" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:13px;font-weight:700;color:var(--blue);min-width:36px;text-align:right">${+(c.pct||0)}%</span></div></div>`).join('')}</div>
+        <div id="ss-gc-list">${(D.goalCriteria||[]).map((c,i)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px"><div class="ss-row2"><input class="ss-inp" style="flex:3" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）" value="${esc(c.label||'')}"><input class="ss-inp" style="flex:1;max-width:80px" data-gci="${i}" data-gcf="targetNum" placeholder="目標値" value="${esc(c.targetNum||'')}"><input class="ss-inp" style="flex:0 0 52px;max-width:52px" data-gci="${i}" data-gcf="unit" placeholder="単位" value="${esc(c.unit||'')}"><button onclick="ssGcDel(${i})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div></div>`).join('')}</div>
         <button onclick="ssGcAdd()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 条件を追加</button></div>`+
         `<div class="ss-field"><label class="ss-lbl">イメージ画像</label><div id="ssGoalImgWrap"></div><input type="file" id="ssGoalImgFile" accept="image/*" multiple style="display:none" onchange="ssGoalAddImgs(this)"></div>`;
       onSave=()=>{
         D.goal=document.getElementById('ss-goal').value;
         D.goalNote=document.getElementById('ss-goalNote').value;
-        D.goalCriteria=[];
-        document.querySelectorAll('[data-gci]').forEach(el=>{
-          const i=+el.dataset.gci,f=el.dataset.gcf;
-          if(!D.goalCriteria[i]) D.goalCriteria[i]={label:'',value:'',pct:0};
-          D.goalCriteria[i][f]=f==='pct'?+(el.value||0):el.value;
+        const prevCriteria=D.goalCriteria||[];
+        const newCriteria=[];
+        document.querySelectorAll('[data-gci][data-gcf="label"]').forEach(el=>{
+          const i=+el.dataset.gci;
+          const prev=prevCriteria[i]||{};
+          const tEl=document.querySelector(`[data-gci="${i}"][data-gcf="targetNum"]`);
+          const uEl=document.querySelector(`[data-gci="${i}"][data-gcf="unit"]`);
+          newCriteria.push({label:el.value||'',targetNum:tEl?tEl.value:'',unit:uEl?uEl.value:'',currentNum:prev.currentNum||''});
         });
-        D.goalCriteria=D.goalCriteria.filter(c=>c.label||c.value);
+        D.goalCriteria=newCriteria.filter(c=>c.label||c.targetNum);
       };
       setTimeout(()=>ssGoalRenderImgs(),0);
       break;
@@ -2089,12 +2093,29 @@ function ssGcAdd(){
   const i=existing.length;
   const row=document.createElement('div');
   row.style.cssText='border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px';
-  row.innerHTML=`<div class="ss-row2" style="margin-bottom:6px"><input class="ss-inp" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）"><input class="ss-inp" style="max-width:120px" data-gci="${i}" data-gcf="value" placeholder="目標値（例：70kg）"><button onclick="this.closest('div[style]').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">進捗</span><input type="range" min="0" max="100" step="1" style="flex:1" data-gci="${i}" data-gcf="pct" value="0" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:13px;font-weight:700;color:var(--blue);min-width:36px;text-align:right">0%</span></div>`;
+  row.innerHTML=`<div class="ss-row2"><input class="ss-inp" style="flex:3" data-gci="${i}" data-gcf="label" placeholder="項目（例：体重）"><input class="ss-inp" style="flex:1;max-width:80px" data-gci="${i}" data-gcf="targetNum" placeholder="目標値"><input class="ss-inp" style="flex:0 0 52px;max-width:52px" data-gci="${i}" data-gcf="unit" placeholder="単位"><button onclick="this.closest('div[style]').remove()" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>`;
   list.appendChild(row);
 }
 function ssGcDel(i){
   const els=document.querySelectorAll(`[data-gci="${i}"]`);
   if(els.length) els[0].closest('.ss-row2').remove();
+}
+function gcSetCurrent(el){
+  const i=+el.dataset.gci;
+  if(!D.goalCriteria||!D.goalCriteria[i]) return;
+  D.goalCriteria[i].currentNum=el.value;
+  const tgt=+D.goalCriteria[i].targetNum||0;
+  const cur=+el.value||0;
+  const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;
+  const row=el.closest('.gc-progress-row');
+  if(row){
+    const bar=row.querySelector('.gc-bar');
+    const pctSpan=row.querySelector('.gc-pct');
+    const col=pct>=100?'#30D158':'var(--blue)';
+    if(bar){bar.style.width=pct+'%';bar.style.background=col;}
+    if(pctSpan){pctSpan.textContent=pct+'%';pctSpan.style.color=col;}
+  }
+  save();
 }
 function ssGoalRenderImgs(){
   const wrap=document.getElementById('ssGoalImgWrap'); if(!wrap) return;
@@ -2326,15 +2347,11 @@ function renderSheetEdit(){
     ${ta(D.goalNote,"goalNote")}
     <label class="fl" style="margin-top:10px">達成条件（項目・数字）</label>
     <div id="gcList">${D.goalCriteria.map((c,i)=>`<div style="margin-bottom:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px">
-      <div class="listrow" style="margin-bottom:6px">
-        <input type="text" class="small" style="flex:2" placeholder="項目（例：体重）" data-oi="goalCriteria.${i}.label" value="${esc(c.label||'')}">
-        <input type="text" class="small" style="flex:1" placeholder="目標値（例：70kg）" data-oi="goalCriteria.${i}.value" value="${esc(c.value||'')}">
+      <div class="listrow">
+        <input type="text" class="small" style="flex:3" placeholder="項目（例：体重）" data-oi="goalCriteria.${i}.label" value="${esc(c.label||'')}">
+        <input type="text" class="small" style="flex:1;min-width:56px;max-width:80px" placeholder="目標値" data-oi="goalCriteria.${i}.targetNum" value="${esc(c.targetNum||'')}">
+        <input type="text" class="small" style="flex:0 0 52px;max-width:52px" placeholder="単位" data-oi="goalCriteria.${i}.unit" value="${esc(c.unit||'')}">
         <button class="del" data-act="delGc" data-i="${i}" title="削除">✕</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:12px;color:var(--sub);flex:0 0 auto">進捗</span>
-        <input type="range" min="0" max="100" step="1" style="flex:1" data-oi="goalCriteria.${i}.pct" value="${+(c.pct||0)}">
-        <span style="font-size:13px;font-weight:700;color:var(--blue);flex:0 0 auto;min-width:36px;text-align:right">${+(c.pct||0)}%</span>
       </div>
     </div>`).join('')}</div>
     <button class="add" data-act="addGc">＋ 条件を追加</button>
@@ -2497,13 +2514,14 @@ function renderSheetView(){
     <div class="vgoal">
       <div class="vgoal-label" style="margin-bottom:8px">達成目標</div>
       <div class="vgoal-main">${nl2br(D.goal)||"—"}</div>
-      ${D.goalNote?`<div class="vgoal-note">${nl2br(D.goalNote)}</div>`:""}
-      ${(D.goalCriteria||[]).filter(c=>c.label||c.value).length?`<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">${(D.goalCriteria||[]).filter(c=>c.label||c.value).map(c=>{const pct=Math.max(0,Math.min(100,+(c.pct||0)));return `<div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;color:var(--navy);font-weight:600">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">${esc(c.value)}&nbsp;<strong style="color:var(--blue)">${pct}%</strong></span></div><div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pct>=100?'#30D158':'var(--blue)'};border-radius:3px;transition:width .3s"></div></div></div>`;}).join('')}</div>`:''}
+      ${D.goalNote?`<div style="margin-top:8px"><span style="font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.05em">ご褒美・補足</span><div class="vgoal-note">${nl2br(D.goalNote)}</div></div>`:""}
+      ${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).length?`<div style="margin-top:10px"><span style="font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.05em">達成条件（項目・数字）</span><div style="margin-top:6px;display:flex;flex-direction:column;gap:5px">${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px"><span style="color:var(--navy);font-weight:600">${esc(c.label)}</span><span style="color:var(--sub)">${esc(c.targetNum)}${esc(c.unit)}</span></div>`).join('')}</div></div>`:''}
       ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
     <div class="vsec"><h3>経過目標と進捗</h3>
       <div class="vms">${D.milestones.map(m=>`<div class="vmsbox ${(m.pct||0)>=100?'done100':''}"><div class="vmsd">${esc(m.date)||"—"}</div>${nl2br(m.text)}
         <div class="vprog"><div class="progress"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div><span class="vpct">${m.pct||0}%</span></div></div>`).join("")}</div>
+      ${(()=>{const gc=(D.goalCriteria||[]).filter(c=>c.label||c.targetNum);if(!gc.length)return '';return `<div style="margin-top:14px"><div style="font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.05em;margin-bottom:8px">達成条件の進捗</div>${gc.map((c,i)=>{const tgt=+c.targetNum||0;const cur=+c.currentNum||0;const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;const col=pct>=100?'#30D158':'var(--blue)';return `<div class="gc-progress-row" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:600;color:var(--navy)">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">目標: ${esc(c.targetNum)}${esc(c.unit)}</span></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">現在</span><input type="number" data-gci="${i}" oninput="gcSetCurrent(this)" value="${esc(c.currentNum||'')}" style="width:72px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px;background:var(--fill);color:var(--navy);text-align:right"><span style="font-size:12px;color:var(--sub)">${esc(c.unit)}</span><span class="gc-pct" style="font-size:13px;font-weight:700;color:${col};margin-left:auto">${pct}%</span></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div class="gc-bar" style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .3s"></div></div></div>`;}).join('')}</div>`;})()}
       <button class="vsec-add-btn" onclick="ssMilestoneAdd()">＋ 経過目標と進捗を追加</button>
     </div>
     <div class="vsec"><h3>週間期日行動</h3>
@@ -2567,10 +2585,7 @@ function bindSheet(root){
         if(bar) bar.style.width=pv+"%";
         if(item) item.classList.toggle("done100", pv>=100);
       }
-      if(el.type==="range"&&el.dataset.oi&&el.dataset.oi.includes('goalCriteria')){
-        const span=el.nextElementSibling;
-        if(span) span.textContent=el.value+'%';
-      }
+
       if(el.tagName==="TEXTAREA") fit(el);
       save();
       if(el.type==="checkbox") renderSheet();
@@ -2594,7 +2609,7 @@ function bindSheet(root){
         case "addDl": D.deadlines.push({id:D.nextDeadlineId++,month:"",text:"",done:false}); break;
         case "delDl": if(confirm("この期日行動を削除しますか？")) D.deadlines.splice(i,1); else return; break;
         case "delImg": if(confirm("この画像を削除しますか？")) D.goalImages.splice(i,1); else return; break;
-        case "addGc": D.goalCriteria.push({label:"",value:"",pct:0}); break;
+        case "addGc": D.goalCriteria.push({label:"",targetNum:"",unit:"",currentNum:""}); break;
         case "delGc": if(confirm("この条件を削除しますか？")) D.goalCriteria.splice(i,1); else return; break;
         case "addSp": D.supports.push({who:"",what:""}); break;
         case "delSp": if(confirm("この支援者の行を削除しますか？")) D.supports.splice(i,1); else return; break;
