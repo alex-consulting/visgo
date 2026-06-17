@@ -2015,8 +2015,9 @@ function openSheetSection(key){
       break;
     case 'milestones':
       title='経過目標と進捗';
-      body=`<div id="ss-ms">${D.milestones.map((m,i)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;overflow:hidden">${fld('期日',`<input class="ss-inp" id="ss-ms-d${i}" type="date" value="${esc(m.date||'')}" style="max-width:100%">`)}${fld('内容',ta('ms-t'+i,m.text||'',2))}${fld('進捗%',`<input class="ss-inp" id="ss-ms-p${i}" type="number" min="0" max="100" value="${m.pct||0}" style="width:80px">`)}</div>`).join('')}</div>`;
-      onSave=()=>{D.milestones.forEach((_,i)=>{D.milestones[i].date=document.getElementById('ss-ms-d'+i).value;D.milestones[i].text=document.getElementById('ss-ms-t'+i).value;D.milestones[i].pct=+(document.getElementById('ss-ms-p'+i).value||0);});};
+      body=`<div id="ss-ms">${D.milestones.map((m,i)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;overflow:hidden">${fld('期日',`<input class="ss-inp" id="ss-ms-d${i}" type="date" value="${esc(m.date||'')}" style="max-width:100%">`)}${fld('内容',ta('ms-t'+i,m.text||'',2))}</div>`).join('')}</div>`+
+      (()=>{const gc=(D.goalCriteria||[]).filter(c=>c.label||c.targetNum);if(!gc.length)return '';return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><div class="ss-lbl" style="margin-bottom:8px">達成条件の進捗（現状の数字）</div>${gc.map((c,i)=>{const tgt=+c.targetNum||0;const cur=+c.currentNum||0;const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;const col=pct>=100?'#30D158':'var(--blue)';return `<div class="gc-progress-row" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:600;color:var(--navy)">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">目標: ${esc(c.targetNum)}${esc(c.unit)}</span></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">現在</span><input type="number" data-gci="${i}" oninput="gcSetCurrent(this)" value="${esc(c.currentNum||'')}" style="width:72px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px;background:var(--fill);color:var(--navy);text-align:right"><span style="font-size:12px;color:var(--sub)">${esc(c.unit)}</span><span class="gc-pct" style="font-size:13px;font-weight:700;color:${col};margin-left:auto">${pct}%</span></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div class="gc-bar" style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .3s"></div></div></div>`;}).join('')}</div>`;})();
+      onSave=()=>{D.milestones.forEach((_,i)=>{D.milestones[i].date=document.getElementById('ss-ms-d'+i).value;D.milestones[i].text=document.getElementById('ss-ms-t'+i).value;});};
       break;
     case 'deadlines':
       title='週間期日行動';
@@ -2380,6 +2381,7 @@ function renderSheetEdit(){
     </div>`).join("")}
     </div>
     <button class="add" data-act="addMs">＋ 経過目標と進捗を追加</button>
+    ${(()=>{const gc=(D.goalCriteria||[]).filter(c=>c.label||c.targetNum);if(!gc.length)return '';return `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)"><div style="font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.05em;margin-bottom:10px">達成条件の進捗（現状の数字）</div>${gc.map((c,i)=>{const tgt=+c.targetNum||0;const cur=+c.currentNum||0;const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;const col=pct>=100?'#30D158':'var(--blue)';return `<div class="gc-progress-row" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:600;color:var(--navy)">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">目標: ${esc(c.targetNum)}${esc(c.unit)}</span></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">現在</span><input type="number" data-gci="${i}" oninput="gcSetCurrent(this)" value="${esc(c.currentNum||'')}" style="width:72px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px;background:var(--fill);color:var(--navy);text-align:right"><span style="font-size:12px;color:var(--sub)">${esc(c.unit)}</span><span class="gc-pct" style="font-size:13px;font-weight:700;color:${col};margin-left:auto">${pct}%</span></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div class="gc-bar" style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .3s"></div></div></div>`;}).join('')}</div>`;})()}
   </div>
   <div class="card">
     <h2>週間期日行動（発生期日順）</h2>
@@ -2602,7 +2604,7 @@ function bindSheet(root){
           D.quad[i].items.splice(j,1);
           if(D.quad[i].items.length===0) D.quad[i].items.push("");
           break;
-        case "addMs": D.milestones.push({date:"",text:""}); break;
+        case "addMs": D.milestones.push({date:"",text:"",pct:0}); break;
         case "delMs": if(confirm("この経過目標と進捗を削除しますか？")) D.milestones.splice(i,1); else return; break;
         case "addRt": D.routines.push({id:D.nextRoutineId++,text:""}); break;
         case "delRt": if(confirm("このルーティンを削除しますか？（過去のチェック履歴も非表示になります）")) D.routines.splice(i,1); else return; break;
