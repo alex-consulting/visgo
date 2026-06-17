@@ -1198,6 +1198,7 @@ function idbGet(k){
 let saveTimer=null;
 let goalImagesReady=false; // IDBからの初回ロード完了前にsave()がgoalImagesを上書きするのを防ぐ
 let missionImagesReady=false;
+let dreamImagesReady=false;
 function save(){
   clearTimeout(saveTimer);
   document.getElementById("saveState").textContent="保存中…";
@@ -1212,7 +1213,7 @@ function save(){
       localStorage.setItem(LS_KEY, JSON.stringify(lsData));
       if(goalImagesReady) await idbSet("goalImages", D.goalImages||[]);
       if(missionImagesReady) await idbSet("missionImages", D.missionImages||[]);
-      await idbSet("dreamImages", dreamImgs);
+      if(dreamImagesReady) await idbSet("dreamImages", dreamImgs);
       document.getElementById("saveState").textContent="✓ 保存済み";
       syncPush();
     }catch(e){
@@ -1249,7 +1250,8 @@ async function _applyRemoteData(remote){
     if(Array.isArray(remote.missionImages)) await idbSet("missionImages",remote.missionImages);
     const dreamImgs={};
     (remote.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs[String(d.id)]=d.image; });
-    await idbSet("dreamImages",dreamImgs);
+    // リモートに画像がある場合のみ上書き（空でローカルIDBを消さないように）
+    if(Object.keys(dreamImgs).length>0) await idbSet("dreamImages",dreamImgs);
   }catch(e){}
   const {goalImages,missionImages,...rest}=D;
   const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
@@ -4213,10 +4215,11 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
       });
       if(merged&&document.getElementById("tab-dream").classList.contains("act")) renderDreams();
     }
+    dreamImagesReady=true;
     // 旧データ移行：もしlocalStorage内に画像が残っていたらIDBへ移す
     const hasInlineImgs=(D.dreams?.items||[]).some(d=>d.image);
     if(hasInlineImgs) await save();
-  }catch(e){}
+  }catch(e){ dreamImagesReady=true; }
   try{
     const dreamImgs2={};
     (D.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs2[String(d.id)]=d.image; });
