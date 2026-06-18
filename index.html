@@ -1337,6 +1337,7 @@ function syncPush(){
 }
 // リモートデータをD・IDB・localStorageに適用する共通処理
 async function _applyRemoteData(remote){
+  if(_demoMode) return; // デモ中はリモートデータを適用しない
   // プロジェクト・カテゴリの並び順はローカルを優先し、リモートの新規分を末尾に追加
   const localProj=Array.isArray(D.gtd?.projects)?[...D.gtd.projects]:[];
   const localCat=Array.isArray(D.gtd?.categories)?[...D.gtd.categories]:[];
@@ -1367,6 +1368,7 @@ async function _applyRemoteData(remote){
   localStorage.setItem(LS_KEY,JSON.stringify(lsData));
 }
 async function syncPushNow(){
+  if(_demoMode) return; // デモ中はサーバーに送信しない
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
   // キャッシュクリア直後（localStorageが空だった起動）はサーバーを上書きしない
   if(!dataLoadedFromStorage){
@@ -1407,6 +1409,7 @@ async function syncPushNow(){
   }catch(e){ D._syncAt=oldSyncAt; setSyncStatus("⚠ 同期失敗"); }
 }
 async function syncPull(){
+  if(_demoMode) return; // デモ中は同期しない
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
   try{
     const res=await fetch(WORKER_URL,{
@@ -1499,6 +1502,7 @@ async function doLogin(){
   document.body.style.overflow='';
 }
 async function syncNow(){
+  if(_demoMode){ toast("⚠ デモ中は同期できません"); return; }
   if(!getSyncCode()){ setSyncStatus("⚠ ログインが必要です"); return; }
   setSyncStatus("⬆⬇ 同期中…");
   try{
