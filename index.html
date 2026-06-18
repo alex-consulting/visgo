@@ -447,6 +447,35 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .gm-routine-addrow input{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card)}
 .gm-routine-addrow button{background:var(--card);color:var(--blue);border:1.5px solid var(--blue);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;white-space:nowrap;font-weight:600}
 .kcard{cursor:default}
+/* ---- Routine Wizard ---- */
+#rwBg{position:fixed;inset:0;background:rgba(15,25,45,.5);display:none;z-index:120;align-items:center;justify-content:center;padding:16px}
+#rwBg.show{display:flex}
+#rwModal{background:var(--card);border-radius:16px;width:100%;max-width:460px;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto}
+.rw-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rw-title{font-size:17px;font-weight:800;color:var(--navy)}
+.rw-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--faint);padding:0 4px}
+.rw-steps{display:flex;gap:6px;margin-bottom:20px;margin-top:8px}
+.rw-step-dot{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .2s}
+.rw-step-dot.active{background:var(--blue)}
+.rw-step-dot.done{background:#30D158}
+.rw-instruction{background:var(--blue-l);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:10px 12px;font-size:13px;line-height:1.7;color:var(--navy);margin-bottom:14px}
+.rw-label{font-size:12px;font-weight:700;color:var(--navy);margin:14px 0 5px}
+.rw-input{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px;background:var(--fill);color:var(--navy);outline:none;transition:border-color .15s;box-sizing:border-box}
+.rw-input:focus{border-color:var(--blue)}
+.rw-sub-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.rw-sub-row:last-child{border-bottom:none}
+.rw-sub-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;padding:0 3px}
+.rw-sub-del:hover{color:var(--red)}
+.rw-addrow{display:flex;gap:6px;margin-top:8px}
+.rw-addrow input{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card)}
+.rw-addrow button{background:var(--blue-l);color:var(--blue);border:1.5px solid var(--blue);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600}
+.rw-footer{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:8px}
+.rw-btn-back{background:none;border:1.5px solid var(--line);border-radius:8px;padding:9px 18px;cursor:pointer;font-size:13px;color:var(--sub)}
+.rw-btn-next{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 22px;cursor:pointer;font-size:14px;font-weight:700;flex:1}
+.rw-btn-create{background:#30D158;color:#fff;border:none;border-radius:8px;padding:10px 22px;cursor:pointer;font-size:14px;font-weight:700;flex:1}
+.rw-create-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#30D158,#34c7a8);color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:700;width:100%;justify-content:center;margin:4px 0 2px}
+.rw-create-btn:hover{opacity:.9}
+#rwBg .gm-dur-btn.rw-sel{background:var(--blue);color:#fff;border-color:var(--blue)}
 /* ---- Today timeline ---- */
 /* ---- Today timeline ---- */
 .tl-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
@@ -907,6 +936,26 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
     </div>
     <p class="gm-label">メモ</p>
     <textarea id="gmMemo" rows="4" placeholder="メモを入力..."></textarea>
+  </div>
+</div>
+
+<!-- ルーティンウィザード -->
+<div id="rwBg" onclick="if(event.target===this)closeRoutineWizard()">
+  <div id="rwModal">
+    <div class="rw-header">
+      <span class="rw-title">🔄 ルーティンを作る</span>
+      <button class="rw-close" onclick="closeRoutineWizard()">✕</button>
+    </div>
+    <div class="rw-steps">
+      <div class="rw-step-dot active" id="rwDot1"></div>
+      <div class="rw-step-dot" id="rwDot2"></div>
+      <div class="rw-step-dot" id="rwDot3"></div>
+    </div>
+    <div id="rwBody"></div>
+    <div class="rw-footer" id="rwFooter">
+      <button class="rw-btn-back" id="rwBtnBack" onclick="rwPrev()">← 戻る</button>
+      <button class="rw-btn-next" id="rwBtnNext" onclick="rwNext()">次へ →</button>
+    </div>
   </div>
 </div>
 
@@ -2959,6 +3008,138 @@ function closeGtdModal(){
   document.getElementById("gtdModalBg").classList.remove("show");
   gtdModalId=null;
 }
+
+/* ============ ルーティンウィザード ============ */
+let rwStep=1;
+let rwData={name:'',recur:'daily',dur:'',subtasks:[],memo:''};
+const RW_RECUR_LABELS={daily:'毎日',weekly:'毎週',monthly:'毎月',quarterly:'毎Q',yearly:'毎年'};
+const RW_DUR_LABELS={'5':'5分','15':'15分','30':'30分','60':'60分','more':'それ以上'};
+
+function openRoutineWizard(){
+  rwStep=1;
+  rwData={name:'',recur:'daily',dur:'',subtasks:[],memo:''};
+  rwRender();
+  document.getElementById('rwBg').classList.add('show');
+}
+function closeRoutineWizard(){
+  document.getElementById('rwBg').classList.remove('show');
+}
+function rwSaveStep(){
+  if(rwStep===1){
+    rwData.name=(document.getElementById('rwName')||{}).value||'';
+    rwData.recur=(document.querySelector('#rwRecurBtns .rw-sel')||{}).dataset||{};
+    const sel=document.querySelector('#rwRecurBtns .rw-sel');
+    rwData.recur=sel?sel.dataset.v:'daily';
+    const durSel=document.querySelector('#rwDurBtns .rw-sel');
+    rwData.dur=durSel?durSel.dataset.v:'';
+  } else if(rwStep===2){
+    rwData.subtasks=Array.from(document.querySelectorAll('.rw-sub-input')).map(el=>el.value.trim()).filter(Boolean);
+    rwData.memo=(document.getElementById('rwMemo')||{}).value||'';
+  }
+}
+function rwNext(){
+  rwSaveStep();
+  if(rwStep===1){
+    if(!rwData.name.trim()){alert('タスク名を入力してください');return;}
+  }
+  if(rwStep<3){ rwStep++; rwRender(); }
+}
+function rwPrev(){
+  rwSaveStep();
+  if(rwStep>1){ rwStep--; rwRender(); }
+}
+function rwRender(){
+  [1,2,3].forEach(i=>{
+    const d=document.getElementById('rwDot'+i);
+    if(d) d.className='rw-step-dot'+(i<rwStep?' done':i===rwStep?' active':'');
+  });
+  const body=document.getElementById('rwBody');
+  const footer=document.getElementById('rwFooter');
+  if(rwStep===1){
+    body.innerHTML=`
+      <div class="rw-instruction">📝 まず、このルーティンタスクに名前をつけましょう。毎日・毎週続けたいことを入力してください。</div>
+      <label class="gm-label">タスク名 <span style="color:var(--red)">*</span></label>
+      <input class="rw-input" id="rwName" placeholder="例：朝の運動、週次レビュー" value="${esc(rwData.name)}">
+      <label class="gm-label" style="margin-top:14px">繰り返し</label>
+      <div class="gm-dur" id="rwRecurBtns">
+        ${Object.entries(RW_RECUR_LABELS).map(([k,l])=>`<button class="gm-dur-btn${rwData.recur===k?' rw-sel':''}" data-v="${k}" onclick="rwRecurSel(this)">${l}</button>`).join('')}
+      </div>
+      <label class="gm-label" style="margin-top:14px">所要時間（任意）</label>
+      <div class="gm-dur" id="rwDurBtns">
+        ${Object.entries(RW_DUR_LABELS).map(([k,l])=>`<button class="gm-dur-btn${rwData.dur===k?' rw-sel':''}" data-v="${k}" onclick="rwDurSel(this)">${l}</button>`).join('')}
+      </div>`;
+    footer.innerHTML=`<span></span><button class="rw-btn-next" onclick="rwNext()">次へ →</button>`;
+  } else if(rwStep===2){
+    const subs=rwData.subtasks.length?rwData.subtasks:[''];
+    body.innerHTML=`
+      <div class="rw-instruction">✅ このルーティンに含めるサブタスクを追加しましょう。（省略可）<br>例：「水を1杯飲む」「5分間ストレッチ」など細分化すると達成しやすくなります。</div>
+      <label class="gm-label">サブタスク</label>
+      <div id="rwSubList">${subs.map((s,i)=>`<div class="rw-sub-row"><input class="rw-input rw-sub-input" placeholder="サブタスク ${i+1}" value="${esc(s)}"><button class="rw-sub-del" onclick="rwDelSub(this)">✕</button></div>`).join('')}</div>
+      <button class="rw-addrow" onclick="rwAddSubtask()">＋ サブタスクを追加</button>
+      <label class="gm-label" style="margin-top:14px">メモ（任意）</label>
+      <textarea class="rw-input" id="rwMemo" rows="3" placeholder="このルーティンについてのメモ...">${esc(rwData.memo)}</textarea>`;
+    footer.innerHTML=`<button class="rw-btn-back" onclick="rwPrev()">← 戻る</button><button class="rw-btn-next" onclick="rwNext()">次へ →</button>`;
+  } else if(rwStep===3){
+    const recurLabel=RW_RECUR_LABELS[rwData.recur]||rwData.recur;
+    const durLabel=RW_DUR_LABELS[rwData.dur]||'';
+    const subs=rwData.subtasks.filter(Boolean);
+    body.innerHTML=`
+      <div class="rw-instruction">🎉 内容を確認して「ルーティンを作成」を押してください！</div>
+      <div style="background:var(--fill);border-radius:10px;padding:14px 16px;margin-top:8px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px;align-items:flex-start"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">タスク名</span><span style="font-size:14px;font-weight:700;color:var(--navy)">${esc(rwData.name)}</span></div>
+        <div style="display:flex;gap:10px;align-items:center"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">繰り返し</span><span style="font-size:13px">${recurLabel}</span></div>
+        ${durLabel?`<div style="display:flex;gap:10px;align-items:center"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">所要時間</span><span style="font-size:13px">${durLabel}</span></div>`:''}
+        ${subs.length?`<div style="display:flex;gap:10px;align-items:flex-start"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">サブタスク</span><div style="display:flex;flex-direction:column;gap:3px">${subs.map(s=>`<span style="font-size:13px">• ${esc(s)}</span>`).join('')}</div></div>`:''}
+        ${rwData.memo?`<div style="display:flex;gap:10px;align-items:flex-start"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">メモ</span><span style="font-size:13px;color:var(--sub)">${esc(rwData.memo)}</span></div>`:''}
+      </div>`;
+    footer.innerHTML=`<button class="rw-btn-back" onclick="rwPrev()">← 戻る</button><button class="rw-btn-create" onclick="rwCreate()">🔄 ルーティンを作成</button>`;
+  }
+}
+function rwRecurSel(btn){
+  document.querySelectorAll('#rwRecurBtns .gm-dur-btn').forEach(b=>b.classList.remove('rw-sel'));
+  btn.classList.add('rw-sel');
+}
+function rwDurSel(btn){
+  document.querySelectorAll('#rwDurBtns .gm-dur-btn').forEach(b=>b.classList.remove('rw-sel'));
+  btn.classList.toggle('rw-sel');
+}
+function rwAddSubtask(){
+  const list=document.getElementById('rwSubList');
+  if(!list) return;
+  const i=list.children.length;
+  const div=document.createElement('div');
+  div.className='rw-sub-row';
+  div.innerHTML=`<input class="rw-input rw-sub-input" placeholder="サブタスク ${i+1}"><button class="rw-sub-del" onclick="rwDelSub(this)">✕</button>`;
+  list.appendChild(div);
+  div.querySelector('input').focus();
+}
+function rwDelSub(btn){
+  btn.closest('.rw-sub-row').remove();
+}
+function rwCreate(){
+  rwSaveStep();
+  const name=rwData.name.trim();
+  if(!name){alert('タスク名を入力してください');return;}
+  if(!Array.isArray(D.gtd.tasks)) D.gtd.tasks=[];
+  const subtasks=rwData.subtasks.filter(Boolean).map(s=>({id:Date.now()+Math.random(),text:s,done:false}));
+  const task={
+    id:D.gtd.nextId++,
+    text:name,
+    status:'inbox',
+    project:'',
+    categories:[],
+    created:Date.now(),
+    recur:rwData.recur||'daily',
+    dur:rwData.dur||'',
+    routine:true,
+    memo:rwData.memo||'',
+    routineItems:subtasks
+  };
+  D.gtd.tasks.unshift(task);
+  save(); renderGTD();
+  closeRoutineWizard();
+  toast('ルーティンタスク「'+name+'」を作成しました！');
+}
 function duplicateGtdTask(){
   const t=gtdTask(gtdModalId); if(!t) return;
   const copy=JSON.parse(JSON.stringify(t));
@@ -3734,6 +3915,9 @@ function renderGTD(){
             </div>
           </div>
         </div>
+      </div>
+      <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+        <button class="rw-create-btn" onclick="openRoutineWizard()">🔄 ルーティンを作る</button>
       </div>
     </aside>
     <div class="gtd-main">
