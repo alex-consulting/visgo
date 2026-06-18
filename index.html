@@ -477,10 +477,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .rw-create-btn:hover{opacity:.9}
 #rwBg .gm-dur-btn.rw-sel{background:var(--blue);color:#fff;border-color:var(--blue)}
 /* ---- Demo mode ---- */
-#demoBanner{position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(90deg,#ff6987,#ff9f43);color:#fff;text-align:center;font-size:12.5px;font-weight:700;padding:6px 12px;letter-spacing:.04em;display:none}
+#demoBanner{position:fixed;bottom:0;left:0;right:0;z-index:9000;background:linear-gradient(90deg,#ff6987,#ff9f43);color:#fff;text-align:center;font-size:12px;font-weight:700;padding:4px 12px;padding-bottom:calc(4px + env(safe-area-inset-bottom));letter-spacing:.04em;display:none}
 #demoBanner.show{display:block}
-body.demo-mode nav{padding-top:28px}
-body.demo-mode main{padding-top:28px}
 .demo-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
 .demo-toggle-row span{font-size:13px;color:var(--navy);font-weight:600}
 .demo-switch{position:relative;width:44px;height:26px;flex:0 0 44px}
