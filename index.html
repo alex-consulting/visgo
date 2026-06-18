@@ -3039,17 +3039,17 @@ function closeGtdModal(){
 /* ============ デモモード ============ */
 let _demoMode=false;
 let _realD=null;
+let _realGcalUrls=null;
 const DEMO_DATA={
   meta:{name:"山田 太郎",writeDate:"2026-01-05",targetDate:"2026-12-31",updateDate:"2026-06-01"},
-  goal:"2026年末までにサブ4でフルマラソンを完走し、家族との時間を大切にしながら仕事で年収1000万円を達成する",
+  goal:"2026年末までにサブ4でフルマラソンを完走し、家族との時間を大切にしながら年収1000万円を達成する",
   goalNote:"達成したら家族でハワイ旅行🌺",
   goalCriteria:[
     {label:"フルマラソンタイム",targetNum:"4",unit:"時間以内",currentNum:"4.5"},
     {label:"年収",targetNum:"1000",unit:"万円",currentNum:"720"},
     {label:"月間走行距離",targetNum:"200",unit:"km",currentNum:"145"}
   ],
-  vision:"健康で活力あふれる人生を送り、家族・仕事・趣味のすべてを高いレベルで実現する",
-  mission:"毎日の小さな積み重ねで夢を現実にする実行者",
+  zones:["","","",""],
   service:{family:"毎週末は家族と過ごす時間を確保する",society:"ランニングコミュニティを通じて地域を元気にする"},
   quad:[
     {title:"社会・他者（有形）",items:["ランニング教室の開催","地域マラソン大会の企画運営","SNSで走る楽しさを発信"]},
@@ -3063,6 +3063,7 @@ const DEMO_DATA={
     {id:3,text:"夜の振り返り日記5分"},
     {id:4,text:"週次レビュー（日曜30分）"}
   ],
+  nextRoutineId:5,
   milestones:[],
   deadlines:[
     {id:1,month:"2026-03",text:"大阪マラソン出場（ペース確認）",done:true},
@@ -3070,35 +3071,67 @@ const DEMO_DATA={
     {id:3,month:"2026-11",text:"神戸マラソン出場（本番）",done:false},
     {id:4,month:"2026-12",text:"年末振り返りと来年計画",done:false}
   ],
-  support:[{name:"田中コーチ",content:"月2回のランニング指導"},{name:"妻・佐智子",content:"食事管理と精神的サポート"}],
+  nextDeadlineId:5,
+  supports:[
+    {who:"田中コーチ",what:"月2回のランニング指導"},
+    {who:"妻・佐智子",what:"食事管理と精神的サポート"},
+    {who:"",what:""}
+  ],
+  analysis:{
+    rows:["心・メンタル","技・スキル","体・健康","生活"],
+    success:["ポジティブ思考が定着","営業スキル向上","体重3kg減","早起き習慣定着"],
+    failure:["モチベーション波あり","時間管理が課題","",""],
+    problem:["繁忙期に練習が途切れる","収入の波が激しい","",""],
+    solution:["週3回の最低ラインを設定","副収入源を確保する","",""]
+  },
   goalImages:[],missionImages:[],
-  dreams:{nextId:5,items:[
-    {id:1,title:"GLB（Mercedes）を購入する",category:"Have",note:"黒のGLBに乗って家族でドライブ。2028年目標。",steps:["現在の車を下取り査定","試乗・グレード決定","資金計画を立てる"]},
-    {id:2,title:"フルマラソンをサブ4で完走",category:"Do",note:"2026年神戸マラソンで達成する",steps:["月間200kmをコンスタントに走る","10月に30kmレースで感覚確認","レース2週間前はテーパリング"]},
-    {id:3,title:"家族でハワイ旅行",category:"Do",note:"マラソン完走後のご褒美。3泊5日。",steps:["パスポート更新","旅行予算を確保","ホテルとフライト予約"]},
-    {id:4,title:"書籍を出版する",category:"Do",note:"ランニングと仕事の両立をテーマに",steps:["ブログで実績を作る","出版社にアプローチ","原稿執筆"]}
-  ]},
-  gtd:{nextId:20,projects:["🎯年間目標達成","仕事","プライベート"],categories:["緊急","重要","長期"],
-    projectColors:{"仕事":"#5856D6","プライベート":"#30D158"},
-    tasks:[
-      {id:1,text:"神戸マラソンのエントリー",status:"inbox",project:"🎯年間目標達成",categories:["緊急"],deadline:"2026-07-15",important:true,urgent:true,done:false,routine:false,recur:"",dur:"15",created:Date.now()},
-      {id:2,text:"週次レビュー（今週の振り返り）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-22",important:true,urgent:false,done:false,routine:true,recur:"weekly",dur:"30",created:Date.now(),routineItems:[{id:101,text:"今週のランニング距離を記録",done:true},{id:102,text:"収入・支出を確認",done:false},{id:103,text:"来週の計画を立てる",done:false}]},
-      {id:3,text:"Q2収入レポートを作成",status:"inbox",project:"仕事",categories:["重要"],deadline:"2026-06-30",important:true,urgent:false,done:false,routine:false,recur:"",dur:"60",created:Date.now()},
-      {id:4,text:"子供の参観日に参加",status:"inbox",project:"プライベート",categories:[],deadline:"2026-06-20",important:true,urgent:true,done:false,routine:false,recur:"",dur:"",created:Date.now()},
-      {id:5,text:"新しいランニングシューズを購入",status:"inbox",project:"プライベート",categories:[],deadline:"",important:false,urgent:false,done:false,routine:false,recur:"",dur:"",created:Date.now()},
-      {id:6,text:"クライアントAの提案書作成",status:"inbox",project:"仕事",categories:["緊急","重要"],deadline:"2026-06-19",important:true,urgent:true,done:false,routine:false,recur:"",dur:"60",created:Date.now()},
-      {id:7,text:"ブログ記事「ランニングと仕事の両立」を投稿",status:"inbox",project:"仕事",categories:["長期"],deadline:"2026-06-25",important:false,urgent:false,done:false,routine:false,recur:"",dur:"30",created:Date.now()},
-      {id:8,text:"朝ランニング（今日分）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-19",important:true,urgent:false,done:true,routine:true,recur:"daily",dur:"30",created:Date.now()}
+  profile:{birthday:'1985-04-15',lifespan:90},
+  weekly:{},
+  gcalUrls:[],
+  dreams:{
+    nextId:5,
+    missionTitle:"家族と自分の可能性を最大限に引き出す",
+    mission:"毎日の小さな積み重ねで夢を現実にする。家族の笑顔を守りながら、自分自身も成長し続ける存在でいる。",
+    items:[
+      {id:1,title:"GLB（Mercedes）を購入する",category:"Have",note:"黒のGLBに乗って家族でドライブ。2028年目標。",steps:["現在の車を下取り査定","試乗・グレード決定","資金計画を立てる"],stepGoals:["","",""]},
+      {id:2,title:"フルマラソンをサブ4で完走",category:"Do",note:"2026年神戸マラソンで達成する",steps:["月間200kmをコンスタントに走る","10月に30kmレースで感覚確認","レース2週間前はテーパリング"],stepGoals:["","",""]},
+      {id:3,title:"家族でハワイ旅行",category:"Do",note:"マラソン完走後のご褒美。3泊5日。",steps:["パスポート更新","旅行予算を確保","ホテルとフライト予約"],stepGoals:["","",""]},
+      {id:4,title:"書籍を出版する",category:"Do",note:"ランニングと仕事の両立をテーマに",steps:["ブログで実績を作る","出版社にアプローチ","原稿執筆"],stepGoals:["","",""]}
     ]
   },
-  ow:{rows:[
-    ["ランニング体力強化","サブ4完走","月間200km走破","週3回以上のロング走","心肺機能向上トレーニング","レース戦略の研究","栄養管理の徹底","",  ""],
-    ["収入アップ","年収1000万円","新規クライアント獲得","単価30%アップ","副業（ブログ・セミナー）","スキルアップ学習","人脈拡大","",""],
-    ["家族との時間","週末は家族優先","月1回の家族イベント","夫婦でデート","子供の成長記録","","","",""],
-    ["健康管理","体重65kg維持","睡眠7時間確保","禁酒weekを設ける","定期健診","","","",""],
-    ["","","","","","","","",""],["","","","","","","","",""],["","","","","","","","",""],["","","","","","","","",""]
-  ]},
-  _syncAt:0,nextRoutineId:5,nextDeadlineId:5
+  gtd:{
+    nextId:20,
+    projects:["🎯年間目標達成","仕事","プライベート"],
+    categories:["緊急","重要","長期"],
+    projectColors:{"仕事":"#5856D6","プライベート":"#30D158"},
+    tasks:[
+      {id:1,text:"神戸マラソンのエントリー",status:"inbox",project:"🎯年間目標達成",categories:["緊急"],deadline:"2026-07-15",important:true,urgent:true,done:false,routine:false,recur:"",dur:"15",created:Date.now()-86400000*3},
+      {id:2,text:"週次レビュー（今週の振り返り）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-22",important:true,urgent:false,done:false,routine:true,recur:"weekly",dur:"30",created:Date.now()-86400000*7,routineItems:[{id:101,text:"今週のランニング距離を記録",done:true},{id:102,text:"収入・支出を確認",done:false},{id:103,text:"来週の計画を立てる",done:false}]},
+      {id:3,text:"Q2収入レポートを作成",status:"inbox",project:"仕事",categories:["重要"],deadline:"2026-06-30",important:true,urgent:false,done:false,routine:false,recur:"",dur:"60",created:Date.now()-86400000*2},
+      {id:4,text:"子供の参観日に参加",status:"inbox",project:"プライベート",categories:[],deadline:"2026-06-20",important:true,urgent:true,done:false,routine:false,recur:"",dur:"",created:Date.now()-86400000},
+      {id:5,text:"新しいランニングシューズを購入",status:"inbox",project:"プライベート",categories:[],deadline:"",important:false,urgent:false,done:false,routine:false,recur:"",dur:"",created:Date.now()},
+      {id:6,text:"クライアントAの提案書作成",status:"inbox",project:"仕事",categories:["緊急","重要"],deadline:"2026-06-19",important:true,urgent:true,done:false,routine:false,recur:"",dur:"60",created:Date.now()-86400000*4},
+      {id:7,text:"ブログ記事「ランニングと仕事の両立」を投稿",status:"inbox",project:"仕事",categories:["長期"],deadline:"2026-06-25",important:false,urgent:false,done:false,routine:false,recur:"",dur:"30",created:Date.now()},
+      {id:8,text:"朝ランニング（今日分）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-19",important:true,urgent:false,done:true,routine:true,recur:"daily",dur:"30",created:Date.now()-86400000*30}
+    ]
+  },
+  ow:{
+    goal:"2026年末にフルマラソンサブ4・年収1000万円を達成する",
+    themes:["【心】\n自己信頼","【心】\nポジティブ思考","【心】\nストレス管理",
+            "【技】\n営業力UP","【技】\nランニング技術",
+            "【体】\n体力強化","【体】\n栄養管理","【体】\n睡眠の質"],
+    actions:[
+      ["毎日振り返り日記","週次レビュー","メンタルコーチ","","","","",""],
+      ["感謝日記","ポジティブ言葉","","","","","",""],
+      ["瞑想5分","深呼吸","","","","","",""],
+      ["提案書テンプレ","ロープレ練習","クライアント増","","","","",""],
+      ["インターバル走","LSD","フォーム改善","シューズ選び","","","",""],
+      ["週5回ラン","体幹トレーニング","ストレッチ","","","","",""],
+      ["プロテイン摂取","糖質管理","","","","","",""],
+      ["22時就寝","睡眠計測","","","","","",""]
+    ]
+  },
+  _syncAt:0
 };
 
 function toggleDemoMode(on){
@@ -3106,20 +3139,23 @@ function toggleDemoMode(on){
     if(!confirm("デモモードに切り替えます。現在のデータは一時的に非表示になり、サンプルデータが表示されます。よろしいですか？")) {
       document.getElementById('demoModeCheck').checked=false; return;
     }
-    _realD=JSON.parse(JSON.stringify(D)); // 実データを保存
+    _realD=JSON.parse(JSON.stringify(D));
+    _realGcalUrls=[...gcalUrls];
     _demoMode=true;
     D=JSON.parse(JSON.stringify(DEMO_DATA));
+    gcalUrls=[];  // Googleカレンダー予定を非表示
     document.getElementById('demoBanner').classList.add('show');
     document.body.classList.add('demo-mode');
   } else {
     if(_realD) D=_realD;
-    _realD=null;
+    if(_realGcalUrls) gcalUrls=_realGcalUrls;
+    _realD=null; _realGcalUrls=null;
     _demoMode=false;
     document.getElementById('demoBanner').classList.remove('show');
     document.body.classList.remove('demo-mode');
   }
-  showTab('sheet');
   closeSettings();
+  showTab('sheet');
   toast(_demoMode?'🎭 デモモード ON':'✅ 実データに戻りました');
 }
 
