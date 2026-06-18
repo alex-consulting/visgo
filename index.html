@@ -856,10 +856,15 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       </div>
       <p class="settings-section">データ管理</p>
       <div class="settings-row">
-        <button class="settings-btn" onclick="exportJSON()">📤 バックアップ</button>
-        <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 全データ復元</button>
+        <button class="settings-btn" onclick="exportJSON()">📤 JSONエクスポート</button>
+        <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 JSONインポート</button>
       </div>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
+      <p class="settings-section">自動バックアップ（直近7日）</p>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
+        毎日1回、端末内に自動保存されます。ネット不要でいつでも復旧できます。
+      </div>
+      <div id="autoBackupList"><div style="font-size:12px;color:var(--sub)">読み込み中…</div></div>
       <p class="settings-section">ToDo設定</p>
       <button class="settings-btn" onclick="document.getElementById('nozbeFile').click()">📥 Nozbeから移行</button>
       <input type="file" id="nozbeFile" accept=".zip" style="display:none" onchange="importNozbe(event);closeSettings()">
@@ -1322,12 +1327,66 @@ function save(){
       if(missionImagesReady) await idbSet("missionImages", D.missionImages||[]);
       if(dreamImagesReady) await idbSet("dreamImages", dreamImgs);
       document.getElementById("saveState").textContent="✓ 保存済み";
+      autoBackup();
       syncPush();
     }catch(e){
       document.getElementById("saveState").textContent="⚠ 保存失敗";
     }
   },400);
 }
+// ---- 自動バックアップ（IDB、最大7日分） ----
+const BACKUP_IDB_KEY='autoBackups';
+const BACKUP_MAX_DAYS=7;
+
+async function autoBackup(){
+  if(_demoMode) return;
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const backups=(await idbGet(BACKUP_IDB_KEY))||[];
+    if(backups.length>0&&backups[0].date===today) return; // 今日は取得済み
+    const {goalImages,missionImages,...rest}=D;
+    const snapshot={
+      ...rest,
+      dreams:{...rest.dreams,
+        items:(rest.dreams?.items||[]).map(({image,...r})=>r)}
+    };
+    backups.unshift({date:today,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot});
+    await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS));
+  }catch(e){}
+}
+
+async function renderBackupList(){
+  const el=document.getElementById('autoBackupList'); if(!el) return;
+  try{
+    const backups=(await idbGet(BACKUP_IDB_KEY))||[];
+    if(backups.length===0){
+      el.innerHTML='<div style="font-size:12px;color:var(--sub);padding:4px 0">まだバックアップがありません。次回保存時に自動作成されます。</div>';
+      return;
+    }
+    el.innerHTML=backups.map((b,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${b.date}</div>
+          <div style="font-size:11px;color:var(--sub)">タスク ${b.tasks}件</div>
+        </div>
+        <button onclick="restoreFromAutoBackup(${i})" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">この日に戻す</button>
+      </div>`).join('');
+  }catch(e){
+    el.innerHTML='<div style="font-size:12px;color:var(--sub)">読み込みエラー</div>';
+  }
+}
+
+async function restoreFromAutoBackup(index){
+  const backups=(await idbGet(BACKUP_IDB_KEY))||[];
+  const bk=backups[index];
+  if(!bk){toast('バックアップが見つかりません');return;}
+  if(!confirm(`${bk.date}のバックアップからデータを復旧しますか？\n現在のデータは上書きされます。`)) return;
+  D=JSON.parse(JSON.stringify(bk.data));
+  goalImagesReady=true; missionImagesReady=true; dreamImagesReady=true;
+  save(); closeSettings(); showTab('sheet');
+  toast(`✅ ${bk.date}のバックアップから復旧しました`);
+}
+
 // ---- Cloudflare同期 ----
 let syncPushTimer=null;
 function syncPush(){
@@ -4368,6 +4427,7 @@ function openSettings(){
   const demoChk=document.getElementById('demoModeCheck');
   if(demoChk) demoChk.checked=_demoMode;
   gcalRenderUrls();
+  renderBackupList();
   // PCのみQRコード表示
   const qrSec=document.getElementById('qrSection');
   if(qrSec&&syncCfg.syncId&&syncCfg.syncPassword&&window.innerWidth>700){
