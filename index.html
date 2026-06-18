@@ -3954,20 +3954,14 @@ function bindGTD(root){
     if(gtdFilter.type===type&&gtdFilter.value===name) gtdFilter={type:null,value:null};
     save(); renderGTD();
   }));
-  // カード本体クリック → 詳細モーダル / 複数選択モード
+  // カード本体クリック → チェックボックス以外はすべてモーダルを開く
   root.querySelectorAll(".kcard").forEach(card=>{
     card.addEventListener("click",e=>{
-      if(!multiSelectMode) return;
-      if(e.target.closest(".kdel")||e.target.closest(".kcheck")||e.target.closest(".ri-check")) return;
-      if(e.target.classList.contains("kms-cb")) return; // checkboxのchangeに任せる
-      const id=String(card.dataset.id);
-      if(multiSelectedIds.has(id)) multiSelectedIds.delete(id); else multiSelectedIds.add(id);
-      card.classList.toggle("kms-sel",multiSelectedIds.has(id));
-      const cb=card.querySelector(".kms-cb");
-      if(cb) cb.checked=multiSelectedIds.has(id);
-      updateKmsBar();
+      if(e.target.closest(".kdel")||e.target.closest(".kcheck")||e.target.closest(".ri-check")||e.target.closest(".kms-cb")) return;
+      openGtdModal(card.dataset.id);
     });
   });
+  // kms-cb（複数選択チェックボックス）のみ選択トグル
   root.querySelectorAll(".kms-cb").forEach(cb=>{
     cb.addEventListener("change",e=>{
       e.stopPropagation();
@@ -3976,13 +3970,6 @@ function bindGTD(root){
       const card=cb.closest(".kcard");
       if(card) card.classList.toggle("kms-sel",cb.checked);
       updateKmsBar();
-    });
-  });
-  root.querySelectorAll(".kcard-head").forEach(area=>{
-    area.addEventListener("click",e=>{
-      if(e.target.closest(".kcheck")) return;
-      e.stopPropagation(); // カード選択トグルへの伝播を止める
-      openGtdModal(area.dataset.open);
     });
   });
   // フォルダ（プロジェクト・カテゴリ）ドラッグ並び替え
