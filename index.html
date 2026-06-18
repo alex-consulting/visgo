@@ -1341,17 +1341,15 @@ async function _applyRemoteData(remote){
   const localProj=Array.isArray(D.gtd?.projects)?[...D.gtd.projects]:[];
   const localCat=Array.isArray(D.gtd?.categories)?[...D.gtd.categories]:[];
   Object.assign(D,remote);
-  // 常にローカル順を基準にマージ（localProjが空の場合はリモートをそのまま使う）
+  // リモートが新しい（_applyRemoteDataが呼ばれる前提）→ リモート順を正とし、ローカルにしかない項目を末尾に追加
   if(Array.isArray(D.gtd?.projects)){
-    const base=localProj.length?localProj:[...D.gtd.projects];
-    const merged=[...base];
-    (D.gtd.projects||[]).forEach(p=>{if(p&&!merged.includes(p))merged.push(p);});
+    const merged=[...D.gtd.projects]; // リモート順（Object.assignで上書き済み）
+    localProj.forEach(p=>{if(p&&p.trim()&&!merged.includes(p))merged.push(p);});
     D.gtd.projects=[...new Set(merged.filter(p=>p&&p.trim()))];
   }
   if(Array.isArray(D.gtd?.categories)){
-    const base=localCat.length?localCat:[...D.gtd.categories];
-    const merged=[...base];
-    (D.gtd.categories||[]).forEach(c=>{if(c&&!merged.includes(c))merged.push(c);});
+    const merged=[...D.gtd.categories];
+    localCat.forEach(c=>{if(c&&c.trim()&&!merged.includes(c))merged.push(c);});
     D.gtd.categories=[...new Set(merged.filter(c=>c&&c.trim()))];
   }
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
