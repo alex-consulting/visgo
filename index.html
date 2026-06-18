@@ -1220,6 +1220,9 @@ D.gtd.tasks.forEach(function(t){
   if(t.project&&D.gtd.projects.indexOf(t.project)<0) D.gtd.projects.push(t.project);
   t.categories.forEach(function(c){ if(c&&D.gtd.categories.indexOf(c)<0) D.gtd.categories.push(c); });
 });
+// 重複・空白除去（起動時に一度だけ正規化）
+D.gtd.projects=[...new Set(D.gtd.projects.filter(p=>p&&p.trim()))];
+D.gtd.categories=[...new Set(D.gtd.categories.filter(c=>c&&c.trim()))];
 // メールレポートからのタスク取り込み（URLハッシュ経由）
 (function(){
   const hash = window.location.hash;
@@ -1338,15 +1341,18 @@ async function _applyRemoteData(remote){
   const localProj=Array.isArray(D.gtd?.projects)?[...D.gtd.projects]:[];
   const localCat=Array.isArray(D.gtd?.categories)?[...D.gtd.categories]:[];
   Object.assign(D,remote);
-  if(localProj.length&&Array.isArray(D.gtd?.projects)){
-    const merged=[...localProj];
-    (D.gtd.projects||[]).forEach(p=>{if(!merged.includes(p))merged.push(p);});
-    D.gtd.projects=merged;
+  // 常にローカル順を基準にマージ（localProjが空の場合はリモートをそのまま使う）
+  if(Array.isArray(D.gtd?.projects)){
+    const base=localProj.length?localProj:[...D.gtd.projects];
+    const merged=[...base];
+    (D.gtd.projects||[]).forEach(p=>{if(p&&!merged.includes(p))merged.push(p);});
+    D.gtd.projects=[...new Set(merged.filter(p=>p&&p.trim()))];
   }
-  if(localCat.length&&Array.isArray(D.gtd?.categories)){
-    const merged=[...localCat];
-    (D.gtd.categories||[]).forEach(c=>{if(!merged.includes(c))merged.push(c);});
-    D.gtd.categories=merged;
+  if(Array.isArray(D.gtd?.categories)){
+    const base=localCat.length?localCat:[...D.gtd.categories];
+    const merged=[...base];
+    (D.gtd.categories||[]).forEach(c=>{if(c&&!merged.includes(c))merged.push(c);});
+    D.gtd.categories=[...new Set(merged.filter(c=>c&&c.trim()))];
   }
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
