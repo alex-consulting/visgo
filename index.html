@@ -1148,6 +1148,37 @@ D.gtd.tasks.forEach(function(t){
   if(t.project&&D.gtd.projects.indexOf(t.project)<0) D.gtd.projects.push(t.project);
   t.categories.forEach(function(c){ if(c&&D.gtd.categories.indexOf(c)<0) D.gtd.categories.push(c); });
 });
+// メールレポートからのタスク取り込み（URLハッシュ経由）
+(function(){
+  const hash = window.location.hash;
+  const marker = '#mail-import=';
+  if (!hash || !hash.startsWith(marker)) return;
+  try {
+    const encoded = hash.slice(marker.length);
+    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (data.action !== 'mail-import' || !Array.isArray(data.tasks)) return;
+    const now = Date.now();
+    const routineItems = data.tasks.map(function(t, i) {
+      return { id: now + i, text: t.txt, done: false };
+    });
+    D.gtd.tasks.unshift({
+      id: D.gtd.nextId++,
+      text: "メール対応",
+      status: "inbox",
+      project: "",
+      categories: [],
+      created: now,
+      deadline: data.date || new Date().toISOString().slice(0,10),
+      urgent: true,
+      important: false,
+      memo: "",
+      routineItems: routineItems
+    });
+    save();
+    history.replaceState(null, '', window.location.pathname);
+    setTimeout(function(){ if(typeof renderGTD==='function') renderGTD(); toast('メール対応タスクを追加しました（'+data.tasks.length+'件）'); }, 300);
+  } catch(e) { console.error('mail-import failed:', e); }
+})();
 // 4観点：旧text形式→数字付き箇条書き(items配列)へ移行
 (function(){
   function stripNum(s){return s.replace(/^\s*(?:[0-9０-９]+\s*[．.、)）]|[①-⑩]\s*|[一二三四五六七八九十]+\s*[．.、])\s*/,"");}
