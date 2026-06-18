@@ -1,6 +1,6 @@
 // VISGO Service Worker
 // バージョンを変更するとPWAキャッシュが自動更新されます
-const CACHE_VERSION = 'visgo-v3.0.0';
+const CACHE_VERSION = 'visgo-v3.2.0';
 const CACHE_URLS = [
   './index.html',
   './apple-touch-icon.png'
