@@ -476,6 +476,19 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .rw-create-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#30D158,#34c7a8);color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:700;width:100%;justify-content:center;margin:4px 0 2px}
 .rw-create-btn:hover{opacity:.9}
 #rwBg .gm-dur-btn.rw-sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* ---- Demo mode ---- */
+#demoBanner{position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(90deg,#ff6987,#ff9f43);color:#fff;text-align:center;font-size:12.5px;font-weight:700;padding:6px 12px;letter-spacing:.04em;display:none}
+#demoBanner.show{display:block}
+body.demo-mode nav{padding-top:28px}
+body.demo-mode main{padding-top:28px}
+.demo-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+.demo-toggle-row span{font-size:13px;color:var(--navy);font-weight:600}
+.demo-switch{position:relative;width:44px;height:26px;flex:0 0 44px}
+.demo-switch input{opacity:0;width:0;height:0}
+.demo-switch-slider{position:absolute;inset:0;background:var(--line);border-radius:13px;cursor:pointer;transition:background .2s}
+.demo-switch-slider::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.demo-switch input:checked+.demo-switch-slider{background:#ff6987}
+.demo-switch input:checked+.demo-switch-slider::before{transform:translateX(18px)}
 /* ---- Today timeline ---- */
 /* ---- Today timeline ---- */
 .tl-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
@@ -832,6 +845,17 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
         <input type="url" id="gcalUrlInput" placeholder="iCal URLをここに貼り付け" style="flex:1;min-width:0;font-size:12px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--text)">
         <button onclick="gcalAddUrl()" style="flex:0 0 auto;white-space:nowrap;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:13px;cursor:pointer">追加</button>
       </div>
+      <p class="settings-section">デモモード</p>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
+        サンプルデータで画面をプレビューできます。オンにしている間は保存されず、オフにすると元のデータに戻ります。
+      </div>
+      <div class="demo-toggle-row">
+        <span>🎭 デモモード</span>
+        <label class="demo-switch">
+          <input type="checkbox" id="demoModeCheck" onchange="toggleDemoMode(this.checked)">
+          <span class="demo-switch-slider"></span>
+        </label>
+      </div>
       <p class="settings-section">データ管理</p>
       <div class="settings-row">
         <button class="settings-btn" onclick="exportJSON()">📤 バックアップ</button>
@@ -873,6 +897,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   🆕 新しいバージョンがあります
   <button onclick="location.reload(true)" style="background:var(--card);color:var(--text);border:none;border-radius:12px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">更新</button>
 </div>
+<div id="demoBanner">🎭 デモモード表示中 — データは保存されません</div>
 <div class="toast" id="toast"></div>
 <div id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg" alt=""></div>
 <div id="gtdModalBg" onclick="if(event.target===this)closeGtdModal()">
@@ -1280,6 +1305,7 @@ let goalImagesReady=false; // IDBからの初回ロード完了前にsave()がgo
 let missionImagesReady=false;
 let dreamImagesReady=false;
 function save(){
+  if(_demoMode){ document.getElementById("saveState").textContent="🎭 デモ中"; return; }
   clearTimeout(saveTimer);
   document.getElementById("saveState").textContent="保存中…";
   saveTimer=setTimeout(async ()=>{
@@ -1326,8 +1352,9 @@ async function _applyRemoteData(remote){
   }
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
-    if(Array.isArray(remote.goalImages)) await idbSet("goalImages",remote.goalImages);
-    if(Array.isArray(remote.missionImages)) await idbSet("missionImages",remote.missionImages);
+    // 空配列でIDBを上書きしない（dreamImagesと同じパターン）
+    if(Array.isArray(remote.goalImages)&&remote.goalImages.length>0) await idbSet("goalImages",remote.goalImages);
+    if(Array.isArray(remote.missionImages)&&remote.missionImages.length>0) await idbSet("missionImages",remote.missionImages);
     const dreamImgs={};
     (remote.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs[String(d.id)]=d.image; });
     // リモートに画像がある場合のみ上書き（空でローカルIDBを消さないように）
@@ -3009,6 +3036,93 @@ function closeGtdModal(){
   gtdModalId=null;
 }
 
+/* ============ デモモード ============ */
+let _demoMode=false;
+let _realD=null;
+const DEMO_DATA={
+  meta:{name:"山田 太郎",writeDate:"2026-01-05",targetDate:"2026-12-31",updateDate:"2026-06-01"},
+  goal:"2026年末までにサブ4でフルマラソンを完走し、家族との時間を大切にしながら仕事で年収1000万円を達成する",
+  goalNote:"達成したら家族でハワイ旅行🌺",
+  goalCriteria:[
+    {label:"フルマラソンタイム",targetNum:"4",unit:"時間以内",currentNum:"4.5"},
+    {label:"年収",targetNum:"1000",unit:"万円",currentNum:"720"},
+    {label:"月間走行距離",targetNum:"200",unit:"km",currentNum:"145"}
+  ],
+  vision:"健康で活力あふれる人生を送り、家族・仕事・趣味のすべてを高いレベルで実現する",
+  mission:"毎日の小さな積み重ねで夢を現実にする実行者",
+  service:{family:"毎週末は家族と過ごす時間を確保する",society:"ランニングコミュニティを通じて地域を元気にする"},
+  quad:[
+    {title:"社会・他者（有形）",items:["ランニング教室の開催","地域マラソン大会の企画運営","SNSで走る楽しさを発信"]},
+    {title:"自分（有形）",items:["サブ4達成","年収1000万円","体重65kg以下をキープ"]},
+    {title:"社会・他者（無形）",items:["仲間を励ます存在になる","家族の笑顔を守る"]},
+    {title:"自分（無形）",items:["自己効力感の向上","規律と自由の両立","ポジティブな自己イメージ"]}
+  ],
+  routines:[
+    {id:1,text:"朝5時起き・ランニング30分"},
+    {id:2,text:"読書20分（ビジネス書・自己啓発）"},
+    {id:3,text:"夜の振り返り日記5分"},
+    {id:4,text:"週次レビュー（日曜30分）"}
+  ],
+  milestones:[],
+  deadlines:[
+    {id:1,month:"2026-03",text:"大阪マラソン出場（ペース確認）",done:true},
+    {id:2,month:"2026-06",text:"中間レビュー・収入目標チェック",done:false},
+    {id:3,month:"2026-11",text:"神戸マラソン出場（本番）",done:false},
+    {id:4,month:"2026-12",text:"年末振り返りと来年計画",done:false}
+  ],
+  support:[{name:"田中コーチ",content:"月2回のランニング指導"},{name:"妻・佐智子",content:"食事管理と精神的サポート"}],
+  goalImages:[],missionImages:[],
+  dreams:{nextId:5,items:[
+    {id:1,title:"GLB（Mercedes）を購入する",category:"Have",note:"黒のGLBに乗って家族でドライブ。2028年目標。",steps:["現在の車を下取り査定","試乗・グレード決定","資金計画を立てる"]},
+    {id:2,title:"フルマラソンをサブ4で完走",category:"Do",note:"2026年神戸マラソンで達成する",steps:["月間200kmをコンスタントに走る","10月に30kmレースで感覚確認","レース2週間前はテーパリング"]},
+    {id:3,title:"家族でハワイ旅行",category:"Do",note:"マラソン完走後のご褒美。3泊5日。",steps:["パスポート更新","旅行予算を確保","ホテルとフライト予約"]},
+    {id:4,title:"書籍を出版する",category:"Do",note:"ランニングと仕事の両立をテーマに",steps:["ブログで実績を作る","出版社にアプローチ","原稿執筆"]}
+  ]},
+  gtd:{nextId:20,projects:["🎯年間目標達成","仕事","プライベート"],categories:["緊急","重要","長期"],
+    projectColors:{"仕事":"#5856D6","プライベート":"#30D158"},
+    tasks:[
+      {id:1,text:"神戸マラソンのエントリー",status:"inbox",project:"🎯年間目標達成",categories:["緊急"],deadline:"2026-07-15",important:true,urgent:true,done:false,routine:false,recur:"",dur:"15",created:Date.now()},
+      {id:2,text:"週次レビュー（今週の振り返り）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-22",important:true,urgent:false,done:false,routine:true,recur:"weekly",dur:"30",created:Date.now(),routineItems:[{id:101,text:"今週のランニング距離を記録",done:true},{id:102,text:"収入・支出を確認",done:false},{id:103,text:"来週の計画を立てる",done:false}]},
+      {id:3,text:"Q2収入レポートを作成",status:"inbox",project:"仕事",categories:["重要"],deadline:"2026-06-30",important:true,urgent:false,done:false,routine:false,recur:"",dur:"60",created:Date.now()},
+      {id:4,text:"子供の参観日に参加",status:"inbox",project:"プライベート",categories:[],deadline:"2026-06-20",important:true,urgent:true,done:false,routine:false,recur:"",dur:"",created:Date.now()},
+      {id:5,text:"新しいランニングシューズを購入",status:"inbox",project:"プライベート",categories:[],deadline:"",important:false,urgent:false,done:false,routine:false,recur:"",dur:"",created:Date.now()},
+      {id:6,text:"クライアントAの提案書作成",status:"inbox",project:"仕事",categories:["緊急","重要"],deadline:"2026-06-19",important:true,urgent:true,done:false,routine:false,recur:"",dur:"60",created:Date.now()},
+      {id:7,text:"ブログ記事「ランニングと仕事の両立」を投稿",status:"inbox",project:"仕事",categories:["長期"],deadline:"2026-06-25",important:false,urgent:false,done:false,routine:false,recur:"",dur:"30",created:Date.now()},
+      {id:8,text:"朝ランニング（今日分）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-19",important:true,urgent:false,done:true,routine:true,recur:"daily",dur:"30",created:Date.now()}
+    ]
+  },
+  ow:{rows:[
+    ["ランニング体力強化","サブ4完走","月間200km走破","週3回以上のロング走","心肺機能向上トレーニング","レース戦略の研究","栄養管理の徹底","",  ""],
+    ["収入アップ","年収1000万円","新規クライアント獲得","単価30%アップ","副業（ブログ・セミナー）","スキルアップ学習","人脈拡大","",""],
+    ["家族との時間","週末は家族優先","月1回の家族イベント","夫婦でデート","子供の成長記録","","","",""],
+    ["健康管理","体重65kg維持","睡眠7時間確保","禁酒weekを設ける","定期健診","","","",""],
+    ["","","","","","","","",""],["","","","","","","","",""],["","","","","","","","",""],["","","","","","","","",""]
+  ]},
+  _syncAt:0,nextRoutineId:5,nextDeadlineId:5
+};
+
+function toggleDemoMode(on){
+  if(on){
+    if(!confirm("デモモードに切り替えます。現在のデータは一時的に非表示になり、サンプルデータが表示されます。よろしいですか？")) {
+      document.getElementById('demoModeCheck').checked=false; return;
+    }
+    _realD=JSON.parse(JSON.stringify(D)); // 実データを保存
+    _demoMode=true;
+    D=JSON.parse(JSON.stringify(DEMO_DATA));
+    document.getElementById('demoBanner').classList.add('show');
+    document.body.classList.add('demo-mode');
+  } else {
+    if(_realD) D=_realD;
+    _realD=null;
+    _demoMode=false;
+    document.getElementById('demoBanner').classList.remove('show');
+    document.body.classList.remove('demo-mode');
+  }
+  showTab('sheet');
+  closeSettings();
+  toast(_demoMode?'🎭 デモモード ON':'✅ 実データに戻りました');
+}
+
 /* ============ ルーティンウィザード ============ */
 let rwStep=1;
 let rwData={name:'',recur:'daily',dur:'',startDate:'',subtasks:[],memo:''};
@@ -4209,6 +4323,8 @@ function bindGTD(root){
 /* ================= 設定モーダル ================= */
 function openSettings(){
   document.getElementById('settingsOverlay').style.display='flex';
+  const demoChk=document.getElementById('demoModeCheck');
+  if(demoChk) demoChk.checked=_demoMode;
   gcalRenderUrls();
   // PCのみQRコード表示
   const qrSec=document.getElementById('qrSection');
@@ -4250,7 +4366,16 @@ function gcalDelUrl(i){
 }
 
 /* ================= 入出力 ================= */
-function exportJSON(){
+async function exportJSON(){
+  // IDBから確実に画像を取り出してから書き出す
+  try{if(!D.goalImages?.length) D.goalImages=await idbGet("goalImages")||[];}catch(e){}
+  try{if(!D.missionImages?.length) D.missionImages=await idbGet("missionImages")||[];}catch(e){}
+  try{
+    const dImgs=await idbGet("dreamImages");
+    if(dImgs&&typeof dImgs==='object'){
+      (D.dreams?.items||[]).forEach(d=>{if(!d.image&&dImgs[String(d.id)])d.image=dImgs[String(d.id)];});
+    }
+  }catch(e){}
   const blob=new Blob([JSON.stringify(D,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -4327,13 +4452,16 @@ function importJSON(ev){
       if(!obj.ow||!obj.routines) throw new Error("形式が違います");
       if(!confirm("現在のデータを読み込んだ内容で上書きします。よろしいですか？")) return;
       D=obj;
-      // バックアップJSON内の夢画像をIDBへ移行しつつDには保持
+      // バックアップJSON内の全画像をIDBへ書き込む
+      if(Array.isArray(D.goalImages)&&D.goalImages.length) await idbSet("goalImages",D.goalImages);
+      if(Array.isArray(D.missionImages)&&D.missionImages.length) await idbSet("missionImages",D.missionImages);
       const bkImgs={};
       (D.dreams?.items||[]).forEach(d=>{ if(d.image) bkImgs[String(d.id)]=d.image; });
-      await idbSet("dreamImages", bkImgs);
+      if(Object.keys(bkImgs).length) await idbSet("dreamImages", bkImgs);
+      goalImagesReady=true; missionImagesReady=true; dreamImagesReady=true;
       save();
       showTab("sheet");
-      toast("読み込みました");
+      toast("読み込みました（画像を含むデータを復元しました）");
     }catch(e){ alert("読み込みに失敗しました: "+e.message); }
   };
   reader.readAsText(f);
