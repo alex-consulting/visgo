@@ -3981,7 +3981,7 @@ function bindGTD(root){
   root.querySelectorAll(".kcard-head").forEach(area=>{
     area.addEventListener("click",e=>{
       if(e.target.closest(".kcheck")) return;
-      if(multiSelectMode) return; // 複数選択モード中はモーダルを開かない
+      e.stopPropagation(); // カード選択トグルへの伝播を止める
       openGtdModal(area.dataset.open);
     });
   });
