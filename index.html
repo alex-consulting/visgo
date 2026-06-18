@@ -3011,13 +3011,13 @@ function closeGtdModal(){
 
 /* ============ ルーティンウィザード ============ */
 let rwStep=1;
-let rwData={name:'',recur:'daily',dur:'',subtasks:[],memo:''};
+let rwData={name:'',recur:'daily',dur:'',startDate:'',subtasks:[],memo:''};
 const RW_RECUR_LABELS={daily:'毎日',weekly:'毎週',monthly:'毎月',quarterly:'毎Q',yearly:'毎年'};
 const RW_DUR_LABELS={'5':'5分','15':'15分','30':'30分','60':'60分','more':'それ以上'};
 
 function openRoutineWizard(){
   rwStep=1;
-  rwData={name:'',recur:'daily',dur:'',subtasks:[],memo:''};
+  rwData={name:'',recur:'daily',dur:'',startDate:'',subtasks:[],memo:''};
   rwRender();
   document.getElementById('rwBg').classList.add('show');
 }
@@ -3032,6 +3032,7 @@ function rwSaveStep(){
     rwData.recur=sel?sel.dataset.v:'daily';
     const durSel=document.querySelector('#rwDurBtns .rw-sel');
     rwData.dur=durSel?durSel.dataset.v:'';
+    rwData.startDate=(document.getElementById('rwStartDate')||{}).value||'';
   } else if(rwStep===2){
     rwData.subtasks=Array.from(document.querySelectorAll('.rw-sub-input')).map(el=>el.value.trim()).filter(Boolean);
     rwData.memo=(document.getElementById('rwMemo')||{}).value||'';
@@ -3067,7 +3068,10 @@ function rwRender(){
       <label class="gm-label" style="margin-top:14px">所要時間（任意）</label>
       <div class="gm-dur" id="rwDurBtns">
         ${Object.entries(RW_DUR_LABELS).map(([k,l])=>`<button class="gm-dur-btn${rwData.dur===k?' rw-sel':''}" data-v="${k}" onclick="rwDurSel(this)">${l}</button>`).join('')}
-      </div>`;
+      </div>
+      <label class="gm-label" style="margin-top:14px">いつから始める？（任意）</label>
+      <div class="rw-instruction" style="margin-bottom:8px">📅 開始日を設定すると、その日が来るまでToDo一覧に表示されません。「今日から始める」なら空欄のままでOKです。準備が必要な場合や、来週から習慣を始めたい場合などに活用してください。</div>
+      <input type="date" class="rw-input" id="rwStartDate" value="${esc(rwData.startDate)}">`;
     footer.innerHTML=`<span></span><button class="rw-btn-next" onclick="rwNext()">次へ →</button>`;
   } else if(rwStep===2){
     const subs=rwData.subtasks.length?rwData.subtasks:[''];
@@ -3089,6 +3093,7 @@ function rwRender(){
         <div style="display:flex;gap:10px;align-items:flex-start"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">タスク名</span><span style="font-size:14px;font-weight:700;color:var(--navy)">${esc(rwData.name)}</span></div>
         <div style="display:flex;gap:10px;align-items:center"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">繰り返し</span><span style="font-size:13px">${recurLabel}</span></div>
         ${durLabel?`<div style="display:flex;gap:10px;align-items:center"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">所要時間</span><span style="font-size:13px">${durLabel}</span></div>`:''}
+        <div style="display:flex;gap:10px;align-items:center"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">開始日</span><span style="font-size:13px">${rwData.startDate||'今日から'}</span></div>
         ${subs.length?`<div style="display:flex;gap:10px;align-items:flex-start"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">サブタスク</span><div style="display:flex;flex-direction:column;gap:3px">${subs.map(s=>`<span style="font-size:13px">• ${esc(s)}</span>`).join('')}</div></div>`:''}
         ${rwData.memo?`<div style="display:flex;gap:10px;align-items:flex-start"><span style="min-width:72px;font-size:12px;color:var(--sub);font-weight:600">メモ</span><span style="font-size:13px;color:var(--sub)">${esc(rwData.memo)}</span></div>`:''}
       </div>`;
@@ -3131,6 +3136,7 @@ function rwCreate(){
     created:Date.now(),
     recur:rwData.recur||'daily',
     dur:rwData.dur||'',
+    deadline:rwData.startDate||'',
     routine:true,
     memo:rwData.memo||'',
     routineItems:subtasks
