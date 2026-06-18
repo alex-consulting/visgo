@@ -436,6 +436,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .gm-routine-area{margin-top:6px;padding:8px;background:var(--green-l);border:1px solid rgba(52,199,89,.30);border-radius:8px}
 .gm-ri-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .gm-ri-row:last-child{border-bottom:none}
+.gm-ri-row[draggable="true"]{cursor:grab}
+.gm-ri-row.drag-over{border-top:2px solid var(--blue);background:var(--fill2)}
 .gm-ri-input{flex:1;min-width:0;border:none;background:transparent;font-size:13px;color:var(--navy);font-family:inherit;padding:2px 4px;border-radius:4px;outline:none}.gm-ri-input:focus{background:var(--card);outline:1px solid var(--blue)}.gm-ri-input:disabled{color:var(--sub);cursor:default}
 .gm-ri-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:0 3px;flex:0 0 auto;line-height:1}
 .ri-btns{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
@@ -643,6 +645,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dm-cat-btn.act-be{background:rgba(175,82,222,.12);border-color:rgba(175,82,222,.35);color:#AF52DE}
 .dm-step-list{margin-bottom:6px}
 .dm-step-item{display:flex;align-items:flex-start;gap:8px;padding:7px 4px;border-bottom:1px solid var(--fill)}
+.dm-step-item[draggable="true"]{cursor:grab}
+.dm-step-item.drag-over{border-top:2px solid var(--blue);background:var(--fill2)}
 .dm-step-item:last-child{border-bottom:none}
 .dm-step-check{width:16px;height:16px;accent-color:var(--blue);flex:0 0 auto;cursor:pointer;margin-top:4px}
 .dm-step-body{flex:1;display:flex;flex-direction:column;gap:3px}
@@ -1738,13 +1742,16 @@ function dreamProgress(d){
   if(!sgs.length) return 0;
   return Math.round(sgs.filter(s=>s.done).length/sgs.length*100);
 }
+let _dmDragIdx=null;
 function renderDmSteps(){
   const list=document.getElementById('dmStepList'); if(!list) return;
   const pct=dmSteps.length?Math.round(dmSteps.filter(s=>s.done).length/dmSteps.length*100):0;
   const badge=document.getElementById('dmProgressPct');
   if(badge) badge.textContent=pct+'%';
   list.innerHTML=dmSteps.length
-    ? dmSteps.map((s,i)=>`<div class="dm-step-item">
+    ? dmSteps.map((s,i)=>`<div class="dm-step-item" draggable="true"
+        ondragstart="dmStepDragStart(${i})" ondragover="dmStepDragOver(event,${i})"
+        ondragleave="dmStepDragLeave(event)" ondrop="dmStepDrop(${i})">
         <div class="ri-btns">
           <button class="ri-mv" onclick="dmStepMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
           <button class="ri-mv" onclick="dmStepMove(${i},1)" ${i===dmSteps.length-1?'disabled':''}>▼</button>
@@ -1759,6 +1766,17 @@ function renderDmSteps(){
         <button class="dm-step-del" onclick="dmDeleteStep('${s.id}')">✕</button>
       </div>`).join('')
     : `<div style="color:var(--sub);font-size:12.5px;padding:6px 0">アクションをまだ追加していません</div>`;
+}
+function dmStepDragStart(i){_dmDragIdx=i;}
+function dmStepDragOver(e,i){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+function dmStepDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function dmStepDrop(i){
+  document.querySelectorAll('.dm-step-item.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  if(_dmDragIdx===null||_dmDragIdx===i){_dmDragIdx=null;return;}
+  const item=dmSteps.splice(_dmDragIdx,1)[0];
+  dmSteps.splice(i,0,item);
+  _dmDragIdx=null;
+  renderDmSteps();
 }
 function dmStepMove(i,dir){
   const j=i+dir;
@@ -2969,6 +2987,7 @@ function toggleGmRoutineArea(){
   const on=document.getElementById('gmIsRoutine').checked;
   document.getElementById('gmRoutineArea').style.display=on?'block':'none';
 }
+let _riDragIdx=null;
 function gmRenderRoutineItems(){
   const c=document.getElementById('gmRoutineList');
   if(!c) return;
@@ -2976,7 +2995,9 @@ function gmRenderRoutineItems(){
   const t=gtdTask(gtdModalId);
   const isAnn=t&&t.project===ANNUAL_PROJECT;
   c.innerHTML=gmRoutineItems.map((it,i)=>`
-    <div class="gm-ri-row">
+    <div class="gm-ri-row" draggable="${isAnn?'false':'true'}"
+         ondragstart="riDragStart(${i})" ondragover="riDragOver(event,${i})"
+         ondragleave="riDragLeave(event)" ondrop="riDrop(${i})">
       <div class="ri-btns" style="${isAnn?'visibility:hidden;pointer-events:none':''}">
         <button class="ri-mv" onclick="riMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
         <button class="ri-mv" onclick="riMove(${i},1)" ${i===gmRoutineItems.length-1?'disabled':''}>▼</button>
@@ -2984,6 +3005,17 @@ function gmRenderRoutineItems(){
       <input type="text" class="gm-ri-input" value="${esc(it.text)}" ${isAnn?'disabled':''} oninput="gmEditRoutineItem('${it.id}',this.value)">
       <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')" style="${isAnn?'display:none':''}">✕</button>
     </div>`).join('');
+}
+function riDragStart(i){_riDragIdx=i;}
+function riDragOver(e,i){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+function riDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function riDrop(i){
+  document.querySelectorAll('.gm-ri-row.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  if(_riDragIdx===null||_riDragIdx===i){_riDragIdx=null;return;}
+  const item=gmRoutineItems.splice(_riDragIdx,1)[0];
+  gmRoutineItems.splice(i,0,item);
+  _riDragIdx=null;
+  gmRenderRoutineItems();
 }
 function gmEditRoutineItem(id,val){
   const it=gmRoutineItems.find(x=>String(x.id)===String(id));
