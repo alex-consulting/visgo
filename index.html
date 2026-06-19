@@ -3703,7 +3703,8 @@ function gtdFolderItems(type){
     ? rawList.filter(name=>name!==ANNUAL_PROJECT)
     : rawList;
   if(!list.length) return `<div class="gf-none">（フォルダなし）</div>`;
-  return list.map(name=>{
+  const isMobile=window.innerWidth<=700;
+  return list.map((name,i)=>{
     const cnt=type==='category'
       ? D.gtd.tasks.filter(t=>(t.categories||[]).includes(name)).length
       : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
@@ -3717,11 +3718,24 @@ function gtdFolderItems(type){
       : `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`;
     const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
-    return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="true" style="${annualStyle}">
-      <span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>
+    const moveCtrl=isMobile&&!isAnnual
+      ? `<span onclick="event.stopPropagation();gfMove('${type}','${esc(name)}',-1)" style="padding:0 3px;opacity:${i===0?.3:1};cursor:${i===0?'default':'pointer'}">▲</span><span onclick="event.stopPropagation();gfMove('${type}','${esc(name)}',1)" style="padding:0 3px;opacity:${i===list.length-1?.3:1};cursor:${i===list.length-1?'default':'pointer'}">▼</span>`
+      : `<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`;
+    return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${isMobile?'false':'true'}" style="${annualStyle}">
+      ${moveCtrl}
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt}</span>
       ${controls}</div>`;
   }).join("");
+}
+function gfMove(type,name,dir){
+  const list=type==='project'?D.gtd.projects:D.gtd.categories;
+  const idx=list.indexOf(name);
+  if(idx<0) return;
+  const to=idx+dir;
+  if(to<0||to>=list.length) return;
+  list.splice(idx,1);
+  list.splice(to,0,name);
+  save(); renderGTD();
 }
 function advanceRecurDeadline(t){
   if(!t.recur||!t.deadline) return;
