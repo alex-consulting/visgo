@@ -1377,20 +1377,20 @@ async function renderServerBackupList(){
       el.innerHTML='<div style="font-size:12px;color:var(--sub)">まだサーバーバックアップがありません。次回同期時に自動作成されます。</div>';
       return;
     }
-    el.innerHTML=dates.map(date=>`
+    el.innerHTML=dates.map(({label,bucket})=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">☁ ${date}</div>
-        <button onclick="restoreFromServerBackup('${date}')" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">この日に戻す</button>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">☁ ${label}</div>
+        <button onclick="restoreFromServerBackup('${bucket}')" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">この時点に戻す</button>
       </div>`).join('');
   }catch(e){
     el.innerHTML='<div style="font-size:12px;color:var(--sub)">読み込み失敗（同期サーバーに接続できません）</div>';
   }
 }
 
-async function restoreFromServerBackup(date){
-  if(!confirm(`${date}のサーバーバックアップからデータを復旧しますか？\n現在のデータは上書きされます。`)) return;
+async function restoreFromServerBackup(bucket){
+  if(!confirm(`このバックアップからデータを復旧しますか？\n現在のデータは上書きされます。`)) return;
   try{
-    const res=await fetch(WORKER_URL+'?restore='+date,{headers:{'X-Sync-Code':getSyncCode()}});
+    const res=await fetch(WORKER_URL+'?restore='+bucket,{headers:{'X-Sync-Code':getSyncCode()}});
     if(!res.ok) throw new Error('バックアップが見つかりません');
     const remote=await res.json();
     if(!remote||!remote._syncAt) throw new Error('データが空です');
