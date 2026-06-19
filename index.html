@@ -1327,9 +1327,9 @@ function save(){
       const lsData={...rest, dreams:{...rest.dreams,
         items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
       localStorage.setItem(LS_KEY, JSON.stringify(lsData));
-      if(goalImagesReady) await idbSet("goalImages", D.goalImages||[]);
-      if(missionImagesReady) await idbSet("missionImages", D.missionImages||[]);
-      if(dreamImagesReady) await idbSet("dreamImages", dreamImgs);
+      if(goalImagesReady&&D.goalImages?.length>0) await idbSet("goalImages", D.goalImages);
+      if(missionImagesReady&&D.missionImages?.length>0) await idbSet("missionImages", D.missionImages);
+      if(dreamImagesReady&&Object.keys(dreamImgs).length>0) await idbSet("dreamImages", dreamImgs);
       document.getElementById("saveState").textContent="✓ 保存済み";
       autoBackup();
       syncPush();
@@ -4586,12 +4586,33 @@ function importJSON(ev){
       if(!obj.ow||!obj.routines) throw new Error("形式が違います");
       if(!confirm("現在のデータを読み込んだ内容で上書きします。よろしいですか？")) return;
       D=obj;
-      // バックアップJSON内の全画像をIDBへ書き込む
-      if(Array.isArray(D.goalImages)&&D.goalImages.length) await idbSet("goalImages",D.goalImages);
-      if(Array.isArray(D.missionImages)&&D.missionImages.length) await idbSet("missionImages",D.missionImages);
+      // バックアップJSON内の画像をIDBへ。画像がない場合は既存IDBを保持してDにロード
+      if(Array.isArray(D.goalImages)&&D.goalImages.length){
+        await idbSet("goalImages",D.goalImages);
+      } else {
+        try{ D.goalImages=await idbGet("goalImages")||[]; }catch(e){ D.goalImages=[]; }
+      }
+      if(Array.isArray(D.missionImages)&&D.missionImages.length){
+        await idbSet("missionImages",D.missionImages);
+      } else {
+        try{ D.missionImages=await idbGet("missionImages")||[]; }catch(e){ D.missionImages=[]; }
+      }
+      // 夢カード画像：バックアップ内の画像 + 既存IDBの画像をマージ
       const bkImgs={};
       (D.dreams?.items||[]).forEach(d=>{ if(d.image) bkImgs[String(d.id)]=d.image; });
-      if(Object.keys(bkImgs).length) await idbSet("dreamImages", bkImgs);
+      try{
+        const existDreamImgs=await idbGet("dreamImages")||{};
+        // 既存IDB画像をベースに、バックアップ内の画像で上書き
+        const mergedDreamImgs={...existDreamImgs,...bkImgs};
+        // 存在しない夢カードの画像は除外
+        const activeDreamIds=new Set((D.dreams?.items||[]).map(d=>String(d.id)));
+        Object.keys(mergedDreamImgs).forEach(k=>{ if(!activeDreamIds.has(k)) delete mergedDreamImgs[k]; });
+        // DのitemsにもIDB画像を注入（表示用）
+        (D.dreams?.items||[]).forEach(d=>{
+          if(!d.image&&mergedDreamImgs[String(d.id)]) d.image=mergedDreamImgs[String(d.id)];
+        });
+        if(Object.keys(mergedDreamImgs).length) await idbSet("dreamImages",mergedDreamImgs);
+      }catch(e){ if(Object.keys(bkImgs).length) await idbSet("dreamImages",bkImgs); }
       goalImagesReady=true; missionImagesReady=true; dreamImagesReady=true;
       save();
       showTab("sheet");
