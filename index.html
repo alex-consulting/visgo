@@ -864,9 +864,14 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
         <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 JSONインポート</button>
       </div>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
-      <p class="settings-section">自動バックアップ（直近7日）</p>
+      <p class="settings-section">サーバーバックアップ（直近30日）</p>
       <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
-        毎日1回、端末内に自動保存されます。ネット不要でいつでも復旧できます。
+        同期のたびに日次スナップショットをサーバーに自動保存。どの端末からでも復旧できます。
+      </div>
+      <div id="serverBackupList"><div style="font-size:12px;color:var(--sub)">読み込み中…</div></div>
+      <p class="settings-section">端末内バックアップ（直近7日）</p>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
+        毎日1回、この端末のみに自動保存されます。
       </div>
       <div id="autoBackupList"><div style="font-size:12px;color:var(--sub)">読み込み中…</div></div>
       <p class="settings-section">ToDo設定</p>
@@ -1357,6 +1362,47 @@ async function autoBackup(){
     backups.unshift({date:today,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot});
     await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS));
   }catch(e){}
+}
+
+async function renderServerBackupList(){
+  const el=document.getElementById('serverBackupList'); if(!el) return;
+  if(!getSyncCode()||WORKER_URL.includes('CHANGEME')){
+    el.innerHTML='<div style="font-size:12px;color:var(--sub)">同期設定が必要です</div>'; return;
+  }
+  try{
+    const res=await fetch(WORKER_URL+'?history=1',{headers:{'X-Sync-Code':getSyncCode()}});
+    if(!res.ok) throw new Error();
+    const dates=await res.json();
+    if(!dates.length){
+      el.innerHTML='<div style="font-size:12px;color:var(--sub)">まだサーバーバックアップがありません。次回同期時に自動作成されます。</div>';
+      return;
+    }
+    el.innerHTML=dates.map(date=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">☁ ${date}</div>
+        <button onclick="restoreFromServerBackup('${date}')" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">この日に戻す</button>
+      </div>`).join('');
+  }catch(e){
+    el.innerHTML='<div style="font-size:12px;color:var(--sub)">読み込み失敗（同期サーバーに接続できません）</div>';
+  }
+}
+
+async function restoreFromServerBackup(date){
+  if(!confirm(`${date}のサーバーバックアップからデータを復旧しますか？\n現在のデータは上書きされます。`)) return;
+  try{
+    const res=await fetch(WORKER_URL+'?restore='+date,{headers:{'X-Sync-Code':getSyncCode()}});
+    if(!res.ok) throw new Error('バックアップが見つかりません');
+    const remote=await res.json();
+    if(!remote||!remote._syncAt) throw new Error('データが空です');
+    // syncAtを現在時刻に更新してローカルに適用 → その後pushして全デバイスに配布
+    remote._syncAt=Date.now();
+    await _applyRemoteData(remote);
+    await syncPushNow();
+    closeSettings(); showTab('sheet');
+    toast(`✅ ${date}のサーバーバックアップから復旧しました`);
+  }catch(e){
+    toast('⚠ 復旧失敗: '+e.message);
+  }
 }
 
 async function renderBackupList(){
@@ -4459,6 +4505,7 @@ function openSettings(){
   const demoChk=document.getElementById('demoModeCheck');
   if(demoChk) demoChk.checked=_demoMode;
   gcalRenderUrls();
+  renderServerBackupList();
   renderBackupList();
   // PCのみQRコード表示
   const qrSec=document.getElementById('qrSection');
