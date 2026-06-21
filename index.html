@@ -3605,7 +3605,15 @@ const GTD_COLS=[
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
 let gtdCollapsed={category:true,project:true,recur:true,taskGroup:true};
 let gfEditMode={project:false,category:false};
-function gfToggleEdit(type){gfEditMode[type]=!gfEditMode[type];renderGTD();}
+function gfToggleEdit(type){
+  gfEditMode[type]=!gfEditMode[type];
+  const wasOpen=document.getElementById('gtdSide')?.classList.contains('mob-open');
+  renderGTD();
+  if(wasOpen){
+    document.getElementById('gtdSide')?.classList.add('mob-open');
+    document.getElementById('gtdSideBackdrop')?.classList.add('mob-open');
+  }
+}
 let gtdView='today'; // 'kanban' | 'today'
 let multiSelectMode=false;
 let multiSelectedIds=new Set();
