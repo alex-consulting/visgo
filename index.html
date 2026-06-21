@@ -2099,6 +2099,10 @@ function openDreamModal(id){
       </div>
     </div>
     <div class="dm-field">
+      <label>📝 詳細メモ</label>
+      <textarea id="dmNote" rows="4" placeholder="リンク、参考情報、詳細など自由に...">${esc(d.note||'')}</textarea>
+    </div>
+    <div class="dm-field">
       <label>イメージ画像</label>
       <div class="dm-img-wrap" id="dmImgWrap"></div>
     </div>
@@ -2147,6 +2151,7 @@ function saveDream(){
     createdDate:existing?existing.createdDate:localDateStr(new Date()),
     targetDate:document.getElementById('dmTarget').value,
     memo:document.getElementById('dmMemo').value,
+    note:document.getElementById('dmNote').value,
     stepGoals:[...dmStepGoals],
     steps:[...dmSteps],
     image:dmImage||null
