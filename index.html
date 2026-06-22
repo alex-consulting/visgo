@@ -4987,7 +4987,11 @@ if('serviceWorker' in navigator){
     });
   }).catch(()=>{});
 }
-// PWA対応: バックグラウンドから復帰時に同期とSW更新チェック
+/// 30秒ごとの自動ポーリング同期（フォアグラウンド時のみ）
+setInterval(()=>{
+  if(document.visibilityState==='visible') syncPull();
+}, 30000);
+/ PWA対応: バックグラウンドから復帰時に同期とSW更新チェック
 let _lastVisibilitySync=Date.now();
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
