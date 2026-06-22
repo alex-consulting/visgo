@@ -39,12 +39,13 @@ html,body{margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;-webkit-font-smoothing:antialiased;
   background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;
   padding-bottom:env(safe-area-inset-bottom)}
-header{background:var(--card);color:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+header{background:var(--card);color:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;border-bottom:1px solid var(--line);overflow:hidden}
 header h1{font-size:17px;margin:0;font-weight:700;flex:1;min-width:160px}
 .hbtn{background:var(--fill);color:var(--text);border:1px solid var(--line);
   border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer}
 .hbtn:active{background:var(--blue-l)}
 #syncStatus{font-size:12px;opacity:.8;white-space:nowrap}
+@media(max-width:700px){#loginIdBadge{display:none!important}}
 .sync-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sync-modal-box{background:var(--card);border-radius:14px;padding:24px;width:min(460px,92vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
 #saveState{font-size:12px;opacity:.85}
@@ -3318,6 +3319,7 @@ function toggleDemoMode(on){
     if(!confirm("デモモードに切り替えます。現在のデータは一時的に非表示になり、サンプルデータが表示されます。よろしいですか？")) {
       document.getElementById('demoModeCheck').checked=false; return;
     }
+    autoBackup(); // デモ前にバックアップ
     _realD=JSON.parse(JSON.stringify(D));
     _realGcalUrls=[...gcalUrls];
     _demoMode=true;
