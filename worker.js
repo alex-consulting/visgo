@@ -35,7 +35,7 @@ export default {
     // ── iCal プロキシ ──────────────────────────────────────
     if (url.pathname === '/ical-proxy') {
       if (!code || !code.includes(':')) {
-        return new Response('Unauthorized', { status: 401, headers: CORS });
+        return withCors(new Response('Unauthorized', { status: 401 }));
       }
       const icalUrl = request.headers.get('X-Ical-Url') || '';
       if (!icalUrl.startsWith('https://')) {
