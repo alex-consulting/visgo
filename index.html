@@ -87,7 +87,7 @@ label.fl{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:8p
 .listrow .num{flex:0 0 26px;height:34px;display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:700;color:var(--sub)}
 .listrow input[type=text].small{flex:0 0 110px}
-.listrow input[type=date].small{flex:0 0 150px}
+.listrow input[type=date].small{flex:0 0 110px}
 .subtabs{display:flex;gap:6px;margin-bottom:12px}
 .subtabs button{border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:8px;padding:6px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
 .subtabs button.act{background:var(--blue);color:#fff;border-color:var(--blue)}
@@ -162,7 +162,7 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .vempty{color:var(--faint)}
 .vgoal{border:2px solid var(--red);border-radius:14px;padding:16px 18px;margin-bottom:22px;background:var(--card)}
 .vgoal-label{display:inline-block;background:var(--red);color:#fff;font-weight:700;font-size:12px;padding:3px 12px;border-radius:5px;margin-bottom:8px}
-.vgoal-main{font-size:18px;font-weight:700;color:var(--red);line-height:1.6}
+.vgoal-main{font-size:24px;font-weight:700;color:var(--red);line-height:1.6}
 .vgoal-note{margin-top:8px;font-size:13.5px;line-height:1.7}
 .vgoal .gimgs{margin-top:12px}
 .vgoal .gimgs img{height:120px;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
@@ -636,6 +636,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-modal-body{padding:18px;display:flex;flex-direction:column;gap:14px}
 .dm-field label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin-bottom:5px}
 .dm-field input[type=text],.dm-field input[type=date],.dm-field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13.5px;color:var(--navy);box-sizing:border-box;font-family:inherit}
+@media(max-width:700px){.dm-field input,.dm-field textarea,.dm-step-addrow input{font-size:16px!important}}
 .dm-field textarea{min-height:100px;resize:vertical;line-height:1.6}
 .dm-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .dm-cat-btns{display:flex;gap:6px;flex-wrap:wrap}
@@ -658,7 +659,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dm-step-del:hover{color:var(--red)}
 .dm-step-addrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .dm-step-addrow input[type=text]{flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
-.dm-step-addrow input[type=date]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit}
+.dm-step-addrow input[type=date]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit;width:130px;flex:0 0 auto}
 .dm-step-addrow button{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
 .dm-pct-badge{font-size:12px;font-weight:700;color:var(--blue);margin-left:6px}
 .dream-modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;padding-bottom:max(14px,env(safe-area-inset-bottom));border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--card)}
@@ -2089,6 +2090,10 @@ function openDreamModal(id){
       <input type="text" id="dmTitle" value="${esc(d.title||'')}" placeholder="夢のタイトルを入力">
     </div>
     <div class="dm-field">
+      <label>実現予定年</label>
+      <input type="number" id="dmTarget" value="${d.targetDate||''}" min="2020" max="2100" placeholder="${new Date().getFullYear()}" style="width:120px">
+    </div>
+    <div class="dm-field">
       <label>分類</label>
       <div class="dm-cat-btns">
         <button class="dm-cat-btn${d.category==='Have'?' act-have':''}" data-cat="Have" onclick="dmSelectCat(this)">Have（欲しい）</button>
@@ -2097,12 +2102,12 @@ function openDreamModal(id){
       </div>
     </div>
     <div class="dm-field">
-      <label>実現予定年</label>
-      <input type="number" id="dmTarget" value="${d.targetDate||''}" min="2020" max="2100" placeholder="${new Date().getFullYear()}" style="width:120px">
+      <label>イメージ画像</label>
+      <div class="dm-img-wrap" id="dmImgWrap"></div>
     </div>
     <div class="dm-field">
-      <label>🎉 達成時の気持ち（目標達成をイメージしながら書く）</label>
-      <textarea id="dmMemo" rows="3" placeholder="達成したときどんな気持ちになるか、どんな景色が見えるか...">${esc(d.memo||'')}</textarea>
+      <label>📝 詳細メモ・達成時の気持ち</label>
+      <textarea id="dmNote" rows="4" placeholder="達成したときの気持ち、リンク、参考情報など自由に...">${esc(d.note||d.memo||'')}</textarea>
     </div>
     <div class="dm-field">
       <label>🚩 ステップ目標</label>
@@ -2113,14 +2118,6 @@ function openDreamModal(id){
         <input type="month" id="dmStepGoalMonth" title="目標年月">
         <button onclick="dmAddStepGoal()">確定</button>
       </div>
-    </div>
-    <div class="dm-field">
-      <label>📝 詳細メモ</label>
-      <textarea id="dmNote" rows="4" placeholder="リンク、参考情報、詳細など自由に...">${esc(d.note||'')}</textarea>
-    </div>
-    <div class="dm-field">
-      <label>イメージ画像</label>
-      <div class="dm-img-wrap" id="dmImgWrap"></div>
     </div>
     <div class="dm-field">
       <label>アクション <span class="dm-pct-badge" id="dmProgressPct">0%</span></label>
@@ -2166,8 +2163,8 @@ function saveDream(){
     category,
     createdDate:existing?existing.createdDate:localDateStr(new Date()),
     targetDate:document.getElementById('dmTarget').value,
-    memo:document.getElementById('dmMemo').value,
     note:document.getElementById('dmNote').value,
+    memo:document.getElementById('dmNote').value,
     stepGoals:[...dmStepGoals],
     steps:[...dmSteps],
     image:dmImage||null
@@ -2281,7 +2278,7 @@ function openSheetSection(key){
     case 'deadlines':
       title='週間期日行動';
       const todoIdxs=[];D.deadlines.forEach((d,i)=>{if(!d.done)todoIdxs.push(i);});
-      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:140px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" onclick="try{this.showPicker()}catch(e){}" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>
+      body=`<div id="ss-dl">${todoIdxs.map((ri,li)=>`<div class="ss-row2"><input class="ss-inp" style="width:100px;flex:0 0 auto" data-dli="${li}" data-dlf="month" type="date" onclick="try{this.showPicker()}catch(e){}" value="${esc(toDateInputMD(D.deadlines[ri].month)||'')}"><input class="ss-inp" style="flex:1" data-dli="${li}" data-dlf="text" value="${esc(D.deadlines[ri].text||'')}"></div>`).join('')}</div><button onclick="ssAddDl()" style="border:1px dashed var(--line);background:none;width:100%;padding:7px;border-radius:8px;color:var(--sub);cursor:pointer;margin-top:4px">＋ 追加</button>
         <button onclick="deadlinesToTodo()" style="margin-top:12px;width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">✅ ToDoに反映する</button>`;
       onSave=()=>{const ti=[];D.deadlines.forEach((d,i)=>{if(!d.done)ti.push(i);});document.querySelectorAll('[data-dli]').forEach(el=>{const li=+el.dataset.dli,f=el.dataset.dlf;if(ti[li]!=null)D.deadlines[ti[li]][f]=el.value;});};
       break;
@@ -2566,7 +2563,7 @@ function ta(value,oninput,attrs){
 let sheetMode = (D.meta.name||D.goal) ? "view" : "edit";
 let dlTab="todo"; // 週間期日行動の未完了/完了サブタブ
 function renderSheet(){ if(sheetMode==="edit") renderSheetEdit(); else renderSheetView(); }
-function setSheetMode(m){ sheetMode=m; renderSheet(); window.scrollTo(0,0); if(m==="view") toast("保存しました"); }
+function setSheetMode(m){ sheetMode=m; if(m==='view'){D.meta.updateDate=localDateStr(new Date());save();} renderSheet(); window.scrollTo(0,0); if(m==="view") toast("保存しました"); }
 function renderSheetEdit(){
   const root=document.getElementById("tab-sheet");
   const a=D.analysis;
@@ -3750,10 +3747,8 @@ function gtdFolderItems(type){
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`
       : '';
     const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
-    const moveCtrl=(inEdit&&!isAnnual)
-      ? (isMobile
-          ? `<span onclick="event.stopPropagation();gfMove('${type}','${esc(name)}',-1)" style="padding:0 3px;opacity:${i===0?.3:1};cursor:${i===0?'default':'pointer'}">▲</span><span onclick="event.stopPropagation();gfMove('${type}','${esc(name)}',1)" style="padding:0 3px;opacity:${i===list.length-1?.3:1};cursor:${i===list.length-1?'default':'pointer'}">▼</span>`
-          : `<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`)
+    const moveCtrl=(inEdit&&!isAnnual&&!isMobile)
+      ? `<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`
       : '';
     return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${inEdit&&!isMobile?'true':'false'}" style="${annualStyle}">
       ${moveCtrl}
@@ -4537,6 +4532,72 @@ function bindGTD(root){
       save(); renderGTD();
     });
   });
+  // モバイル：長押し＋タッチドラッグで並び替え
+  if(window.innerWidth<=700){
+    let _gfDragEl=null,_gfDragType=null;
+    root.querySelectorAll('.gf-item[data-f]').forEach(item=>{
+      const type=item.dataset.f;
+      const name=item.dataset.v;
+      if(type!=='project'&&type!=='category') return;
+      if(type==='project'&&name===ANNUAL_PROJECT) return;
+      let pressTimer=null;
+      item.addEventListener('touchstart',e=>{
+        pressTimer=setTimeout(()=>{
+          pressTimer=null;
+          _gfDragEl=item; _gfDragType=type;
+          item.classList.add('gf-dragging');
+          item.style.boxShadow='0 4px 16px rgba(0,0,0,.22)';
+          item.style.position='relative';
+          item.style.zIndex='100';
+          try{navigator.vibrate(40);}catch(_){}
+        },380);
+      },{passive:true});
+      item.addEventListener('touchmove',e=>{
+        if(pressTimer){clearTimeout(pressTimer);pressTimer=null;return;}
+        if(!_gfDragEl||_gfDragEl!==item) return;
+        e.preventDefault();
+        const touch=e.touches[0];
+        const container=item.parentNode;
+        const siblings=[...container.querySelectorAll(`.gf-item[data-f="${_gfDragType}"]`)].filter(s=>s!==item);
+        for(const s of siblings){
+          const r=s.getBoundingClientRect();
+          if(touch.clientY<r.top+r.height/2){
+            if(item.nextSibling!==s) container.insertBefore(item,s);
+            return;
+          }
+        }
+        if(item!==container.lastElementChild) container.appendChild(item);
+      },{passive:false});
+      const endDrag=()=>{
+        if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
+        if(!_gfDragEl||_gfDragEl!==item) return;
+        item.classList.remove('gf-dragging');
+        item.style.boxShadow=''; item.style.position=''; item.style.zIndex='';
+        const container=item.parentNode;
+        const newOrder=[...container.querySelectorAll(`.gf-item[data-f="${_gfDragType}"]`)].map(e=>e.dataset.v);
+        const list=_gfDragType==='project'?D.gtd.projects:D.gtd.categories;
+        let vi=0;
+        for(let i=0;i<list.length;i++){
+          if(_gfDragType==='project'&&list[i]===ANNUAL_PROJECT) continue;
+          if(vi<newOrder.length) list[i]=newOrder[vi++];
+        }
+        _gfDragEl=null; _gfDragType=null;
+        save();
+      };
+      item.addEventListener('touchend',endDrag);
+      item.addEventListener('touchcancel',()=>{
+        if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
+        if(_gfDragEl===item){
+          item.classList.remove('gf-dragging');
+          item.style.boxShadow=''; item.style.position=''; item.style.zIndex='';
+          _gfDragEl=null; _gfDragType=null;
+          const wasOpen=document.getElementById('gtdSide')?.classList.contains('mob-open');
+          renderGTD();
+          if(wasOpen){document.getElementById('gtdSide')?.classList.add('mob-open');document.getElementById('gtdSideBackdrop')?.classList.add('mob-open');}
+        }
+      });
+    });
+  }
   // カードドラッグ＆ドロップ
   root.querySelectorAll(".kcard").forEach(card=>{
     card.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/plain",card.dataset.id); card.classList.add("kdrag"); });
