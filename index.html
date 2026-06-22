@@ -45,7 +45,6 @@ header h1{font-size:17px;margin:0;font-weight:700;flex:1;min-width:160px}
   border-radius:10px;padding:6px 12px;font-size:13px;cursor:pointer}
 .hbtn:active{background:var(--blue-l)}
 #syncStatus{font-size:12px;opacity:.8;white-space:nowrap}
-@media(max-width:700px){#loginIdBadge{display:none!important}}
 .sync-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center}
 .sync-modal-box{background:var(--card);border-radius:14px;padding:24px;width:min(460px,92vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
 #saveState{font-size:12px;opacity:.85}
@@ -788,7 +787,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   <h1 style="flex:1;min-width:160px;margin:0;line-height:1"><img src="visgo-logo.png" alt="VISGO" style="height:36px;width:auto;display:block"></h1>
   <span id="saveState" style="display:none"></span>
   <span id="syncStatus" style="display:none"></span>
-  <span id="loginIdBadge" style="display:none;font-size:11px;color:var(--sub);background:var(--fill);border:1px solid var(--line);border-radius:6px;padding:2px 8px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis"></span>
   <button onclick="location.reload()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--sub);padding:4px 8px;line-height:1" title="リロード">↺</button>
   <button onclick="openSettings()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--navy);padding:4px 8px;line-height:1">⚙</button>
 </header>
@@ -1560,10 +1558,8 @@ function setSyncStatus(msg){
 }
 function updateLoginIdDisplay(){
   const id=syncCfg.syncId||'';
-  const badge=document.getElementById('loginIdBadge');
   const row=document.getElementById('settingsIdRow');
   const lbl=document.getElementById('settingsIdLabel');
-  if(badge){ badge.textContent=id?'ID: '+id:''; badge.style.display=id?'inline-block':'none'; }
   if(row){ row.style.display=id?'flex':'none'; }
   if(lbl){ lbl.textContent=id; }
 }
@@ -4993,7 +4989,7 @@ if('serviceWorker' in navigator){
 setInterval(()=>{
   if(document.visibilityState==='visible') syncPull();
 }, 30000);
-/ PWA対応: バックグラウンドから復帰時に同期とSW更新チェック
+// PWA対応: バックグラウンドから復帰時に同期とSW更新チェック
 let _lastVisibilitySync=Date.now();
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
