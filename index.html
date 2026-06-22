@@ -1624,10 +1624,18 @@ async function doLogin(){
       if(res.ok){
         const remote=await res.json();
         if(remote&&remote._syncAt){
+          const stayEl=document.getElementById('loginStayChecked');
+          const ttlEarly=(!stayEl||stayEl.checked)?LOGIN_TTL:60*60*1000;
           if(D._syncAt&&remote._syncAt>D._syncAt){
             await _applyRemoteData(remote);
+            localStorage.setItem(LOGIN_SESSION_KEY, Date.now());
+            localStorage.setItem('visgo_login_ttl', ttlEarly);
+            location.reload(); return;
           } else if(!D._syncAt){
             await _applyRemoteData(remote);
+            localStorage.setItem(LOGIN_SESSION_KEY, Date.now());
+            localStorage.setItem('visgo_login_ttl', ttlEarly);
+            location.reload(); return;
           }
         }
       }
@@ -1652,8 +1660,8 @@ async function syncNow(){
       const remote=await res.json();
       if(remote&&remote._syncAt&&(!D._syncAt||remote._syncAt>D._syncAt)){
         await _applyRemoteData(remote);
-        setSyncStatus("☁ 同期済み");
-        renderGTD(); return;
+        setSyncStatus("☁ 同期済み・再読込");
+        setTimeout(()=>location.reload(),600); return;
       }
     }
   }catch(e){}
