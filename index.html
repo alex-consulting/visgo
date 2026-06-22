@@ -864,17 +864,12 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
           <span class="demo-switch-slider"></span>
         </label>
       </div>
-      <p class="settings-section">データ管理</p>
+      <p class="settings-section">手動バックアップ</p>
       <div class="settings-row">
-        <button class="settings-btn" onclick="exportJSON()">📤 JSONエクスポート</button>
-        <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 JSONインポート</button>
+        <button class="settings-btn" onclick="exportJSON()">📤 保存</button>
+        <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 読込</button>
       </div>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
-      <p class="settings-section">サーバーバックアップ（直近30日）</p>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
-        同期のたびに日次スナップショットをサーバーに自動保存。どの端末からでも復旧できます。
-      </div>
-      <div id="serverBackupList"><div style="font-size:12px;color:var(--sub)">読み込み中…</div></div>
       <p class="settings-section">端末内バックアップ（直近7日）</p>
       <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
         毎日1回、この端末のみに自動保存されます。
