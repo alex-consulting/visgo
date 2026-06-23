@@ -3766,7 +3766,9 @@ function setProjectColor(name,color){
   if(!D.gtd.projectColors) D.gtd.projectColors={};
   if(color) D.gtd.projectColors[name]=color; else delete D.gtd.projectColors[name];
   document.getElementById('colorPickerPopup').style.display='none';
+  const _sv=window.scrollY;
   save(); renderGTD();
+  window.scrollTo({top:_sv,behavior:'instant'});
 }
 document.addEventListener('click',()=>{ const p=document.getElementById('colorPickerPopup'); if(p) p.style.display='none'; });
 
