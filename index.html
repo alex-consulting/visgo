@@ -3755,8 +3755,8 @@ const PROJECT_PALETTE=['#ef4444','#f97316','#f59e0b','#22c55e','#14b8a6','#3b82f
 function openColorPicker(e,name){
   e.stopPropagation();
   const popup=document.getElementById('colorPickerPopup');
-  popup.innerHTML=PROJECT_PALETTE.map(c=>`<div class="cp-dot" style="background:${c}" onclick="setProjectColor('${esc(name)}','${c}')"></div>`).join('')
-    +`<div class="cp-dot" style="background:var(--fill);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--sub)" onclick="setProjectColor('${esc(name)}','')">✕</div>`;
+  popup.innerHTML=PROJECT_PALETTE.map(c=>`<div class="cp-dot" style="background:${c}" onclick="event.stopPropagation();setProjectColor('${esc(name)}','${c}')"></div>`).join('')
+    +`<div class="cp-dot" style="background:var(--fill);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--sub)" onclick="event.stopPropagation();setProjectColor('${esc(name)}','')">✕</div>`;
   const r=e.target.getBoundingClientRect();
   popup.style.left=Math.min(r.left,window.innerWidth-180)+'px';
   popup.style.top=(r.bottom+6)+'px';
@@ -4474,7 +4474,7 @@ function bindGTD(root){
   // フォルダ：選択
   root.querySelectorAll(".gf-item").forEach(it=>{
     it.addEventListener("click",e=>{
-      if(e.target.classList.contains("gf-del")||e.target.classList.contains("gf-ren")) return;
+      if(e.target.classList.contains("gf-del")||e.target.classList.contains("gf-ren")||e.target.classList.contains("gf-color-dot")) return;
       if(it.dataset.view==='today'||it.dataset.view==='tomorrow'||it.dataset.view==='overdue'){
         gtdView=it.dataset.view;
         gtdFilter={type:null,value:null};
