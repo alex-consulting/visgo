@@ -261,6 +261,35 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-color-dot:hover{transform:scale(1.35)}
 .gf-item.act .gf-color-dot{border-color:rgba(255,255,255,.6)}
 #colorPickerPopup{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.16);display:none;flex-wrap:wrap;gap:6px;width:172px;z-index:1001}
+/* ---- Folder Edit Modal ---- */
+#folderEditOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3000;display:none;align-items:center;justify-content:center;padding:16px}
+#folderEditOverlay.show{display:flex}
+#folderEditModal{background:var(--card);border-radius:14px;width:460px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.22)}
+.fe-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px;color:var(--navy);flex:0 0 auto}
+.fe-hd button{background:none;border:none;font-size:20px;cursor:pointer;color:var(--sub);line-height:1;padding:0 4px}
+.fe-body{overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto}
+.fe-add-wrap{padding:0 12px 10px;flex:0 0 auto}
+.fe-item{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--fill);border-radius:8px;border:1px solid var(--line);cursor:default}
+.fe-item.fe-dragging{opacity:.35}
+.fe-item.fe-drag-over{border-top:2px solid var(--blue)}
+.fe-drag{color:var(--faint);font-size:13px;cursor:grab;padding:0 2px;letter-spacing:-1px;flex:0 0 auto;user-select:none;touch-action:none}
+.fe-drag:active{cursor:grabbing}
+.fe-cdot{width:20px;height:20px;border-radius:50%;flex:0 0 auto;cursor:pointer;border:1.5px solid rgba(0,0,0,.13);transition:transform .12s}
+.fe-cdot:hover{transform:scale(1.2)}
+.fe-name-input{flex:1;border:none;background:transparent;font-size:14px;color:var(--navy);outline:none;min-width:0;padding:0}
+.fe-name-input:focus{border-bottom:1px solid var(--blue)}
+.fe-updown{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
+.fe-updown button{background:none;border:none;color:var(--sub);cursor:pointer;font-size:10px;line-height:1.2;padding:0 3px;opacity:.6}
+.fe-updown button:hover{opacity:1;color:var(--blue)}
+.fe-del-btn{background:none;border:none;color:var(--sub);cursor:pointer;font-size:15px;padding:0 2px;opacity:.45;flex:0 0 auto}
+.fe-del-btn:hover{opacity:1;color:var(--red)}
+.fe-add-btn{background:none;border:1px dashed var(--line);border-radius:8px;padding:9px;width:100%;color:var(--blue);cursor:pointer;font-size:13px;text-align:center}
+.fe-add-btn:hover{background:var(--fill)}
+.fe-foot{padding:12px 18px;padding-bottom:max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;flex:0 0 auto}
+.fe-foot button{border:none;border-radius:8px;padding:9px 20px;font-size:13.5px;font-weight:600;cursor:pointer}
+.fe-btn-cancel{background:var(--fill);color:var(--navy)}
+.fe-btn-save{background:var(--blue);color:#fff}
+#feColorPopup{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.16);display:none;flex-wrap:wrap;gap:6px;width:172px;z-index:3100}
 .cp-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s}
 .cp-dot:hover{transform:scale(1.2);border-color:rgba(0,0,0,.25)}
 .gf-cnt{margin-left:auto;font-size:11px;opacity:.75;flex:0 0 auto}
@@ -793,6 +822,25 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 
 <!-- プロジェクトカラーピッカー -->
 <div id="colorPickerPopup"></div>
+
+<!-- フォルダ編集モーダル -->
+<div id="folderEditOverlay" onclick="if(event.target===this)closeFolderEditModal()">
+  <div id="folderEditModal">
+    <div class="fe-hd">
+      <span id="folderEditTitle">📁 プロジェクトを編集</span>
+      <button onclick="closeFolderEditModal()">✕</button>
+    </div>
+    <div class="fe-body" id="folderEditList"></div>
+    <div class="fe-add-wrap">
+      <button class="fe-add-btn" onclick="feAddItem()">＋ 追加</button>
+    </div>
+    <div class="fe-foot">
+      <button class="fe-btn-cancel" onclick="closeFolderEditModal()">キャンセル</button>
+      <button class="fe-btn-save" onclick="saveFolderEdit()">保存</button>
+    </div>
+  </div>
+</div>
+<div id="feColorPopup"></div>
 
 <!-- 夢モーダル -->
 <div id="dreamModalOverlay" onclick="if(event.target===this)closeDreamModal()">
@@ -3772,6 +3820,118 @@ function setProjectColor(name,color){
 }
 document.addEventListener('click',()=>{ const p=document.getElementById('colorPickerPopup'); if(p) p.style.display='none'; });
 
+// ── フォルダ編集モーダル ──────────────────────────────────────────
+let _feType=null,_feItems=[],_feColorIdx=-1;
+
+function openFolderEditModal(type){
+  _feType=type;
+  const colors=D.gtd.projectColors||{};
+  const src=type==='project'?D.gtd.projects:D.gtd.categories;
+  _feItems=(src||[]).filter(n=>n&&n.trim()).map(name=>({name,color:colors[name]||''}));
+  _renderFolderEditList();
+  document.getElementById('folderEditOverlay').classList.add('show');
+}
+function closeFolderEditModal(){
+  document.getElementById('folderEditOverlay').classList.remove('show');
+  document.getElementById('feColorPopup').style.display='none';
+  _feType=null; _feItems=[];
+}
+function _collectFeInputs(){
+  document.querySelectorAll('.fe-name-input').forEach((inp,i)=>{ if(_feItems[i]) _feItems[i].name=inp.value; });
+}
+function _renderFolderEditList(){
+  const isProj=_feType==='project';
+  document.getElementById('folderEditTitle').textContent=isProj?'📁 プロジェクトを編集':'🏷 カテゴリを編集';
+  const list=document.getElementById('folderEditList');
+  list.innerHTML=_feItems.map((item,i)=>{
+    const isAnn=isProj&&item.name===ANNUAL_PROJECT;
+    const cdot=isProj?`<span class="fe-cdot" style="background:${item.color||'#cbd5e1'}" onclick="event.stopPropagation();openFeColorPicker(event,${i})" title="色を変更"></span>`:'';
+    const del=isAnn?'<span style="width:19px;flex:0 0 auto"></span>':`<button class="fe-del-btn" onclick="_collectFeInputs();feDeleteItem(${i})" title="削除">✕</button>`;
+    const updn=`<div class="fe-updown"><button onclick="_collectFeInputs();feMoveItem(${i},-1)" title="上へ">▲</button><button onclick="_collectFeInputs();feMoveItem(${i},1)" title="下へ">▼</button></div>`;
+    return `<div class="fe-item" draggable="true" data-idx="${i}">${updn}<span class="fe-drag" title="ドラッグで並べ替え">⠿⠿</span>${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${del}</div>`;
+  }).join('');
+  _attachFeDrag();
+}
+function feMoveItem(i,dir){
+  const to=i+dir;
+  if(to<0||to>=_feItems.length) return;
+  const a=_feItems[i]; _feItems[i]=_feItems[to]; _feItems[to]=a;
+  _renderFolderEditList();
+}
+function feDeleteItem(i){
+  if(!confirm('「'+_feItems[i].name+'」を削除しますか？')) return;
+  _feItems.splice(i,1);
+  _renderFolderEditList();
+}
+function feAddItem(){
+  _collectFeInputs();
+  _feItems.push({name:'',color:''});
+  _renderFolderEditList();
+  const inputs=document.querySelectorAll('.fe-name-input');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+function saveFolderEdit(){
+  _collectFeInputs();
+  const names=[...new Set(_feItems.map(it=>it.name.trim()).filter(n=>n))];
+  if(_feType==='project'){
+    D.gtd.projects=names;
+    if(!D.gtd.projectColors) D.gtd.projectColors={};
+    const nc={};
+    _feItems.forEach(it=>{ if(it.name.trim()&&it.color) nc[it.name.trim()]=it.color; });
+    D.gtd.projectColors=nc;
+    // ANNUAL_PROJECTが消えていたら先頭に戻す
+    if(D.gtd.projects.length&&!D.gtd.projects.includes(ANNUAL_PROJECT)
+       &&(D.gtd.tasks||[]).some(t=>t.project===ANNUAL_PROJECT)){
+      D.gtd.projects.unshift(ANNUAL_PROJECT);
+    }
+  } else {
+    D.gtd.categories=names;
+  }
+  save(); closeFolderEditModal(); renderGTD();
+}
+function openFeColorPicker(e,idx){
+  _feColorIdx=idx;
+  const popup=document.getElementById('feColorPopup');
+  popup.innerHTML=PROJECT_PALETTE.map(c=>`<div class="cp-dot" style="background:${c}" onclick="event.stopPropagation();feSetColor('${c}')"></div>`).join('')
+    +`<div class="cp-dot" style="background:var(--fill);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--sub)" onclick="event.stopPropagation();feSetColor('')">✕</div>`;
+  const r=e.target.getBoundingClientRect();
+  popup.style.left=Math.min(r.left,window.innerWidth-180)+'px';
+  popup.style.top=(r.bottom+6)+'px';
+  popup.style.display='flex';
+}
+function feSetColor(color){
+  if(_feColorIdx<0) return;
+  _collectFeInputs();
+  _feItems[_feColorIdx].color=color;
+  document.getElementById('feColorPopup').style.display='none';
+  _renderFolderEditList();
+}
+document.addEventListener('click',()=>{ const p=document.getElementById('feColorPopup'); if(p) p.style.display='none'; });
+function _attachFeDrag(){
+  let dragIdx=null;
+  document.querySelectorAll('#folderEditList .fe-item').forEach((el,i)=>{
+    el.addEventListener('dragstart',e=>{
+      // ドラッグハンドルかどうか確認
+      if(!e.target.classList.contains('fe-drag')&&!e.target.closest('.fe-drag')){
+        e.preventDefault(); return;
+      }
+      _collectFeInputs();
+      dragIdx=i; setTimeout(()=>el.classList.add('fe-dragging'),0);
+      e.dataTransfer.effectAllowed='move';
+    });
+    el.addEventListener('dragend',()=>el.classList.remove('fe-dragging'));
+    el.addEventListener('dragover',e=>{ e.preventDefault(); el.classList.add('fe-drag-over'); });
+    el.addEventListener('dragleave',()=>el.classList.remove('fe-drag-over'));
+    el.addEventListener('drop',e=>{
+      e.preventDefault(); el.classList.remove('fe-drag-over');
+      if(dragIdx===null||dragIdx===i) return;
+      const moved=_feItems.splice(dragIdx,1)[0];
+      _feItems.splice(i,0,moved);
+      dragIdx=null; _renderFolderEditList();
+    });
+  });
+}
+
 function gtdFolderItems(type){
   const rawList=gtdListOf(type);
   // 年間目標達成はINBOX直下にピン留めするので通常プロジェクト一覧から除外
@@ -4284,8 +4444,7 @@ function renderGTD(){
             <div class="gf-h gf-toggle" data-toggle="project">
               <span><span class="gf-arrow">▾</span>📁 プロジェクト</span>
               <div style="display:flex;gap:4px;align-items:center" onclick="event.stopPropagation()">
-                ${gfEditMode.project?`<button class="gf-add" data-add="project" title="追加">＋</button>`:''}
-                <button onclick="gfToggleEdit('project')" style="font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--blue);background:${gfEditMode.project?'var(--blue)':'var(--card)'};color:${gfEditMode.project?'#fff':'var(--blue)'};cursor:pointer;white-space:nowrap">${gfEditMode.project?'完了':'編集'}</button>
+                <button onclick="event.stopPropagation();openFolderEditModal('project')" style="font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--card);color:var(--blue);cursor:pointer;white-space:nowrap">編集</button>
               </div>
             </div>
             <div class="gf-items">${gtdFolderItems('project')}</div>
@@ -4294,8 +4453,7 @@ function renderGTD(){
             <div class="gf-h gf-toggle" data-toggle="category">
               <span><span class="gf-arrow">▾</span>🏷 カテゴリ</span>
               <div style="display:flex;gap:4px;align-items:center" onclick="event.stopPropagation()">
-                ${gfEditMode.category?`<button class="gf-add" data-add="category" title="追加">＋</button>`:''}
-                <button onclick="gfToggleEdit('category')" style="font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--blue);background:${gfEditMode.category?'var(--blue)':'var(--card)'};color:${gfEditMode.category?'#fff':'var(--blue)'};cursor:pointer;white-space:nowrap">${gfEditMode.category?'完了':'編集'}</button>
+                <button onclick="event.stopPropagation();openFolderEditModal('category')" style="font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--card);color:var(--blue);cursor:pointer;white-space:nowrap">編集</button>
               </div>
             </div>
             <div class="gf-items">${gtdFolderItems('category')}</div>
@@ -4463,7 +4621,7 @@ function bindGTD(root){
   // セクション折りたたみ
   root.querySelectorAll(".gf-toggle").forEach(h=>{
     h.addEventListener("click",e=>{
-      if(e.target.closest(".gf-add")||e.target.closest("button[onclick*='gfToggleEdit']")) return;
+      if(e.target.closest(".gf-add")||e.target.closest("button[onclick*='openFolderEditModal']")) return;
       const type=h.dataset.toggle;
       if(!type) return;
       gtdCollapsed[type]=!gtdCollapsed[type];
