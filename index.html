@@ -1216,7 +1216,10 @@ const dataLoadedFromStorage = !!localStorage.getItem(LS_KEY);
 try{ D = JSON.parse(localStorage.getItem(LS_KEY)) || structuredClone(DEFAULT_DATA); }
 catch(e){ D = structuredClone(DEFAULT_DATA); }
 if(!Array.isArray(D.goalImages)) D.goalImages=[]; // 旧データ互換
-if(!D.gtd||!Array.isArray(D.gtd.tasks)) D.gtd={tasks:[],nextId:1}; // GTDタスク（PC版）
+// GTD互換初期化: tasks/nextIdのみ補完（他フィールドは保持）
+if(!D.gtd) D.gtd={tasks:[],nextId:1,projects:[],categories:[],projectColors:{}};
+else if(!Array.isArray(D.gtd.tasks)){ D.gtd.tasks=[]; } // tasksのみ修正、他は保持
+if(typeof D.gtd.nextId!=='number') D.gtd.nextId=1;
 if(!D.dreams||!Array.isArray(D.dreams.items)) D.dreams={items:[],nextId:1}; // 夢リスト
 if(!('mission' in D.dreams)) D.dreams.mission='';
 if(!('missionTitle' in D.dreams)) D.dreams.missionTitle='';
@@ -1463,6 +1466,17 @@ function syncPush(){
 // リモートデータをD・IDB・localStorageに適用する共通処理
 async function _applyRemoteData(remote){
   if(_demoMode) return; // デモ中はリモートデータを適用しない
+  // ── データ劣化チェック ──────────────────────────────────────
+  // リモートのタスク数がローカルより大幅に少ない場合は適用をブロック
+  const localTaskCount=Array.isArray(D.gtd?.tasks)?D.gtd.tasks.length:0;
+  const remoteTaskCount=Array.isArray(remote.gtd?.tasks)?remote.gtd.tasks.length:0;
+  const localHasData=localTaskCount>0||(D.gtd?.nextId||1)>1;
+  const remoteIsEmpty=remoteTaskCount===0&&(!remote.gtd?.nextId||remote.gtd.nextId<=1);
+  if(localHasData&&remoteIsEmpty){
+    setSyncStatus("⚠ サーバーデータが空—ローカルを保護中");
+    console.warn('[VISGO] syncブロック: ローカル'+localTaskCount+'タスク vs リモート0タスク');
+    return; // 空データでローカルを上書きしない
+  }
   // プロジェクト・カテゴリの並び順はローカルを優先し、リモートの新規分を末尾に追加
   const localProj=Array.isArray(D.gtd?.projects)?[...D.gtd.projects]:[];
   const localCat=Array.isArray(D.gtd?.categories)?[...D.gtd.categories]:[];
@@ -1498,6 +1512,14 @@ async function syncPushNow(){
   // キャッシュクリア直後（localStorageが空だった起動）はサーバーを上書きしない
   if(!dataLoadedFromStorage){
     setSyncStatus("⚠ ローカルデータなし—上書き保護中");
+    return;
+  }
+  // 空データ検知: タスクが0かつnextIdが初期値（=一度もタスクを作っていない状態）でプッシュしない
+  const pushTaskCount=Array.isArray(D.gtd?.tasks)?D.gtd.tasks.length:0;
+  const pushNextId=D.gtd?.nextId||1;
+  if(pushTaskCount===0&&pushNextId<=1&&(D.gcalUrls||[]).length===0&&!D.meta?.name){
+    setSyncStatus("⚠ データが空のためプッシュ停止");
+    console.warn('[VISGO] 空データプッシュをブロック: tasks=0, nextId='+pushNextId);
     return;
   }
   setSyncStatus("⬆ 同期中…");
