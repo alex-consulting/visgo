@@ -66,7 +66,9 @@ textarea,input[type=text],input[type=date]{width:100%;border:1px solid var(--lin
   padding:8px 10px;font:inherit;font-size:14.5px;background:var(--fill2);color:var(--text);resize:none}
 textarea:focus,input:focus{outline:2px solid var(--blue);outline-offset:-1px;background:var(--card)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.row>div{flex:1;min-width:140px}
+.row>div{flex:1;min-width:140px;min-width:0;overflow:hidden}
+@media(max-width:700px){.row>div{flex:1 1 calc(50% - 5px);min-width:0}
+  .row input[type=date]{width:100%;min-width:0;box-sizing:border-box}}
 label.fl{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:8px 0 3px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.grid2{grid-template-columns:1fr}}
@@ -749,7 +751,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 /* ===== Apple-style: mobile bottom tab bar ===== */
 @media(max-width:700px){
   body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
-  nav{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:95;border-bottom:none;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  nav{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:95;border-bottom:none;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);background:var(--card)}
+  /* safe-areaの下を塗りつぶして「浮き」を解消 */
+  nav::after{content:'';position:fixed;bottom:0;left:0;right:0;height:env(safe-area-inset-bottom);background:var(--card);z-index:-1}
   nav button{padding:7px 2px 6px;border-bottom:none;gap:3px;font-size:10.5px}
   nav button.act{border-bottom-color:transparent}
   nav button .tab-icon{font-size:22px}
