@@ -2679,11 +2679,10 @@ function renderSheetEdit(){
   <div class="gtd-main">
   <div class="card">
     <h2>基本情報</h2>
-    <div class="row">
-      <div><label class="fl">氏名</label><input type="text" data-oi="meta.name" value="${esc(D.meta.name)}"></div>
-      <div><label class="fl">記入日（やると決めた日）</label><input type="date" data-oi="meta.writeDate" value="${esc(toDateInput(D.meta.writeDate))}"></div>
-      <div><label class="fl">目標達成日</label><input type="date" data-oi="meta.targetDate" value="${esc(toDateInput(D.meta.targetDate))}"></div>
-      <div><label class="fl">更新日</label><input type="date" data-oi="meta.updateDate" value="${esc(toDateInput(D.meta.updateDate))}"></div>
+    <div style="margin-bottom:10px"><label class="fl">氏名</label><input type="text" data-oi="meta.name" value="${esc(D.meta.name)}"></div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="flex:0 0 auto"><label class="fl">記入日（やると決めた日）</label><input type="date" data-oi="meta.writeDate" value="${esc(toDateInput(D.meta.writeDate))}" style="width:150px"></div>
+      <div style="flex:0 0 auto"><label class="fl">目標達成日</label><input type="date" data-oi="meta.targetDate" value="${esc(toDateInput(D.meta.targetDate))}" style="width:150px"></div>
     </div>
   </div>
   <div class="card">
