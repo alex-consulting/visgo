@@ -3851,10 +3851,9 @@ function _renderFolderEditList(){
     const isAnn=isProj&&item.name===ANNUAL_PROJECT;
     const cdot=isProj?`<span class="fe-cdot" style="background:${item.color||'#cbd5e1'}" onclick="event.stopPropagation();openFeColorPicker(event,${i})" title="色を変更"></span>`:'';
     const del=isAnn?'<span style="width:19px;flex:0 0 auto"></span>':`<button class="fe-del-btn" onclick="_collectFeInputs();feDeleteItem(${i})" title="削除">✕</button>`;
-    const updn=`<div class="fe-updown"><button onclick="_collectFeInputs();feMoveItem(${i},-1)" title="上へ">▲</button><button onclick="_collectFeInputs();feMoveItem(${i},1)" title="下へ">▼</button></div>`;
-    return `<div class="fe-item" draggable="true" data-idx="${i}">${updn}<span class="fe-drag" title="ドラッグで並べ替え">⠿⠿</span>${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${del}</div>`;
+    const updn=`<div class="fe-updown"><button onclick="event.stopPropagation();event.preventDefault();_collectFeInputs();feMoveItem(${i},-1)" title="上へ">▲</button><button onclick="event.stopPropagation();event.preventDefault();_collectFeInputs();feMoveItem(${i},1)" title="下へ">▼</button></div>`;
+    return `<div class="fe-item" data-idx="${i}">${updn}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${del}</div>`;
   }).join('');
-  _attachFeDrag();
 }
 function feMoveItem(i,dir){
   const to=i+dir;
