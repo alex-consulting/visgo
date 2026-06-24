@@ -4577,6 +4577,8 @@ function gtdMobLabelText(){
   if(gtdView==='tomorrow') return '📅 明日の計画';
   if(gtdView==='overdue') return '⚠️ 期限超過';
   if(gtdFilter.type==='project'&&gtdFilter.value==='') return '📥 Inbox';
+  if(gtdFilter.type==='recur'&&gtdFilter.value) return '🔄 '+(GTD_RECUR_LABEL[gtdFilter.value]||gtdFilter.value);
+  if(gtdFilter.type==='recur'&&!gtdFilter.value) return '🔄 ルーティン（すべて）';
   if(gtdFilter.type&&gtdFilter.value) return gtdFilter.value;
   return '📋 すべて表示';
 }
