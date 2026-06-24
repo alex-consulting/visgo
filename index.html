@@ -192,7 +192,7 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gtd-wrap{display:flex;gap:14px;align-items:flex-start}
 .gtd-side{flex:0 0 210px;background:var(--fill);border:1px solid var(--line);border-radius:10px;padding:10px}
 .gtd-main{flex:1;min-width:0}
-.gtd-mob-toggle{display:none;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:600;color:var(--navy);cursor:pointer;margin-bottom:10px;width:100%;box-sizing:border-box}
+.gtd-mob-toggle{display:none;align-items:center;gap:10px;background:#1a2340;border:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:12px;width:100%;box-sizing:border-box;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .gtd-mob-label{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gtd-side-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:998}
 @media(max-width:700px){
@@ -4407,7 +4407,7 @@ function renderGTD(){
     <button class="btn-save" onclick="gtdAdd()">追加</button>
   </div>
   <button class="gtd-mob-toggle" id="gtdMobToggle" onclick="toggleGtdSidebar()">
-    <span>☰</span><span class="gtd-mob-label">${gtdMobLabelText()}</span><span style="font-size:11px;color:var(--sub)">▾</span>
+    <span style="font-size:18px;line-height:1">☰</span><span class="gtd-mob-label">${gtdMobLabelText()}</span><span style="font-size:12px;color:rgba(255,255,255,.7);margin-left:auto">▾</span>
   </button>
   <div class="gtd-side-backdrop" id="gtdSideBackdrop" onclick="closeGtdSidebar()"></div>
   <div class="gtd-wrap">
