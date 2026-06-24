@@ -3741,6 +3741,7 @@ function gtdVisible(){
       ? (t.recur||"")===gtdFilter.value
       : !!(t.recur);
     if(gtdFilter.type==='routine') return !!t.recur;  // recur設定=ルーティン
+    if(gtdFilter.type==='nodeadline') return !t.deadline&&!t.done;
     return true;
   });
 }
@@ -4418,6 +4419,7 @@ function renderGTD(){
         <div class="gf-items gf-taskedit-panel">
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
           <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
+          <div class="gf-item ${gtdFilter.type==='nodeadline'&&gtdView==='kanban'?'act':''}" data-f="nodeadline" data-v="">📭 日時未設定 <span class="gf-cnt">${D.gtd.tasks.filter(t=>!t.deadline&&!t.done).length||''}</span></div>
           ${(()=>{
             const allProj=D.gtd.projects||[];
             const pinned=[ANNUAL_PROJECT].filter(p=>allProj.includes(p));
@@ -4579,6 +4581,7 @@ function gtdMobLabelText(){
   if(gtdFilter.type==='project'&&gtdFilter.value==='') return '📥 Inbox';
   if(gtdFilter.type==='recur'&&gtdFilter.value) return '🔄 '+(GTD_RECUR_LABEL[gtdFilter.value]||gtdFilter.value);
   if(gtdFilter.type==='recur'&&!gtdFilter.value) return '🔄 ルーティン（すべて）';
+  if(gtdFilter.type==='nodeadline') return '📭 日時未設定';
   if(gtdFilter.type&&gtdFilter.value) return gtdFilter.value;
   return '📋 すべて表示';
 }
