@@ -751,11 +751,12 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 /* ===== Apple-style: mobile bottom tab bar ===== */
 @media(max-width:700px){
   body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
-  nav{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:95;border-bottom:none;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);background:var(--card)}
+  nav{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:95;border-bottom:none;border-top:none;padding-bottom:env(safe-area-inset-bottom);background:#1a2340}
   /* safe-areaの下を塗りつぶして「浮き」を解消 */
-  nav::after{content:'';position:fixed;bottom:0;left:0;right:0;height:env(safe-area-inset-bottom);background:var(--card);z-index:-1}
-  nav button{padding:7px 4px 6px;border-bottom:none;gap:2px;font-size:12px;font-weight:600}
-  nav button.act{border-bottom-color:transparent}
+  nav::after{content:'';position:fixed;bottom:0;left:0;right:0;height:env(safe-area-inset-bottom);background:#1a2340;z-index:-1}
+  nav button{padding:7px 4px 6px;border-bottom:none;gap:2px;font-size:12px;font-weight:600;color:rgba(255,255,255,.55)}
+  nav button.act{color:#fff;border-bottom-color:transparent}
+  nav button.act .tab-icon{filter:drop-shadow(0 0 6px rgba(255,255,255,.4))}
   nav button .tab-icon{font-size:24px}
   .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
   #updateBanner{bottom:calc(78px + env(safe-area-inset-bottom)) !important}
