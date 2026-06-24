@@ -1001,10 +1001,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <label><input type="checkbox" id="gmImportant"> 重要</label>
       <span id="gmQuadLabel"></span>
     </div>
-    <p class="gm-label">ルーティン</p>
-    <div class="gm-chk-row">
-      <label><input type="checkbox" id="gmRoutine"> ルーティンタスクに設定する</label>
-    </div>
     <p class="gm-label">所要時間</p>
     <div class="gm-dur" id="gmDurBtns">
       <button class="gm-dur-btn" data-dur="5">5分</button>
@@ -3213,7 +3209,7 @@ function openGtdModal(id){
   document.getElementById("gmMemo").value=t.memo||"";
   document.getElementById("gmUrgent").checked=!!t.urgent;
   document.getElementById("gmImportant").checked=!!t.important;
-  document.getElementById("gmRoutine").checked=!!t.routine;
+  // routine は recur から自動設定されるため手動チェック不要
   updateGmQuadLabel();
   document.getElementById("gmUrgent").onchange=updateGmQuadLabel;
   document.getElementById("gmImportant").onchange=updateGmQuadLabel;
@@ -3255,7 +3251,7 @@ function openGtdModal(id){
     const el=document.getElementById(id);
     if(el) el.disabled=isRoutineTask;
   });
-  ['gmUrgent','gmImportant','gmRoutine'].forEach(id=>{
+  ['gmUrgent','gmImportant'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.disabled=isRoutineTask;
   });
@@ -3285,7 +3281,7 @@ function saveGtdModal(){
   t.categories=[...document.querySelectorAll("#gmCats [data-gcat].act")].map(b=>b.dataset.gcat);
   t.urgent=document.getElementById("gmUrgent").checked;
   t.important=document.getElementById("gmImportant").checked;
-  t.routine=document.getElementById("gmRoutine").checked;
+  t.routine=!!(t.recur);  // 繰り返し設定があれば自動的にルーティン
   t.routineItems=JSON.parse(JSON.stringify(gmRoutineItems));
   save(); renderGTD();
   closeGtdModal();
@@ -3745,7 +3741,7 @@ function gtdVisible(){
     if(gtdFilter.type==='recur') return gtdFilter.value
       ? (t.recur||"")===gtdFilter.value
       : !!(t.recur);
-    if(gtdFilter.type==='routine') return !!t.routine;
+    if(gtdFilter.type==='routine') return !!t.recur;  // recur設定=ルーティン
     return true;
   });
 }
@@ -4435,9 +4431,7 @@ function renderGTD(){
               const main=`<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
               // 年間目標達成の直下にルーティン項目を表示
               if(isAnnual){
-                const rCnt=D.gtd.tasks.filter(t=>!!t.routine&&!t.done).length;
-                const rAct=(gtdFilter.type==='routine'&&gtdView==='kanban')?'act':'';
-                const routineItem=rCnt>0||rAct?`<div class="gf-item ${rAct}" data-f="routine" data-v="" style="border-left:4px solid #30D158;border-radius:0 6px 6px 0;padding-left:6px;">🔄 ルーティン<span class="gf-cnt">${rCnt||''}</span></div>`:'';
+                const routineItem=''; // ルーティン項目廃止（繰り返し設定で自動判別）
                 return main+routineItem;
               }
               return main;
@@ -4464,7 +4458,7 @@ function renderGTD(){
           </div>
           <div class="gf-section ${gtdCollapsed.recur?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="recur">
-              <span><span class="gf-arrow">▾</span>🔁 繰り返し</span>
+              <span><span class="gf-arrow">▾</span>🔄 ルーティン</span>
             </div>
             <div class="gf-items">
               <div class="gf-item ${gtdFilter.type==='recur'&&!gtdFilter.value&&gtdView!=='today'?'act':''}" data-f="recur" data-v="">すべて <span class="gf-cnt">${D.gtd.tasks.filter(t=>!!t.recur&&!t.done).length||''}</span></div>
