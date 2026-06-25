@@ -734,10 +734,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 @media(min-width:701px){
   body{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh}
   header{grid-column:1/-1;position:sticky;top:0;z-index:200}
-  nav{grid-column:1;grid-row:2;position:sticky;top:var(--header-h,56px);height:calc(100vh - var(--header-h,56px));overflow-y:auto;align-self:start;flex-direction:column;justify-content:flex-start;gap:4px;padding:12px 8px;border-bottom:none;border-right:1px solid var(--line);background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}
-  nav button{flex:0 0 auto;border-bottom:none;border-radius:10px;padding:10px 2px;font-size:11px;gap:5px}
+  nav{grid-column:1;grid-row:2;position:sticky;top:var(--header-h,56px);height:calc(100vh - var(--header-h,56px));overflow-y:auto;align-self:start;flex-direction:column;justify-content:flex-start;gap:4px;padding:12px 8px;border-bottom:none;border-right:none;background:#1a2340;backdrop-filter:none;-webkit-backdrop-filter:none}
+  nav button{flex:0 0 auto;border-bottom:none;border-radius:10px;padding:10px 2px;font-size:11px;gap:5px;color:rgba(255,255,255,.55);font-weight:600}
   nav button .tab-icon{font-size:21px}
-  nav button.act{background:var(--blue-l);border-bottom-color:transparent}
+  nav button.act{background:rgba(255,255,255,.15);color:#fff;border-bottom-color:transparent}
   main{grid-column:2;grid-row:2;margin:0 auto;width:100%}
   .gtd-side{flex:0 0 225px;background:transparent;border:none;padding:0 6px 0 0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}
 }
