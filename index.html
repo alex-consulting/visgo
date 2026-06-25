@@ -292,6 +292,24 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .fe-btn-cancel{background:var(--fill);color:var(--navy)}
 .fe-btn-save{background:var(--blue);color:#fff}
 #feColorPopup{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.16);display:none;flex-wrap:wrap;gap:6px;width:172px;z-index:3100}
+/* ===== オンボーディング ===== */
+#onboardingOverlay{position:fixed;inset:0;background:rgba(10,15,40,.82);z-index:9500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#onboardingOverlay.show{display:flex}
+#onboardingCard{background:var(--card);border-radius:22px;width:min(480px,100%);padding:36px 28px 28px;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.35);animation:ob-in .3s cubic-bezier(.34,1.36,.64,1)}
+@keyframes ob-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+#onboardingSkip{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--sub);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:6px}
+#onboardingSkip:hover{background:var(--fill)}
+.ob-icon-wrap{width:88px;height:88px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 22px;transition:background .3s}
+#onboardingTitle{font-size:22px;font-weight:800;color:var(--navy);text-align:center;margin:0 0 12px;letter-spacing:-.02em}
+#onboardingDesc{font-size:14px;line-height:1.8;color:var(--text);text-align:center;margin:0 0 26px}
+#onboardingDots{display:flex;justify-content:center;gap:6px;margin-bottom:22px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .25s}
+.ob-dot.act{width:22px;border-radius:4px}
+#onboardingBtns{display:flex;gap:10px}
+#onboardingBtns button{flex:1;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s}
+#onboardingBtns button:active{opacity:.75}
+#obPrevBtn{background:var(--fill);color:var(--navy)}
+#obNextBtn{color:#fff}
 .cp-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s}
 .cp-dot:hover{transform:scale(1.2);border-color:rgba(0,0,0,.25)}
 .gf-cnt{margin-left:auto;font-size:11px;opacity:.75;flex:0 0 auto}
@@ -846,6 +864,21 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   </div>
 </div>
 <div id="feColorPopup"></div>
+
+<!-- オンボーディング -->
+<div id="onboardingOverlay">
+  <div id="onboardingCard">
+    <button id="onboardingSkip" onclick="closeOnboarding()">スキップ</button>
+    <div class="ob-icon-wrap" id="obIconWrap"></div>
+    <h2 id="onboardingTitle"></h2>
+    <p id="onboardingDesc"></p>
+    <div id="onboardingDots"></div>
+    <div id="onboardingBtns">
+      <button id="obPrevBtn" onclick="obNav(-1)">← 戻る</button>
+      <button id="obNextBtn" onclick="obNav(1)">次へ →</button>
+    </div>
+  </div>
+</div>
 
 <!-- 夢モーダル -->
 <div id="dreamModalOverlay" onclick="if(event.target===this)closeDreamModal()">
@@ -3907,6 +3940,59 @@ function feSetColor(color){
   _renderFolderEditList();
 }
 document.addEventListener('click',()=>{ const p=document.getElementById('feColorPopup'); if(p) p.style.display='none'; });
+
+// ===== オンボーディング =====
+const OB_KEY='visgo_onboarding_v1';
+let _obStep=0;
+const OB_STEPS=[
+  {icon:'👋',color:'#007AFF',title:'VISGOへようこそ！',
+   desc:'「ビジョンを、行動へ。」\nVISGOは夢・目標・タスクを一元管理して、\n理想の人生を実現するためのアプリです。\nまず使い方を簡単にご案内します。'},
+  {icon:'✅',color:'#30D158',title:'ToDo — タスク管理',
+   desc:'GTD®メソッドでタスクを整理します。\nプロジェクトやカテゴリで分類し、\n期日・優先度・繰り返しを設定できます。\n左メニューでフィルタリングも自由自在です。'},
+  {icon:'🏝️',color:'#FF9F0A',title:'夢リスト',
+   desc:'「欲しいもの」「やりたいこと」「なりたい姿」\nを書き出して夢を可視化しましょう。\n写真・ステップ・目標年月も設定でき、\n眺めるだけでモチベーションが上がります。'},
+  {icon:'🎯',color:'#FF6987',title:'年間目標達成シート',
+   desc:'目的・目標・奉仕活動・期日行動を\n一枚のシートにまとめます。\n目標を明確にして行動と結びつけることで\n着実に前進できます。'},
+  {icon:'📋',color:'#5856D6',title:'OW64 — マンダラチャート',
+   desc:'オープンウインドウ64（マンダラチャート）で\n目標を9×9のマスに展開します。\n目標の構造を俯瞰し、\nあらゆる角度から行動を考えられます。'},
+  {icon:'☁️',color:'#34C7A9',title:'データ同期',
+   desc:'⚙設定から同期コードを設定すると\nスマホとPCでデータを共有できます。\n複数デバイスで使う場合はぜひ設定を。\nさあ、はじめましょう！'}
+];
+function _obRender(){
+  const s=OB_STEPS[_obStep];
+  const wrap=document.getElementById('obIconWrap');
+  const hex=s.color;
+  wrap.style.background=hex+'22';
+  wrap.textContent=s.icon;
+  document.getElementById('onboardingTitle').textContent=s.title;
+  document.getElementById('onboardingDesc').innerHTML=s.desc.replace(/\n/g,'<br>');
+  // dots
+  const dots=document.getElementById('onboardingDots');
+  dots.innerHTML=OB_STEPS.map((_,i)=>`<div class="ob-dot${i===_obStep?' act':''}" style="${i===_obStep?'background:'+s.color:''}"></div>`).join('');
+  // next btn
+  const nb=document.getElementById('obNextBtn');
+  nb.style.background=s.color;
+  nb.textContent=_obStep===OB_STEPS.length-1?'はじめる ✓':'次へ →';
+  // prev btn
+  document.getElementById('obPrevBtn').style.display=_obStep===0?'none':'block';
+}
+function obNav(dir){
+  _obStep+=dir;
+  if(_obStep>=OB_STEPS.length){ closeOnboarding(); return; }
+  if(_obStep<0) _obStep=0;
+  _obRender();
+}
+function closeOnboarding(){
+  localStorage.setItem(OB_KEY,'1');
+  document.getElementById('onboardingOverlay').classList.remove('show');
+}
+function openOnboarding(){
+  _obStep=0; _obRender();
+  document.getElementById('onboardingOverlay').classList.add('show');
+}
+function maybeShowOnboarding(){
+  if(!localStorage.getItem(OB_KEY)) openOnboarding();
+}
 function _attachFeDrag(){
   let dragIdx=null;
   document.querySelectorAll('#folderEditList .fe-item').forEach((el,i)=>{
@@ -5160,6 +5246,7 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
   // バージョン表示
   const vl=document.getElementById("versionLabel");
   if(vl) vl.textContent="v"+APP_VERSION;
+  setTimeout(maybeShowOnboarding, 600); // 初回のみオンボーディング表示
 })();
 
 // Service Worker 登録（PWAキャッシュ更新）
