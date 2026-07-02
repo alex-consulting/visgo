@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -243,9 +243,9 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .gf-taskedit-panel .gf-items{padding-left:4px}
 .overdue-hd{padding:10px 16px;background:var(--red-l);border-bottom:1px solid rgba(255,59,48,.35);font-weight:700;font-size:14px;color:#D70015;display:flex;align-items:center;gap:10px}
 .overdue-date-label{font-size:12px;font-weight:700;color:#FF3B30;margin-bottom:5px;padding:2px 6px;background:var(--red-l);border-radius:4px;display:inline-block}
-.overdue-move-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--red-l);border-bottom:1px solid rgba(255,59,48,.35);flex-wrap:wrap}
+.overdue-move-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--red-l);border-bottom:1px solid rgba(255,59,48,.35)}
 .overdue-move-bar span{font-size:13px;font-weight:600;color:#D70015}
-.overdue-move-date{border:1px solid rgba(255,59,48,.35);border-radius:7px;padding:6px 8px;font-size:13px;font-family:inherit;background:var(--card)}
+.overdue-move-date{border:1px solid rgba(255,59,48,.35);border-radius:7px;padding:6px 8px;font-size:13px;font-family:inherit;background:var(--card);flex:1;min-width:130px}
 .overdue-move-btn{background:#FF3B30;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .overdue-move-btn:hover{background:#D70015}
 .overdue-move-btn:disabled{opacity:.4;cursor:default}
@@ -293,6 +293,19 @@ table.an textarea{border:none;background:transparent;padding:2px;min-height:42px
 .fe-btn-save{background:var(--blue);color:#fff}
 #feColorPopup{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.16);display:none;flex-wrap:wrap;gap:6px;width:172px;z-index:3100}
 /* ===== オンボーディング ===== */
+/* ---- ToDo ヘルプモーダル ---- */
+#todoHelpOverlay{position:fixed;inset:0;background:rgba(10,15,40,.75);z-index:9400;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
+#todoHelpOverlay.show{display:flex}
+#todoHelpCard{background:var(--card);border-radius:22px;width:min(520px,100%);max-height:85vh;overflow-y:auto;padding:32px 28px 28px;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.35);animation:ob-in .3s cubic-bezier(.34,1.36,.64,1)}
+#todoHelpCard h2{font-size:20px;font-weight:800;color:var(--navy);margin:0 0 18px;text-align:center}
+.th-section{margin-bottom:18px}
+.th-section h3{font-size:13px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.th-row{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:13.5px;line-height:1.6;color:var(--text)}
+.th-icon{font-size:18px;flex:0 0 26px;text-align:center;margin-top:1px}
+#todoHelpClose{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--sub);line-height:1}
+.todo-help-btn{background:none;border:1.5px solid var(--line);border-radius:8px;padding:4px 10px;font-size:13px;color:var(--sub);cursor:pointer;line-height:1.4;transition:all .15s}
+.todo-help-btn:hover{background:var(--line);color:var(--text)}
+
 #onboardingOverlay{position:fixed;inset:0;background:rgba(10,15,40,.82);z-index:9500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 #onboardingOverlay.show{display:flex}
 #onboardingCard{background:var(--card);border-radius:22px;width:min(480px,100%);padding:36px 28px 28px;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.35);animation:ob-in .3s cubic-bezier(.34,1.36,.64,1)}
@@ -648,7 +661,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-mission-imgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .dm-img-thumb{height:90px;border-radius:8px;cursor:zoom-in;border:1px solid var(--line)}
 .dm-img-del{position:absolute;top:-5px;right:-5px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0}
-.dream-mission-arrow{font-size:11px;color:var(--sub);transition:transform .2s}
+.dream-mission-arrow{font-size:16px;color:var(--sub);transition:transform .2s}
 .dream-mission.collapsed .dream-mission-arrow{transform:rotate(-90deg)}
 .dream-mission-body{padding:0 14px 14px;display:block}
 .dream-mission.collapsed .dream-mission-body{display:none}
@@ -657,8 +670,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-mission-preview{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;cursor:text;min-height:24px}
 .dream-mission-preview.empty{color:var(--faint)}
 .dream-year-section{margin-bottom:22px}
-.dream-year-heading{font-size:14px;font-weight:700;color:var(--sub);margin:0 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
-.dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;height:140px;object-fit:cover;border-radius:14px 12px 0 0;display:block}
+.dream-year-heading{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 12px;letter-spacing:-.02em}
+.dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;aspect-ratio:4/3;object-fit:cover;border-radius:14px 12px 0 0;display:block}
 .sg-card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:10px;padding:8px 12px;cursor:pointer;transition:box-shadow .15s;display:flex;align-items:center;gap:8px}
 .sg-card.have{border-left-color:#0071E3}
 .sg-card.do{border-left-color:#248A3D}
@@ -686,6 +699,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dm-field label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin-bottom:5px}
 .dm-field input[type=text],.dm-field input[type=date],.dm-field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13.5px;color:var(--navy);box-sizing:border-box;font-family:inherit}
 @media(max-width:700px){.dm-field input,.dm-field textarea,.dm-step-addrow input{font-size:16px!important}}
+@media(max-width:700px){input,select,textarea{font-size:16px!important}}
+@media(max-width:700px){.dream-toolbar select{font-size:13px!important}}
 .dm-field textarea{min-height:100px;resize:vertical;line-height:1.6}
 .dm-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .dm-cat-btns{display:flex;gap:6px;flex-wrap:wrap}
@@ -714,7 +729,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;padding-bottom:max(14px,env(safe-area-inset-bottom));border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--card)}
 .dream-modal-foot button{border:none;border-radius:8px;padding:9px 20px;font-size:13.5px;font-weight:600;cursor:pointer}
 .dm-btn-cancel{background:var(--fill);color:var(--navy)}
-.dm-btn-save{background:var(--blue);color:#fff}
+.dm-btn-save{background:#30D158;color:#fff}
 /* 設定モーダル */
 #settingsOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
 .settings-modal{background:var(--card);border-radius:14px;width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;display:flex;flex-direction:column}
@@ -741,13 +756,13 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .seg-tabs{display:flex;background:var(--blue);border-radius:10px;padding:3px;gap:2px;flex:1}
 .seg-tabs button{flex:1;border:none;background:transparent;border-radius:8px;padding:7px 4px;font-size:13px;font-weight:600;color:rgba(255,255,255,.75);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;text-align:center}
 .seg-tabs button.act{background:#fff;color:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.15)}
-.dream-toolbar{display:none;align-items:center;gap:8px;margin:0 0 14px}
+.dream-toolbar{display:none;align-items:center;gap:8px;margin:0 0 14px;justify-content:flex-start}
 .dream-page-head{align-items:center;gap:24px}
 .dream-age-bar{flex:0 0 360px;min-width:180px}
 @media(max-width:700px){.dream-page-head{flex-direction:column;align-items:flex-start;gap:10px}.dream-age-bar{width:100%;flex:none}}
 .dream-tb-btn{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer}
 .dream-tb-btn:hover{border-color:var(--blue);color:var(--blue)}
-.dream-tb-add{margin-left:auto}
+.dream-tb-add{background:var(--blue);color:#fff;border-color:var(--blue)}
 #appFooter{grid-column:1/-1}
 @media(min-width:701px){
   body{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh}
@@ -866,6 +881,42 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 <div id="feColorPopup"></div>
 
 <!-- オンボーディング -->
+<div id="todoHelpOverlay" onclick="if(event.target===this)closeTodoHelp()">
+  <div id="todoHelpCard">
+    <button id="todoHelpClose" onclick="closeTodoHelp()">✕</button>
+    <h2>✅ ToDoの使い方</h2>
+
+    <div class="th-section">
+      <h3>基本の流れ（GTD®）</h3>
+      <div class="th-row"><span class="th-icon">📥</span><div><strong>Inbox</strong> — まずすべてのタスクをInboxに入れる。後で整理する。</div></div>
+      <div class="th-row"><span class="th-icon">📁</span><div><strong>プロジェクト / カテゴリ</strong> — タスクを目的別・属性別に分類する。</div></div>
+      <div class="th-row"><span class="th-icon">📅</span><div><strong>期日・優先度</strong> — 締め切りと重要度を設定して実行順を決める。</div></div>
+      <div class="th-row"><span class="th-icon">✅</span><div><strong>完了</strong> — タスクのチェックボックスをタップして完了にする。</div></div>
+    </div>
+
+    <div class="th-section">
+      <h3>タスクの追加</h3>
+      <div class="th-row"><span class="th-icon">⌨️</span><div>上部の入力欄にタスク名を入力して<strong>「追加」</strong>ボタンまたはEnterキーで追加。まずInboxに入る。</div></div>
+      <div class="th-row"><span class="th-icon">✏️</span><div>タスクをタップすると詳細編集モーダルが開く。プロジェクト・期日・優先度・繰り返しなどを設定できる。</div></div>
+    </div>
+
+    <div class="th-section">
+      <h3>フィルター（左メニュー）</h3>
+      <div class="th-row"><span class="th-icon">☀️</span><div><strong>1日をスタート！</strong> — 今日の予定タスクをまとめて確認。</div></div>
+      <div class="th-row"><span class="th-icon">📭</span><div><strong>日時未設定</strong> — 期日が未設定のタスク一覧。定期的に見直してInboxを空にしよう。</div></div>
+      <div class="th-row"><span class="th-icon">🔄</span><div><strong>ルーティン</strong> — 繰り返し設定（毎日・毎週など）のタスクを確認できる。</div></div>
+      <div class="th-row"><span class="th-icon">⚠️</span><div><strong>期限超過</strong> — 期日を過ぎた未完了タスク。優先的に対処しよう。</div></div>
+    </div>
+
+    <div class="th-section">
+      <h3>便利な機能</h3>
+      <div class="th-row"><span class="th-icon">🔁</span><div><strong>ルーティンタスク</strong> — 繰り返しを「毎日」などに設定すると自動でルーティンタスクになる。</div></div>
+      <div class="th-row"><span class="th-icon">🗂️</span><div><strong>プロジェクト編集</strong> — 左メニューの「プロジェクト」右の編集ボタンで色・名前・順番を変更できる。</div></div>
+      <div class="th-row"><span class="th-icon">☁️</span><div><strong>データ同期</strong> — ⚙設定から同期コードを設定するとスマホ・PC間でデータを共有できる。</div></div>
+    </div>
+  </div>
+</div>
+
 <div id="onboardingOverlay">
   <div id="onboardingCard">
     <button id="onboardingSkip" onclick="closeOnboarding()">スキップ</button>
@@ -888,9 +939,12 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <button onclick="closeDreamModal()">✕</button>
     </div>
     <div class="dream-modal-body"></div>
-    <div class="dream-modal-foot">
-      <button class="dm-btn-cancel" onclick="closeDreamModal()">キャンセル</button>
-      <button class="dm-btn-save" onclick="saveDream()">保存</button>
+    <div class="dream-modal-foot" style="justify-content:space-between">
+      <button id="dmDeleteBtn" onclick="deleteDreamFromModal()" style="background:#FF3B30;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;display:none">この夢を削除する</button>
+      <div style="display:flex;gap:8px">
+        <button class="dm-btn-cancel" onclick="closeDreamModal()">キャンセル</button>
+        <button class="dm-btn-save" onclick="saveDream()">保存</button>
+      </div>
     </div>
   </div>
 </div>
@@ -938,6 +992,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
         <input type="url" id="gcalUrlInput" placeholder="iCal URLをここに貼り付け" style="flex:1;min-width:0;font-size:12px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--text)">
         <button onclick="gcalAddUrl()" style="flex:0 0 auto;white-space:nowrap;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:13px;cursor:pointer">追加</button>
       </div>
+      <div id="demoModeSection" style="display:none">
       <p class="settings-section">デモモード</p>
       <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
         サンプルデータで画面をプレビューできます。オンにしている間は保存されず、オフにすると元のデータに戻ります。
@@ -948,6 +1003,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
           <input type="checkbox" id="demoModeCheck" onchange="toggleDemoMode(this.checked)">
           <span class="demo-switch-slider"></span>
         </label>
+      </div>
       </div>
       <p class="settings-section">手動バックアップ</p>
       <div class="settings-row">
@@ -1305,6 +1361,8 @@ if(typeof D.gtd.nextId!=='number') D.gtd.nextId=1;
 if(!D.dreams||!Array.isArray(D.dreams.items)) D.dreams={items:[],nextId:1}; // 夢リスト
 if(!('mission' in D.dreams)) D.dreams.mission='';
 if(!('missionTitle' in D.dreams)) D.dreams.missionTitle='';
+if(!('value' in D.dreams)) D.dreams.value='';
+if(!('valueTitle' in D.dreams)) D.dreams.valueTitle='';
 if(!Array.isArray(D.missionImages)) D.missionImages=[];
 if(!Array.isArray(D.goalCriteria)) D.goalCriteria=[];
 D.goalCriteria.forEach(c=>{if(!('targetNum' in c)){c.targetNum=c.value||'';}if(!('unit' in c))c.unit='';if(!('currentNum' in c))c.currentNum='';});
@@ -1320,6 +1378,8 @@ if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
 if(!Array.isArray(D.gtd.categories)) D.gtd.categories=[];
 if(!D.dailyFocus) D.dailyFocus={};
 if(!D.profile) D.profile={birthday:'',lifespan:90};
+if(!('showMission' in D.profile)) D.profile.showMission=true;
+if(!('showValue' in D.profile)) D.profile.showValue=false;
 D.gtd.tasks.forEach(function(t){
   if(t.isRoutine===undefined) t.isRoutine=false;
   if(!Array.isArray(t.routineItems)) t.routineItems=[];
@@ -1380,6 +1440,7 @@ D.gtd.categories=[...new Set(D.gtd.categories.filter(c=>c&&c.trim()))];
     }
   });
 })();
+
 if(!Array.isArray(D.supports)){ // 旧データ互換：支援欄を2列リストへ移行
   if(D.supporters==="①Claude ②なつきちゃん ③さつき税理士事務所"){
     D.supports=[
@@ -1559,21 +1620,8 @@ async function _applyRemoteData(remote){
     console.warn('[VISGO] syncブロック: ローカル'+localTaskCount+'タスク vs リモート0タスク');
     return; // 空データでローカルを上書きしない
   }
-  // プロジェクト・カテゴリの並び順はローカルを優先し、リモートの新規分を末尾に追加
-  const localProj=Array.isArray(D.gtd?.projects)?[...D.gtd.projects]:[];
-  const localCat=Array.isArray(D.gtd?.categories)?[...D.gtd.categories]:[];
+  // リモートの並び順を正とする（別デバイスで並べ替えた順を反映するため）
   Object.assign(D,remote);
-  // ローカル順を正とし、リモートにしかない項目を末尾に追加（バージョンアップで順番がリセットされるのを防ぐ）
-  if(Array.isArray(D.gtd?.projects)){
-    const merged=[...localProj]; // ローカル順を優先
-    (D.gtd.projects||[]).forEach(p=>{if(p&&p.trim()&&!merged.includes(p))merged.push(p);}); // リモートのみの項目を末尾追加
-    D.gtd.projects=[...new Set(merged.filter(p=>p&&p.trim()))];
-  }
-  if(Array.isArray(D.gtd?.categories)){
-    const merged=[...localCat]; // ローカル順を優先
-    (D.gtd.categories||[]).forEach(c=>{if(c&&c.trim()&&!merged.includes(c))merged.push(c);}); // リモートのみの項目を末尾追加
-    D.gtd.categories=[...new Set(merged.filter(c=>c&&c.trim()))];
-  }
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
     // 空配列でIDBを上書きしない（dreamImagesと同じパターン）
@@ -1882,6 +1930,7 @@ let dreamFilter='all'; // 'all'|'Have'|'Do'|'Be'
 let dreamShowSteps=true;
 let dreamEditId=null;
 let dreamMissionCollapsed=true;
+let dreamValueCollapsed=true;
 let dmSteps=[]; // モーダル編集中の一時ステップ配列
 let dmStepGoals=[]; // モーダル編集中のステップ目標配列
 let dmImage=null; // モーダル編集中の画像データURL
@@ -2013,6 +2062,27 @@ function dmUpdateStepGoal(id,field,value){
   const s=dmStepGoals.find(x=>String(x.id)===String(id));
   if(s) s[field]=value;
 }
+function dreamActionsToTodo(dreamId){
+  const d=(D.dreams.items||[]).find(x=>String(x.id)===String(dreamId));
+  if(!d){alert('夢が見つかりません');return;}
+  const steps=String(dreamId)===String(dreamEditId)?dmSteps:(Array.isArray(d.steps)?d.steps:[]);
+  const actions=steps.filter(s=>!s.done&&s.text&&s.text.trim());
+  if(!actions.length){alert('未完了のアクションがありません');return;}
+  let added=0;
+  actions.forEach(s=>{
+    if(D.gtd.tasks.some(t=>t.text===s.text.trim()&&!t.done)) return; // 重複スキップ
+    D.gtd.tasks.push({
+      id:D.gtd.nextId++,text:s.text.trim(),done:false,
+      project:'',category:'',priority:'',
+      deadline:s.startDate||'',recur:'',memo:'夢リスト: '+d.title,
+      createdAt:new Date().toISOString()
+    });
+    added++;
+  });
+  save();
+  toast(added+'件のアクションをToDoに追加しました');
+}
+
 function dmAddStepGoal(){
   const inp=document.getElementById('dmStepGoalInput');
   const monthInp=document.getElementById('dmStepGoalMonth');
@@ -2036,6 +2106,24 @@ function dmDeleteStepGoal(id){
 
 function dreamCatClass(cat){
   return cat==='Have'?'have':cat==='Do'?'do':cat==='Be'?'be':'';
+}
+function dreamValueHtml(){
+  if(!D.profile.showValue) return '';
+  const vTitle=D.dreams.valueTitle||'';
+  const val=D.dreams.value||'';
+  const collapsed=dreamValueCollapsed?' collapsed':'';
+  const titleSpan=`<span class="dream-mission-title${vTitle?'':' empty'}">${esc(vTitle)||'（タイトル未設定）'}</span>`;
+  const body=`<input class="dream-mission-title-inp" type="text" placeholder="バリューのタイトル（例：誠実・挑戦・成長）" value="${esc(vTitle)}" oninput="D.dreams.valueTitle=this.value;save()">
+<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.value=this.value;save()">${esc(val)}</textarea>
+<div style="margin-top:8px"><button onclick="save();toast('バリューを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
+  return `<div class="dream-mission${collapsed}">
+    <div class="dream-mission-hd" onclick="dreamValueCollapsed=!dreamValueCollapsed;renderDreams()">
+      <div class="dream-mission-hd-left">💎 バリュー</div>
+      ${titleSpan}
+      <span class="dream-mission-arrow">▾</span>
+    </div>
+    <div class="dream-mission-body">${body}</div>
+  </div>`;
 }
 function renderDreams(){
   const root=document.getElementById('tab-dream');
@@ -2075,7 +2163,6 @@ function renderDreams(){
     const catCls=dreamCatClass(d.category);
     return `<div class="dream-card" onclick="openDreamModal('${d.id}')">
       ${d.image?`<img class="dream-card-img" src="${d.image}" alt="">`:'' }
-      <button class="dream-del" onclick="event.stopPropagation();deleteDream('${d.id}')" title="削除">✕</button>
       <div class="dream-card-top">
         <span class="dream-cat ${catCls}">${esc(d.category||'')}</span>
         <span class="dream-title">${esc(d.title)}</span>
@@ -2083,7 +2170,7 @@ function renderDreams(){
       ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
       ${(()=>{const pct=dreamProgress(d);const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];if(!sgs.length) return '';return `
       <div class="dream-progress-wrap">
-        <div class="dream-progress-label"><span>ステップ ${sgs.filter(s=>s.done).length}/${sgs.length}</span><span>${pct}%</span></div>
+        <div class="dream-progress-label"><span>🚩ステップ目標 ${sgs.filter(s=>s.done).length}/${sgs.length}</span><span>${pct}%</span></div>
         <div class="dream-progress-bar"><div class="dream-progress-fill" style="width:${pct}%"></div></div>
       </div>`;})()}
     </div>`;
@@ -2100,8 +2187,11 @@ function renderDreams(){
 
   root.innerHTML=`
   <div class="page-head dream-page-head">
-    <div style="flex-shrink:0">
-      <h1 class="ph-title">🏝️ 夢リスト</h1>
+    <div style="flex:1;min-width:0;width:100%">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <h1 class="ph-title" style="margin:0">🏝️ 夢リスト</h1>
+        <button onclick="openDreamProfile()" style="flex-shrink:0;font-size:11px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer;white-space:nowrap;margin-left:auto">基本情報を編集</button>
+      </div>
       <p class="ph-sub">夢あるところに行動がある。人生一度きり。</p>
     </div>
     ${(()=>{
@@ -2125,30 +2215,10 @@ function renderDreams(){
             <span style="font-size:12px;color:var(--sub)">${ls}歳まであと <strong style="color:var(--blue);font-size:15px">${daysLeft.toLocaleString()}</strong> 日</span>
           </div>`;
       }
-      return `<div class="dream-age-bar">${barHtml}<div style="display:flex;justify-content:flex-end;margin-top:6px"><button onclick="openDreamProfile()" style="font-size:11px;padding:2px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--blue);cursor:pointer">基本情報を編集</button></div></div>`;
+      return `<div class="dream-age-bar">${barHtml}</div>`;
     })()}
   </div>
-  <div class="dream-toolbar">
-    <div class="seg-tabs">
-      <button class="${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">すべて</button>
-      <button class="${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">Have</button>
-      <button class="${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">Do</button>
-      <button class="${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">Be</button>
-    </div>
-    <button class="dream-tb-btn" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</button>
-    <button class="dream-tb-btn dream-tb-add" onclick="openDreamModal(null)">＋ 夢を追加</button>
-  </div>
-  <div class="gtd-wrap">
-  <aside class="gtd-side side-static">
-    <div class="gf-item ${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">🗂 すべて</div>
-    <div class="gf-item ${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">💎 Have（欲しい）</div>
-    <div class="gf-item ${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">🏃 Do（したい）</div>
-    <div class="gf-item ${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">🌟 Be（なりたい）</div>
-    <div class="gf-item" onclick="openDreamModal(null)" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px">＋ 夢を追加</div>
-    <div class="gf-item" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
-  </aside>
-  <div class="gtd-main">
-  <div class="dream-mission${dreamMissionCollapsed?' collapsed':''}">
+  <div class="dream-mission${dreamMissionCollapsed?' collapsed':''}" style="display:${D.profile.showMission?'block':'none'}">
     <div class="dream-mission-hd" onclick="dreamMissionCollapsed=!dreamMissionCollapsed;renderDreams()">
       <div class="dream-mission-hd-left">💡 ミッション</div>
       ${(()=>{const t=D.dreams.missionTitle||'';return `<span class="dream-mission-title${t?'':' empty'}">${esc(t)||'（タイトル未設定）'}</span>`;})()}
@@ -2167,6 +2237,27 @@ ${imgsHtml}
       })()}
     </div>
   </div>
+  ${dreamValueHtml()}
+  <div class="dream-toolbar">
+    <select onchange="dreamFilter=this.value;renderDreams()" style="padding:6px 10px;border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--sub);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+      <option value="all" ${dreamFilter==='all'?'selected':''}>すべて ▼</option>
+      <option value="Have" ${dreamFilter==='Have'?'selected':''}>💎 Have</option>
+      <option value="Do" ${dreamFilter==='Do'?'selected':''}>🏃 Do</option>
+      <option value="Be" ${dreamFilter==='Be'?'selected':''}>🌟 Be</option>
+    </select>
+    <button class="dream-tb-btn" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</button>
+    <button class="dream-tb-btn dream-tb-add" onclick="openDreamModal(null)">＋ 夢を追加</button>
+  </div>
+  <div class="gtd-wrap">
+  <aside class="gtd-side side-static">
+    <div class="gf-item ${dreamFilter==='all'?'act':''}" onclick="dreamFilter='all';renderDreams()">🗂 すべて</div>
+    <div class="gf-item ${dreamFilter==='Have'?'act':''}" onclick="dreamFilter='Have';renderDreams()">💎 Have（欲しい）</div>
+    <div class="gf-item ${dreamFilter==='Do'?'act':''}" onclick="dreamFilter='Do';renderDreams()">🏃 Do（したい）</div>
+    <div class="gf-item ${dreamFilter==='Be'?'act':''}" onclick="dreamFilter='Be';renderDreams()">🌟 Be（なりたい）</div>
+    <div class="gf-item" onclick="openDreamModal(null)" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px">＋ 夢を追加</div>
+    <div class="gf-item" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
+  </aside>
+  <div class="gtd-main">
   ${items.length
     ? years.map(y=>{
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
@@ -2190,7 +2281,7 @@ ${imgsHtml}
         })();
         return `
       <div class="dream-year-section">
-        <div class="dream-year-heading">${y==='未設定'?'年未設定':y+'年'}</div>
+        <div class="dream-year-heading">${y==='未設定'?'年未設定':(()=>{const b=D.profile&&D.profile.birthday;if(b){const birth=new Date(b);const jan1=new Date(Number(y),0,1);let age=jan1.getFullYear()-birth.getFullYear();if(jan1<new Date(birth.getFullYear()+age,birth.getMonth(),birth.getDate()))age--;return y+'年（'+age+'歳）';}return y+'年';})()}</div>
         <div class="dream-grid">
           ${dreamsInYear.map(d=>cardHtml(d)).join('')}
         </div>
@@ -2206,6 +2297,8 @@ ${imgsHtml}
 function openDreamModal(id){
   dreamEditId=id;
   const isNew=!id;
+  const dmDelBtn=document.getElementById('dmDeleteBtn');
+  if(dmDelBtn) dmDelBtn.style.display=isNew?'none':'block';
   const d=isNew
     ? {id:null,title:'',category:'Do',createdDate:localDateStr(new Date()),targetDate:'',steps:[]}
     : (D.dreams.items||[]).find(x=>String(x.id)===String(id))||{};
@@ -2246,8 +2339,9 @@ function openDreamModal(id){
         <button onclick="dmAddStepGoal()">確定</button>
       </div>
     </div>
+    <hr style="border:none;border-top:1px solid var(--line);margin:4px 0">
     <div class="dm-field">
-      <label>アクション <span class="dm-pct-badge" id="dmProgressPct">0%</span></label>
+      <label style="display:flex;align-items:center;gap:8px">🎯 目標達成のためのアクション<button onclick="dreamActionsToTodo(dreamEditId)" style="font-size:11px;padding:2px 10px;border-radius:6px;border:1px solid var(--blue);background:var(--card);color:var(--blue);cursor:pointer;margin-left:auto;white-space:nowrap">✅ ToDoに反映</button></label>
       <div class="dm-step-list" id="dmStepList"></div>
       <div class="dm-step-addrow">
         <input type="text" id="dmStepInput" placeholder="アクションを追加..."
@@ -2285,6 +2379,13 @@ function saveDream(){
   const catBtn=document.querySelector('.dm-cat-btn.act-have,.dm-cat-btn.act-do,.dm-cat-btn.act-be');
   const category=catBtn?catBtn.dataset.cat:'Do';
   const existing=dreamEditId?(D.dreams.items||[]).find(x=>String(x.id)===String(dreamEditId)):null;
+  // 日付でソート（空日付は末尾）
+  const sortByDate=arr=>arr.slice().sort((a,b)=>{
+    const da=a.yearMonth||a.startDate||'';
+    const db=b.yearMonth||b.startDate||'';
+    if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1;
+    return da<db?-1:da>db?1:0;
+  });
   const data={
     title,
     category,
@@ -2292,8 +2393,8 @@ function saveDream(){
     targetDate:document.getElementById('dmTarget').value,
     note:document.getElementById('dmNote').value,
     memo:document.getElementById('dmNote').value,
-    stepGoals:[...dmStepGoals],
-    steps:[...dmSteps],
+    stepGoals:sortByDate(dmStepGoals),
+    steps:sortByDate(dmSteps),
     image:dmImage||null
   };
   if(!dreamEditId){
@@ -2345,6 +2446,12 @@ async function dmMissionAddImgs(input){
   try{ await idbSet("missionImages", D.missionImages); }catch(e){}
   save();
   dmMissionRenderImgs();
+}
+function deleteDreamFromModal(){
+  if(!dreamEditId) return;
+  if(!confirm('この夢を削除しますか？')) return;
+  D.dreams.items=(D.dreams.items||[]).filter(x=>String(x.id)!==String(dreamEditId));
+  save(); closeDreamModal(); renderDreams();
 }
 function deleteDream(id){
   if(!confirm('この夢を削除しますか？')) return;
@@ -2565,13 +2672,18 @@ function ssRoutineAdd(){
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
 function openDreamProfile(){
   const fld=(lbl,html)=>`<div class="ss-field"><label class="ss-lbl">${lbl}</label>${html}</div>`;
+  const tog=(lbl,id,val)=>`<div class="ss-field" style="display:flex;align-items:center;justify-content:space-between"><label class="ss-lbl" style="margin:0">${lbl}</label><label class="demo-switch"><input type="checkbox" id="${id}" ${val?'checked':''}><span class="demo-switch-slider"></span></label></div>`;
   document.getElementById('sheetSecTitle').textContent='基本情報';
   document.getElementById('sheetSecBody').innerHTML=
     fld('生年月日',`<input class="ss-inp" id="ss-birthday" type="date" value="${esc(D.profile.birthday||'')}">`)+
-    fld('目標寿命（歳）',`<input class="ss-inp" id="ss-lifespan" type="number" min="1" max="150" value="${D.profile.lifespan||90}" style="width:80px">`);
+    fld('目標寿命（歳）',`<input class="ss-inp" id="ss-lifespan" type="number" min="1" max="150" value="${D.profile.lifespan||90}" style="width:80px">`)+
+    tog('Missionを表示する','ss-showMission',D.profile.showMission)+
+    tog('Valueを表示する','ss-showValue',D.profile.showValue);
   document.getElementById('sheetSecSave').onclick=()=>{
     D.profile.birthday=document.getElementById('ss-birthday').value;
     D.profile.lifespan=+(document.getElementById('ss-lifespan').value)||90;
+    D.profile.showMission=document.getElementById('ss-showMission').checked;
+    D.profile.showValue=document.getElementById('ss-showValue').checked;
     save(); renderDreams(); closeSheetSec();
   };
   document.getElementById('sheetSecModal').classList.add('show');
@@ -2767,6 +2879,8 @@ function renderSheetEdit(){
           ${q.items.map((it,j)=>`<div class="qrow">
             <span class="qnum">${j+1}.</span>
             ${ta(it,`quad.${i}.items.${j}`)}
+            <button class="ri-mv" data-act="mvQuadUp" data-i="${i}" data-j="${j}" ${j===0?'disabled':''}>▲</button>
+            <button class="ri-mv" data-act="mvQuadDn" data-i="${i}" data-j="${j}" ${j===q.items.length-1?'disabled':''}>▼</button>
             <button class="del" data-act="delQuad" data-i="${i}" data-j="${j}" title="削除">✕</button>
           </div>`).join("")}
           <button class="add" data-act="addQuad" data-i="${i}">＋ 項目を追加</button>
@@ -2779,6 +2893,8 @@ function renderSheetEdit(){
     ${D.routines.map((r,i)=>`<div class="listrow">
       <span class="num">${i+1}</span>
       ${ta(r.text,`routines.${i}.text`)}
+      <button class="ri-mv" data-act="mvRtUp" data-i="${i}" ${i===0?'disabled':''}>▲</button>
+      <button class="ri-mv" data-act="mvRtDn" data-i="${i}" ${i===D.routines.length-1?'disabled':''}>▼</button>
       <button class="del" data-act="delRt" data-i="${i}" title="削除">✕</button>
     </div>`).join("")}
     <button class="add" data-act="addRt">＋ ルーティンを追加</button>
@@ -2795,6 +2911,8 @@ function renderSheetEdit(){
       <span class="num">${i+1}</span>
       <input type="text" style="flex:0 0 34%" placeholder="支援者" data-oi="supports.${i}.who" value="${esc(s.who)}">
       ${ta(s.what,`supports.${i}.what`,'placeholder="支援内容"')}
+      <button class="ri-mv" data-act="mvSpUp" data-i="${i}" ${i===0?'disabled':''}>▲</button>
+      <button class="ri-mv" data-act="mvSpDn" data-i="${i}" ${i===D.supports.length-1?'disabled':''}>▼</button>
       <button class="del" data-act="delSp" data-i="${i}" title="削除">✕</button>
     </div>`).join("")}
     <button class="add" data-act="addSp">＋ 支援者を追加</button>
@@ -2827,7 +2945,7 @@ function renderSheetView(){
   const zoneNames=["最高の目標","中間の目標","絶対できる目標","今回の目標"];
   root.innerHTML=`
   <div class="page-head dream-page-head">
-    <div><h1 class="ph-title">🎯 年間目標達成シート</h1><p class="ph-sub">心身・スキル・健康・生活習慣を整える。</p></div>
+    <div><h1 class="ph-title">🎯 年間目標達成シート</h1><p class="ph-sub">モチベーションは続かない。だからこそ、毎日の習慣が必要。</p></div>
     ${(()=>{
       const wd=toDateInput(D.meta.writeDate), td=toDateInput(D.meta.targetDate);
       if(!wd||!td) return '';
@@ -2892,17 +3010,17 @@ function renderSheetView(){
         return rows+toggle;})()}
       <button onclick="deadlinesToTodo()" style="margin-top:10px;width:100%;padding:9px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✅ ToDoに反映する</button>
     </div>
-    <div class="vsec"><h3>目的・目標の4観点</h3>
+    <div class="vsec"><h3 style="margin:0 0 10px">目的・目標の4観点</h3>
       <div class="vquads">
         ${D.quad.map(q=>`<div class="vquad"><div class="vquad-t">${esc(q.title)}</div>
           <ol>${q.items.filter(x=>x.trim()).map(it=>`<li>${esc(it)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol></div>`).join("")}
       </div>
     </div>
-    <div class="vsec"><h3>ルーティン行動（重要度が高い順）</h3>
+    <div class="vsec"><h3 style="margin:0 0 10px">ルーティン行動（重要度が高い順）</h3>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
       <button onclick="routinesToTodo()" style="margin-top:10px;width:100%;padding:9px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✅ ToDoに反映する</button>
     </div>
-    <div class="vsec"><h3>目標達成のための支援</h3>
+    <div class="vsec"><h3 style="margin:0 0 10px">目標達成のための支援</h3>
       <table class="vtab"><tr><th style="width:30%">支援者</th><th>支援内容</th></tr>
         ${D.supports.filter(s=>s.who||s.what).map(s=>`<tr><td>${esc(s.who)}</td><td>${esc(s.what)}</td></tr>`).join("")||"<tr><td class='vempty'>—</td><td></td></tr>"}</table>
     </div>
@@ -2971,6 +3089,12 @@ function bindSheet(root){
         case "delImg": if(confirm("この画像を削除しますか？")) D.goalImages.splice(i,1); else return; break;
         case "addGc": D.goalCriteria.push({label:"",targetNum:"",unit:"",currentNum:""}); break;
         case "delGc": if(confirm("この条件を削除しますか？")) D.goalCriteria.splice(i,1); else return; break;
+        case "mvQuadUp": if(j>0){const t=D.quad[i].items.splice(j,1)[0];D.quad[i].items.splice(j-1,0,t);} break;
+        case "mvQuadDn": if(j<D.quad[i].items.length-1){const t=D.quad[i].items.splice(j,1)[0];D.quad[i].items.splice(j+1,0,t);} break;
+        case "mvRtUp": if(i>0){const t=D.routines.splice(i,1)[0];D.routines.splice(i-1,0,t);} break;
+        case "mvRtDn": if(i<D.routines.length-1){const t=D.routines.splice(i,1)[0];D.routines.splice(i+1,0,t);} break;
+        case "mvSpUp": if(i>0){const t=D.supports.splice(i,1)[0];D.supports.splice(i-1,0,t);} break;
+        case "mvSpDn": if(i<D.supports.length-1){const t=D.supports.splice(i,1)[0];D.supports.splice(i+1,0,t);} break;
         case "addSp": D.supports.push({who:"",what:""}); break;
         case "delSp": if(confirm("この支援者の行を削除しますか？")) D.supports.splice(i,1); else return; break;
       }
@@ -3083,7 +3207,7 @@ function renderOW(){
   }
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">📋 OW64</h1><p class="ph-sub">オープンウインドウ６４・マンダラチャート</p></div>
+    <div><h1 class="ph-title">📋 OW64</h1><p class="ph-sub">最も重要なことは、正しい答えを見つけることではない。正しい問いを見つけることである。</p></div>
   </div>
   <div class="mob-chips">
     <button id="owAllM" class="${owMode==="all"?"act":""}">全体表示</button>
@@ -3744,6 +3868,7 @@ const GTD_COLS=[
 ];
 let gtdFilter={type:null,value:null}; // {type:'project'|'category', value:'名前'}
 let gtdCollapsed={category:true,project:true,recur:true,taskGroup:true};
+let gtdShowDone=false;
 let gfEditMode={project:false,category:false};
 function gfToggleEdit(type){
   gfEditMode[type]=!gfEditMode[type];
@@ -3767,9 +3892,12 @@ function gtdHeadAdd(){
 function gtdVisible(){
   const today=dateStr(0);
   return D.gtd.tasks.filter(t=>{
+    if(!gtdShowDone&&t.done) return false;
     if(!gtdFilter.type) return true;
     if(gtdFilter.type==='project') return (t.project||"")===gtdFilter.value;
     if(gtdFilter.type==='category') return (t.categories||[]).includes(gtdFilter.value);
+    if(gtdFilter.type==='noproj') return !(t.project||'');
+    if(gtdFilter.type==='nocat') return !(t.categories||[]).length;
     if(gtdFilter.type==='recur') return gtdFilter.value
       ? (t.recur||"")===gtdFilter.value
       : !!(t.recur);
@@ -3861,7 +3989,7 @@ function openFolderEditModal(type){
   _feType=type;
   const colors=D.gtd.projectColors||{};
   const src=type==='project'?D.gtd.projects:D.gtd.categories;
-  _feItems=(src||[]).filter(n=>n&&n.trim()).map(name=>({name,color:colors[name]||''}));
+  _feItems=(src||[]).filter(n=>n&&n.trim()).map(name=>({name,originalName:name,color:colors[name]||''}));
   _renderFolderEditList();
   document.getElementById('folderEditOverlay').classList.add('show');
 }
@@ -3907,6 +4035,11 @@ function saveFolderEdit(){
   _collectFeInputs();
   const names=[...new Set(_feItems.map(it=>it.name.trim()).filter(n=>n))];
   if(_feType==='project'){
+    // リネームされたプロジェクトのタスクも更新
+    _feItems.forEach(it=>{
+      const orig=it.originalName, nw=it.name.trim();
+      if(orig&&nw&&orig!==nw) D.gtd.tasks.forEach(t=>{ if((t.project||'')===orig) t.project=nw; });
+    });
     D.gtd.projects=names;
     if(!D.gtd.projectColors) D.gtd.projectColors={};
     const nc={};
@@ -3990,6 +4123,9 @@ function openOnboarding(){
   _obStep=0; _obRender();
   document.getElementById('onboardingOverlay').classList.add('show');
 }
+function openTodoHelp(){ document.getElementById('todoHelpOverlay').classList.add('show'); }
+function closeTodoHelp(){ document.getElementById('todoHelpOverlay').classList.remove('show'); }
+
 function maybeShowOnboarding(){
   if(!localStorage.getItem(OB_KEY)) openOnboarding();
 }
@@ -4024,10 +4160,16 @@ function gtdFolderItems(type){
   const list=type==='project'
     ? rawList.filter(name=>name!==ANNUAL_PROJECT)
     : rawList;
-  if(!list.length) return `<div class="gf-none">（フォルダなし）</div>`;
+  const noType=type==='project'?'noproj':'nocat';
+  const noAct=(gtdFilter.type===noType)?'act':'';
+  const noCnt=type==='project'
+    ? D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length
+    : D.gtd.tasks.filter(t=>!(t.categories||[]).length&&!t.done).length;
+  const unsetItem=`<div class="gf-item ${noAct}" data-f="${noType}" data-v="">未設定 <span class="gf-cnt">${noCnt||''}</span></div>`;
+  if(!list.length) return unsetItem;
   const isMobile=window.innerWidth<=700;
   const inEdit=gfEditMode[type];
-  return list.map((name,i)=>{
+  return unsetItem + list.map((name,i)=>{
     const cnt=type==='category'
       ? D.gtd.tasks.filter(t=>(t.categories||[]).includes(name)).length
       : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
@@ -4313,7 +4455,7 @@ function renderTodayTimeline(){
 
   const panel=`<div class="today-point">
     <div class="today-point-sec">
-      <div class="tp-tab${tpFeelingCollapsed?' collapsed':''}" onclick="toggleTpTab('feeling')">今日の到達宣言${df.feeling?`<span style="font-size:14px;margin-left:8px">📣</span><span style="font-size:11px;font-weight:700;color:#FF9500;margin-left:3px">宣言済</span>`:''}<span class="tp-arrow">▾</span></div>
+      <div class="tp-tab${tpFeelingCollapsed?' collapsed':''}" onclick="toggleTpTab('feeling')">今日の目標${df.feeling?`<span style="font-size:14px;margin-left:8px">📣</span><span style="font-size:11px;font-weight:700;color:#FF9500;margin-left:3px">宣言済</span>`:''}<span class="tp-arrow">▾</span></div>
       ${feelingBody}
     </div>
     <div class="today-point-sec">
@@ -4390,13 +4532,17 @@ function dailyTop3Toggle(date,i){
   if(task){ task.done=!task.done; save(); renderGTD(); }
 }
 let overdueSelected=new Set();
-let overdueTargetDate='';
+let overdueTargetDate=dateStr(0);
 function overdueToggle(id){
   const sid=String(id);
   const el=document.getElementById('overdueTargetDate');
   if(el) overdueTargetDate=el.value;
   if(overdueSelected.has(sid)) overdueSelected.delete(sid); else overdueSelected.add(sid);
-  renderGTD();
+  // 全DOM再構築を避けてカードのクラスのみ更新
+  const wrap=document.querySelector(`.overdue-card-wrap [data-id="${sid}"]`)?.closest('.overdue-card-wrap');
+  if(wrap) wrap.classList.toggle('oc-selected', overdueSelected.has(sid));
+  const moveBtn=document.querySelector('.overdue-move-btn');
+  if(moveBtn) moveBtn.style.opacity=overdueSelected.size>0?1:.5;
 }
 function overdueSelectAllToggle(){
   const el=document.getElementById('overdueTargetDate');
@@ -4437,19 +4583,18 @@ function renderOverdueView(){
   tasks.forEach(t=>{if(!byDate[t.deadline]) byDate[t.deadline]=[];byDate[t.deadline].push(t);});
   const daysDiff=d=>{const diff=Math.round((new Date(today+'T00:00:00')-new Date(d+'T00:00:00'))/86400000);return diff===1?'1日前':diff+'日前';};
   return `<div class="tl-panel">
-    <div class="overdue-hd">
-      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px">
-        <input type="checkbox" ${allSel?'checked':''} style="width:16px;height:16px;accent-color:#fff;cursor:pointer" onchange="overdueSelectAllToggle()">
-        ${allSel?'すべて解除':'すべて選択'}
-      </label>
-      <span style="margin-left:auto;font-size:12px;font-weight:400;opacity:.8">⚠️ ${tasks.length}件</span>
-    </div>
     <div class="overdue-move-bar">
-      <span style="font-size:13px;opacity:${selCount>0?1:.45}">${selCount>0?selCount+'件を選択中':'タスクを選択'}</span>
       <input type="date" id="overdueTargetDate" class="overdue-move-date" value="${overdueTargetDate}">
-      <button class="overdue-move-btn" onclick="overdueMoveTo()" style="opacity:${selCount>0?1:.5}">この日付に移動 →</button>
+      <button class="overdue-move-btn" onclick="overdueMoveTo()" style="opacity:${selCount>0?1:.5};white-space:nowrap;flex-shrink:0">この日付に移動</button>
     </div>
     <div style="padding:12px 14px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px;padding:4px 2px 10px;border-bottom:1px solid rgba(255,59,48,.2)">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:#D70015;font-weight:600">
+          <input type="checkbox" ${allSel?'checked':''} style="width:16px;height:16px;accent-color:#D70015;cursor:pointer" onchange="overdueSelectAllToggle()">
+          ${allSel?'すべて解除':'すべて選択'}
+        </label>
+        <span style="margin-left:auto;font-size:12px;font-weight:700;color:#D70015">⚠️ ${tasks.length}件</span>
+      </div>
       ${Object.entries(byDate).map(([date,items])=>`
         <div>
           <div style="margin-bottom:6px"><span class="overdue-date-label">📅 ${date}（${daysDiff(date)}）</span></div>
@@ -4474,6 +4619,22 @@ function renderGTD(){
       delete t._subResetDate;
       needSave=true;
     }
+    // ルーティンタスクが期限超過の場合は次の発生日（本日以降）に自動移動
+    if(t.recur&&t.deadline&&t.deadline<todayStr&&!t.done){
+      const _today=new Date(todayStr+'T00:00:00');
+      const _next=new Date(t.deadline+'T00:00:00');
+      while(_next<_today){
+        if(t.recur==='daily') _next.setDate(_next.getDate()+1);
+        else if(t.recur==='weekly') _next.setDate(_next.getDate()+7);
+        else if(t.recur==='monthly') _next.setMonth(_next.getMonth()+1);
+        else if(t.recur==='quarterly') _next.setMonth(_next.getMonth()+3);
+        else if(t.recur==='yearly') _next.setFullYear(_next.getFullYear()+1);
+        else break;
+      }
+      t.deadline=localDateStr(_next);
+      if(Array.isArray(t.routineItems)) t.routineItems.forEach(it=>it.done=false);
+      needSave=true;
+    }
   });
   if(needSave) save();
   // INBOXは常に複数選択モード
@@ -4482,11 +4643,14 @@ function renderGTD(){
   const vis=gtdVisible();
   root.innerHTML=`
   <div class="page-head">
-    <div><h1 class="ph-title">✅ ToDo</h1><p class="ph-sub">GTD®メソッドで、生産性の向上を助ける。</p></div>
+    <div><h1 class="ph-title">✅ ToDo</h1><p class="ph-sub">一日をコントロールしなければ、一日があなたをコントロールする</p></div>
   </div>
   <div class="gtd-cap">
     <input type="text" id="gtdCapture" placeholder="タスク追加→Inbox">
     <button class="btn-save" onclick="gtdAdd()">追加</button>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin:-8px 0 10px">
+    <button onclick="gtdShowDone=!gtdShowDone;renderGTD()" style="font-size:11px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:${gtdShowDone?'var(--fill)':'var(--card)'};color:${gtdShowDone?'var(--blue)':'var(--sub)'};cursor:pointer;font-weight:600">${gtdShowDone?'✓ 完了済も表示中':'完了済タスクも表示'}</button>
   </div>
   <button class="gtd-mob-toggle" id="gtdMobToggle" onclick="toggleGtdSidebar()">
     <span style="font-size:18px;line-height:1">☰</span><span class="gtd-mob-label">${gtdMobLabelText()}</span><span style="font-size:12px;color:rgba(255,255,255,.7);margin-left:auto">▾</span>
@@ -4497,12 +4661,7 @@ function renderGTD(){
       <div class="gf-item gf-today-btn gf-start-main ${gtdView==='today'?'act':''}" data-view="today" data-f="" data-v="">☀️ 1日をスタート！</div>
       <div class="gf-item gf-today-btn ${gtdView==='tomorrow'?'act':''}" data-view="tomorrow" data-f="" data-v="" style="margin-top:-4px;opacity:.85">📅 明日の計画</div>
       ${(()=>{const oc=(D.gtd.tasks||[]).filter(t=>t.deadline&&t.deadline<dateStr(0)&&!t.done).length;return `<div class="gf-item gf-overdue-btn ${gtdView==='overdue'?'act':''}" data-view="overdue" data-f="" data-v="">⚠️ 期限超過${oc?` <span style="margin-left:auto;background:${gtdView==='overdue'?'rgba(255,255,255,.3)':'#FF3B30'};color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;flex:0 0 auto">${oc}</span>`:''}</div>`;})()}
-      <div class="gf-section ${gtdCollapsed.taskGroup?'gf-collapsed':''}">
-        <div class="gf-taskedit-btn gf-toggle" data-toggle="taskGroup">
-          <span>✏️ タスク編集</span>
-          <span class="gf-arrow">▾</span>
-        </div>
-        <div class="gf-items gf-taskedit-panel">
+      <div class="gf-taskedit-panel" style="padding-top:4px">
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
           <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
           <div class="gf-item ${gtdFilter.type==='nodeadline'&&gtdView==='kanban'?'act':''}" data-f="nodeadline" data-v="">📭 日時未設定 <span class="gf-cnt">${D.gtd.tasks.filter(t=>!t.deadline&&!t.done).length||''}</span></div>
@@ -4553,10 +4712,10 @@ function renderGTD(){
               <div class="gf-item ${gtdFilter.type==='recur'&&gtdFilter.value===k&&gtdView!=='today'?'act':''}" data-f="recur" data-v="${k}">${label}<span class="gf-cnt">${D.gtd.tasks.filter(t=>t.recur===k&&!t.done).length||''}</span></div>`).join('')}
             </div>
           </div>
-        </div>
       </div>
       <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
         <button class="rw-create-btn" onclick="openRoutineWizard()">🔄 ルーティンを作る</button>
+        <button class="todo-help-btn" onclick="openTodoHelp()" style="margin-top:8px;width:100%;text-align:center">❓ ToDoの使い方</button>
       </div>
     </aside>
     <div class="gtd-main">
@@ -4604,11 +4763,11 @@ function renderGTD(){
 function gtdAdd(){
   const cap=document.getElementById("gtdCapture");
   const v=cap.value.trim(); if(!v) return;
-  const task={id:D.gtd.nextId++, text:v, status:"inbox", project:"", categories:[], created:Date.now()};
+  const task={id:D.gtd.nextId++, text:v, status:"inbox", project:"", categories:[], deadline:"", recur:"", done:false, routineItems:[], created:Date.now()};
   if(gtdView==='today') task.deadline=dateStr(0);
   else if(gtdView==='tomorrow') task.deadline=dateStr(1);
-  if(gtdFilter.type==='project') task.project=gtdFilter.value;
-  if(gtdFilter.type==='category') task.categories=[gtdFilter.value];
+  if(gtdFilter.type==='project'&&gtdFilter.value) task.project=gtdFilter.value;
+  if(gtdFilter.type==='category'&&gtdFilter.value) task.categories=[gtdFilter.value];
   D.gtd.tasks.unshift(task);
   cap.value=""; save(); renderGTD();
   const c2=document.getElementById("gtdCapture"); if(c2) c2.focus();
@@ -4728,10 +4887,13 @@ function bindGTD(root){
       } else {
         gtdView='kanban';
         const type=it.dataset.f;
+        const prevType=gtdFilter.type, prevVal=gtdFilter.value;
         gtdFilter = type ? {type,value:it.dataset.v} : {type:null,value:null};
-        // INBOX以外に切り替えたらmultiSelectをリセット
+        // multiSelectをリセットしない条件：Inbox / noproj / nocat、または同一フィルターの再クリック
         const goingToInbox=type==='project'&&it.dataset.v==='';
-        if(!goingToInbox){ multiSelectMode=false; multiSelectedIds.clear(); }
+        const keepSelect=goingToInbox||type==='noproj'||type==='nocat'
+          ||(type===prevType&&it.dataset.v===prevVal);
+        if(!keepSelect){ multiSelectMode=false; multiSelectedIds.clear(); }
       }
       closeGtdSidebar();
       renderGTD();
@@ -4911,6 +5073,8 @@ function bindGTD(root){
 /* ================= 設定モーダル ================= */
 function openSettings(){
   document.getElementById('settingsOverlay').style.display='flex';
+  const demoSec=document.getElementById('demoModeSection');
+  if(demoSec) demoSec.style.display=syncCfg.syncId==='moriyamakoto'?'block':'none';
   const demoChk=document.getElementById('demoModeCheck');
   if(demoChk) demoChk.checked=_demoMode;
   gcalRenderUrls();
