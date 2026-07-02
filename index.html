@@ -1485,6 +1485,8 @@ function save(){
   if(_demoMode){ document.getElementById("saveState").textContent="🎭 デモ中"; return; }
   clearTimeout(saveTimer);
   document.getElementById("saveState").textContent="保存中…";
+  // syncPullによる上書きを防ぐためローカルタイムスタンプを即時更新
+  D._syncAt=Date.now();
   saveTimer=setTimeout(async ()=>{
     try{
       // 夢画像をIDB用に抽出（localStorageの容量節約）
