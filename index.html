@@ -2264,7 +2264,7 @@ ${imgsHtml}
         const nearestSgHtml=(()=>{
           if(!dreamShowSteps) return '';
           // この年のすべてのステップ目標を表示
-          const allSgs=g.stepGoals;
+          const allSgs=groups[y].stepGoals;
           if(!allSgs.length) return '';
           allSgs.sort((a,b)=>{const ka=a.sg.yearMonth||'9999',kb=b.sg.yearMonth||'9999';return ka<kb?-1:ka>kb?1:0;});
           return `<div class="sg-list">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
