@@ -661,7 +661,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-mission-imgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .dm-img-thumb{height:90px;border-radius:8px;cursor:zoom-in;border:1px solid var(--line)}
 .dm-img-del{position:absolute;top:-5px;right:-5px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0}
-.dream-mission-arrow{font-size:16px;color:var(--sub);transition:transform .2s}
+.dream-mission-arrow{font-size:24px;color:var(--sub);transition:transform .2s}
 .dream-mission.collapsed .dream-mission-arrow{transform:rotate(-90deg)}
 .dream-mission-body{padding:0 14px 14px;display:block}
 .dream-mission.collapsed .dream-mission-body{display:none}
@@ -2053,7 +2053,7 @@ function renderDmStepGoals(){
         <div class="dm-step-body">
           <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="ステップ目標"
             oninput="dmUpdateStepGoal('${s.id}','text',this.value)">
-          <input type="month" class="dm-step-date" value="${s.yearMonth||''}" title="目標年月"
+          <input type="number" class="dm-step-date" value="${s.yearMonth||''}" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px"
             onchange="dmUpdateStepGoal('${s.id}','yearMonth',this.value)">
         </div>
         <button class="dm-step-del" onclick="dmDeleteStepGoal('${s.id}')">✕</button>
@@ -2141,7 +2141,7 @@ function renderDreams(){
   // ステップ目標を年グループへ追加
   items.forEach(d=>{
     (Array.isArray(d.stepGoals)?d.stepGoals:[]).forEach(sg=>{
-      const y=sg.yearMonth?sg.yearMonth.slice(0,4):'未設定';
+      const y=sg.yearMonth?String(sg.yearMonth).slice(0,4):'未設定';
       if(!groups[y]) groups[y]={dreams:[],stepGoals:[]};
       groups[y].stepGoals.push({sg,d});
     });
@@ -2150,7 +2150,7 @@ function renderDreams(){
   Object.entries(groups).forEach(([y,g])=>{
     const merged=[];
     g.dreams.forEach(d=>merged.push({type:'dream',sortKey:y==='未設定'?'9999-12-31':`${y}-12-31`,d}));
-    g.stepGoals.forEach(({sg,d})=>merged.push({type:'sg',sortKey:sg.yearMonth?`${sg.yearMonth}-01`:'9999-12-31',sg,d}));
+    g.stepGoals.forEach(({sg,d})=>merged.push({type:'sg',sortKey:sg.yearMonth?`${sg.yearMonth}-06-01`:'9999-12-31',sg,d}));
     merged.sort((a,b)=>a.sortKey.localeCompare(b.sortKey));
     g.merged=merged;
   });
@@ -2178,7 +2178,7 @@ function renderDreams(){
     </div>`;
   }
   function sgCardHtml(sg, d){
-    const month=sg.yearMonth?String(Number(sg.yearMonth.slice(5)))+'月':'—';
+    const month=sg.yearMonth?sg.yearMonth+'年':'—';
     const catCls=dreamCatClass(d.category);
     return `<div class="sg-card ${catCls}${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')">
       ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''}
@@ -2265,21 +2265,11 @@ ${imgsHtml}
         const dreamsInYear=groups[y].merged.filter(item=>item.type==='dream').map(item=>item.d);
         const nearestSgHtml=(()=>{
           if(!dreamShowSteps) return '';
-          // 各ドリームの「最も近いステップ目標」1つをこの年に表示
-          const cards=items.flatMap(d=>{
-            const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];
-            const pending=sgs.filter(s=>!s.done);
-            if(!pending.length) return [];
-            const minYM=pending.reduce((min,s)=>{const k=s.yearMonth||'9999-12';return k<min?k:min;},'9999-12');
-            if(minYM.slice(0,4)!==y) return [];
-            return pending.filter(s=>(s.yearMonth||'9999-12')===minYM).map(s=>({sg:s,d}));
-          });
-          if(!cards.length) return '';
-          // yearMonthでソート、同月は横並び・月が変わると縦積み
-          cards.sort((a,b)=>{const ka=a.sg.yearMonth||'9999-12',kb=b.sg.yearMonth||'9999-12';return ka<kb?-1:ka>kb?1:0;});
-          const byMonth={};const monthOrder=[];
-          cards.forEach(({sg,d})=>{const m=sg.yearMonth||'9999-12';if(!byMonth[m]){byMonth[m]=[];monthOrder.push(m);}byMonth[m].push({sg,d});});
-          return monthOrder.map(m=>`<div class="sg-list">${byMonth[m].map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`).join('');
+          // この年のすべてのステップ目標を表示
+          const allSgs=g.stepGoals;
+          if(!allSgs.length) return '';
+          allSgs.sort((a,b)=>{const ka=a.sg.yearMonth||'9999',kb=b.sg.yearMonth||'9999';return ka<kb?-1:ka>kb?1:0;});
+          return `<div class="sg-list">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
         })();
         return `
       <div class="dream-year-section">
@@ -2337,7 +2327,7 @@ function openDreamModal(id){
       <div class="dm-step-addrow">
         <input type="text" id="dmStepGoalInput" placeholder="ステップ目標を追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStepGoal();}">
-        <input type="month" id="dmStepGoalMonth" title="目標年月">
+        <input type="number" id="dmStepGoalMonth" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px">
         <button onclick="dmAddStepGoal()">確定</button>
       </div>
     </div>
