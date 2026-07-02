@@ -1067,7 +1067,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
     <p class="gm-label">タスク内容</p>
     <textarea id="gmText" rows="2"></textarea>
     <p class="gm-label">プロジェクト</p>
-    <select id="gmProject" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px;color:var(--blue)"></select>
+    <div style="display:flex;gap:6px;align-items:center">
+      <select id="gmProject" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px;color:var(--blue)"></select>
+      <button onclick="gmAddNewProject()" style="flex:0 0 auto;padding:7px 10px;border:1px solid var(--blue);border-radius:8px;background:var(--card);color:var(--blue);font-size:13px;cursor:pointer;white-space:nowrap">＋新規</button>
+    </div>
     <p id="gmAnnualNote" style="display:none;font-size:12px;color:var(--red);margin:5px 0 0;line-height:1.5">編集・追加は「🎯年間目標達成シート」から行ってください</p>
     <p class="gm-label">スタート日時</p>
     <div class="gm-row">
@@ -1098,7 +1101,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <button class="gm-dur-btn" data-dur="60">60分</button>
       <button class="gm-dur-btn" data-dur="more">それ以上</button>
     </div>
-    <p class="gm-label">カテゴリ</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <p class="gm-label" style="margin:0">カテゴリ</p>
+      <button onclick="gmAddNewCategory()" style="padding:3px 8px;border:1px solid var(--blue);border-radius:6px;background:var(--card);color:var(--blue);font-size:11px;cursor:pointer">＋新規</button>
+    </div>
     <div id="gmCats" class="gm-dur"></div>
     <p class="gm-label">サブタスク</p>
     <div id="gmRoutineArea">
@@ -2080,7 +2086,7 @@ function dreamActionsToTodo(dreamId){
     added++;
   });
   save();
-  toast(added+'件のアクションをToDoに追加しました');
+  if(added>0){ toast('✅ '+added+'件のアクションをToDoに追加しました'); } else { toast('ℹ 追加済みのアクションのみです（重複スキップ）'); }
 }
 
 function dmAddStepGoal(){
@@ -3340,6 +3346,29 @@ function gmAddRoutineItem(){
 function gmDelRoutineItem(id){
   gmRoutineItems=gmRoutineItems.filter(it=>String(it.id)!==String(id));
   gmRenderRoutineItems();
+}
+function gmAddNewProject(){
+  const name=(prompt('新しいプロジェクト名を入力してください')||'').trim();
+  if(!name) return;
+  if(D.gtd.projects.includes(name)){alert('同じ名前のプロジェクトが既にあります');return;}
+  D.gtd.projects.push(name);
+  save();
+  const sel=document.getElementById('gmProject');
+  const opt=document.createElement('option');
+  opt.value=name; opt.textContent=name; opt.selected=true;
+  sel.appendChild(opt);
+}
+function gmAddNewCategory(){
+  const name=(prompt('新しいカテゴリ名を入力してください')||'').trim();
+  if(!name) return;
+  if(D.gtd.categories.includes(name)){alert('同じ名前のカテゴリが既にあります');return;}
+  D.gtd.categories.push(name);
+  save();
+  const gmCats=document.getElementById('gmCats');
+  const btn=document.createElement('button');
+  btn.className='gm-dur-btn act'; btn.dataset.gcat=name; btn.textContent=name;
+  btn.onclick=()=>btn.classList.toggle('act');
+  gmCats.appendChild(btn);
 }
 function openGtdModal(id){
   const t=gtdTask(id); if(!t) return;
