@@ -2001,8 +2001,6 @@ function renderDmSteps(){
         <div class="dm-step-body">
           <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="アクション名"
             oninput="dmUpdateStep('${s.id}','text',this.value)">
-          <input type="date" class="dm-step-date" value="${s.startDate||''}" title="スタート期限"
-            onchange="dmUpdateStep('${s.id}','startDate',this.value)">
         </div>
         <button class="dm-step-del" onclick="dmDeleteStep('${s.id}')">✕</button>
       </div>`).join('')
@@ -2338,7 +2336,7 @@ function openDreamModal(id){
       <div class="dm-step-addrow">
         <input type="text" id="dmStepInput" placeholder="アクションを追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStep();}">
-        <input type="date" id="dmStepDate" title="スタート期限">
+
         <button onclick="dmAddStep()">確定</button>
       </div>
     </div>`;
