@@ -2293,7 +2293,7 @@ ${imgsHtml}
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
   }
   </div></div>`;
-  setTimeout(()=>{const ta=document.getElementById('dreamMissionTa');if(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}},0);
+  setTimeout(()=>{document.querySelectorAll('.dream-mission-ta').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});},0);
 }
 
 function openDreamModal(id){
