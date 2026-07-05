@@ -992,6 +992,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
         <input type="url" id="gcalUrlInput" placeholder="iCal URLをここに貼り付け" style="flex:1;min-width:0;font-size:12px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--text)">
         <button onclick="gcalAddUrl()" style="flex:0 0 auto;white-space:nowrap;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:13px;cursor:pointer">追加</button>
       </div>
+      <div style="margin-top:8px">
+        <button onclick="gcalRefresh()" style="font-size:12px;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--sub);cursor:pointer">🔄 Gカレンダーを今すぐ更新</button>
+      </div>
       <div id="demoModeSection" style="display:none">
       <p class="settings-section">デモモード</p>
       <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
@@ -1304,7 +1307,13 @@ function parseIcalEvents(text){
     }
     if(added===0&&ev.start>=winStart&&ev.start<=winEnd) expanded.push(ev);
   }
-  return expanded;
+  // 期間外の非繰り返しイベントも除外（過去の古いイベントが混入しないように）
+  return expanded.filter(ev=>{
+    if(!ev.start) return false;
+    const s=ev.start.getTime();
+    const e=ev.end?ev.end.getTime():s+3600000;
+    return e>=winStart.getTime()&&s<=winEnd.getTime();
+  });
 }
 function icalEventForDate(events,dateStr){
   const [y,m,d]=dateStr.split('-').map(Number);
@@ -5114,6 +5123,11 @@ function gcalAddUrl(){
   _gcalCache={data:[],fetchedAt:0};
   if(inp) inp.value='';
   gcalRenderUrls();
+}
+function gcalRefresh(){
+  _gcalCache={data:[],fetchedAt:0};
+  toast('🔄 Googleカレンダーを再取得しています…');
+  renderGTD();
 }
 function gcalDelUrl(i){
   gcalUrls.splice(i,1);
