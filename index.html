@@ -2264,12 +2264,6 @@ ${imgsHtml}
     <button class="dream-tb-btn" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</button>
     <button class="dream-tb-btn dream-tb-add" onclick="openDreamModal(null)">🌟 ＋ 夢を追加</button>
   </div>
-  <div class="gtd-wrap">
-  <aside class="gtd-side side-static dream-side">
-
-    <div class="gf-item dream-side-ctrl" onclick="openDreamModal(null)" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px">＋ 夢を追加</div>
-    <div class="gf-item dream-side-ctrl" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
-  </aside>
   <div class="gtd-main">
   ${items.length
     ? years.map(y=>{
@@ -2293,7 +2287,7 @@ ${imgsHtml}
       }).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
   }
-  </div></div>`;
+  </div>`;
   setTimeout(()=>{document.querySelectorAll('.dream-mission-ta').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});},0);
 }
 
