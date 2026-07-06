@@ -3001,7 +3001,7 @@ function renderSheetView(){
         const rows=arr.length?arr.map(dl=>{const ri=D.deadlines.indexOf(dl);return `<div class="vdl"><input type="checkbox" class="chk vdl-chk" data-dlid="${ri}" ${dl.done?'checked':''}> <b>${esc(fmtMD(dl.month))}</b> <span class="${dl.done?'ddone':''}">${esc(dl.text)}</span></div>`;}).join(""):"<p class='vempty'>—</p>";
         const toggle=dlTab==='done'?`<button class="linkbtn" onclick="dlTab='todo';renderSheet()">← 未完了の項目に戻る</button>`:(done.length?`<button class="linkbtn" onclick="dlTab='done';renderSheet()">完了済みを表示 (${done.length})</button>`:"");
         return rows+toggle;})()}
-      <button onclick="deadlinesToTodo()" style="margin-top:10px;width:100%;padding:9px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✅ ToDoに反映する</button>
+      <button onclick="deadlinesToTodo()" style="margin-top:8px;padding:5px 12px;background:none;color:var(--sub);border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:12px;font-weight:500">✅ ToDoに反映する</button>
     </div>
     <div class="vsec"><h3 style="margin:0 0 10px">目的・目標の4観点</h3>
       <div class="vquads">
@@ -3011,7 +3011,7 @@ function renderSheetView(){
     </div>
     <div class="vsec"><h3 style="margin:0 0 10px">ルーティン行動（重要度が高い順）</h3>
       <ol class="vrt">${D.routines.filter(r=>r.text.trim()).map(r=>`<li>${esc(r.text)}</li>`).join("")||"<li class='vempty'>—</li>"}</ol>
-      <button onclick="routinesToTodo()" style="margin-top:10px;width:100%;padding:9px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">✅ ToDoに反映する</button>
+      <button onclick="routinesToTodo()" style="margin-top:8px;padding:5px 12px;background:none;color:var(--sub);border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:12px;font-weight:500">✅ ToDoに反映する</button>
     </div>
     <div class="vsec"><h3 style="margin:0 0 10px">目標達成のための支援</h3>
       <table class="vtab"><tr><th style="width:30%">支援者</th><th>支援内容</th></tr>
