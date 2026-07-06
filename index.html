@@ -2323,9 +2323,9 @@ function openDreamModal(id){
       <label>🚩 ステップ目標</label>
       <div class="dm-step-list" id="dmStepGoalList"></div>
       <div class="dm-step-addrow">
+        <input type="number" id="dmStepGoalMonth" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px;flex:0 0 72px">
         <input type="text" id="dmStepGoalInput" placeholder="ステップ目標を追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStepGoal();}">
-        <input type="number" id="dmStepGoalMonth" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px">
         <button onclick="dmAddStepGoal()">確定</button>
       </div>
     </div>
