@@ -779,6 +779,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   .gtd-side{flex:0 0 225px;background:transparent;border:none;padding:0 6px 0 0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}
   .dream-toolbar{display:flex}
   .dream-side-ctrl{display:none}
+  .dream-side{display:none}
 }
 @media(max-width:700px){
   .mob-chips{display:flex}
@@ -2264,7 +2265,7 @@ ${imgsHtml}
     <button class="dream-tb-btn dream-tb-add" onclick="openDreamModal(null)">🌟 ＋ 夢を追加</button>
   </div>
   <div class="gtd-wrap">
-  <aside class="gtd-side side-static">
+  <aside class="gtd-side side-static dream-side">
 
     <div class="gf-item dream-side-ctrl" onclick="openDreamModal(null)" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px">＋ 夢を追加</div>
     <div class="gf-item dream-side-ctrl" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
