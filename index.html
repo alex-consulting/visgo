@@ -660,7 +660,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-mission-title-inp:focus{outline:none;border-color:var(--blue);background:var(--card)}
 .dream-mission-imgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .dm-img-thumb{height:90px;border-radius:8px;cursor:zoom-in;border:1px solid var(--line)}
-.dm-img-del{position:absolute;top:-5px;right:-5px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0}
+.dm-img-del{position:absolute;top:-5px;right:-5px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0;opacity:0;transition:opacity .15s}
+.dm-img-thumb:hover~.dm-img-del,.dm-img-del:hover{opacity:1}
 .dream-mission-arrow{font-size:24px;color:var(--sub);transition:transform .2s}
 .dream-mission.collapsed .dream-mission-arrow{transform:rotate(-90deg)}
 .dream-mission-body{padding:0 14px 14px;display:block}
