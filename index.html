@@ -774,6 +774,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   nav button.act{background:rgba(255,255,255,.15);color:#fff;border-bottom-color:transparent}
   main{grid-column:2;grid-row:2;margin:0 auto;width:100%}
   .gtd-side{flex:0 0 225px;background:transparent;border:none;padding:0 6px 0 0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}
+  .dream-toolbar{display:flex}
+  .dream-side-ctrl{display:none}
 }
 @media(max-width:700px){
   .mob-chips{display:flex}
@@ -2261,8 +2263,8 @@ ${imgsHtml}
   <div class="gtd-wrap">
   <aside class="gtd-side side-static">
 
-    <div class="gf-item" onclick="openDreamModal(null)" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px">＋ 夢を追加</div>
-    <div class="gf-item" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
+    <div class="gf-item dream-side-ctrl" onclick="openDreamModal(null)" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px">＋ 夢を追加</div>
+    <div class="gf-item dream-side-ctrl" onclick="dreamShowSteps=!dreamShowSteps;renderDreams()" style="color:${dreamShowSteps?'var(--sub)':'var(--blue)'}">${dreamShowSteps?'ステップ非表示':'ステップ表示'}</div>
   </aside>
   <div class="gtd-main">
   ${items.length
