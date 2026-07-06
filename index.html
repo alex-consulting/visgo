@@ -724,8 +724,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dm-step-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:13px;padding:0 2px;flex:0 0 auto;line-height:1;margin-top:2px}
 .dm-step-del:hover{color:var(--red)}
 .dm-step-addrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.dm-step-addrow.sg-row{flex-wrap:nowrap;align-items:center}
 .dm-step-addrow input[type=text]{flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit}
 .dm-step-addrow input[type=date]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit;width:130px;flex:0 0 auto}
+.dm-step-addrow input[type=number]{flex:0 0 72px;width:72px;border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:inherit}
 .dm-step-addrow button{background:#30D158;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
 .dm-pct-badge{font-size:12px;font-weight:700;color:var(--blue);margin-left:6px}
 .dream-modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;padding-bottom:max(14px,env(safe-area-inset-bottom));border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--card)}
@@ -2325,8 +2327,8 @@ function openDreamModal(id){
     <div class="dm-field">
       <label>🚩 ステップ目標</label>
       <div class="dm-step-list" id="dmStepGoalList"></div>
-      <div class="dm-step-addrow">
-        <input type="number" id="dmStepGoalMonth" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px;flex:0 0 72px">
+      <div class="dm-step-addrow sg-row">
+        <input type="number" id="dmStepGoalMonth" title="目標年" placeholder="年" min="2020" max="2045">
         <input type="text" id="dmStepGoalInput" placeholder="ステップ目標を追加..."
           onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dmAddStepGoal();}">
         <button onclick="dmAddStepGoal()">確定</button>
