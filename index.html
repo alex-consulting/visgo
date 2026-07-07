@@ -4739,7 +4739,7 @@ function renderGTD(){
         : gtdView==='overdue'
         ? renderOverdueView()
         : `${isInbox?'':`<div style="display:flex;justify-content:flex-start;padding:0 4px 8px">
-            <button class="kms-toggle-btn${multiSelectMode?' kms-active':''}" onclick="toggleMultiSelect()">${multiSelectMode?'✕ キャンセル':'☑ 複数選択'}</button>
+            <button class="kms-toggle-btn${multiSelectMode?' kms-active':''}" onclick="toggleMultiSelect()">${multiSelectMode?'✕ キャンセル':'☑ 選択'}</button>
           </div>`}
           <div class="kcol" style="width:100%;max-width:100%">
             <div class="kbody" data-col="inbox">
