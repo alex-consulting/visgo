@@ -1253,6 +1253,11 @@ function parseIcalEvents(text){
       if(!ev.exdates) ev.exdates=[];
       val.split(',').forEach(v=>{const d=parseIcalDate(v.trim());if(d)ev.exdates.push(d.toDateString());});
     }
+    if(key.startsWith('RECURRENCE-ID')){
+      const tzm=key.match(/TZID=([^;:]+)/);
+      ev.recurrenceId=parseIcalDate(val,tzm?tzm[1]:null);
+    }
+    if(key==='UID') ev.uid=val;
     if(key.startsWith('DTSTART')){
       const tzm=key.match(/TZID=([^;:]+)/);
       ev.start=parseIcalDate(val,tzm?tzm[1]:null);
@@ -1266,8 +1271,14 @@ function parseIcalEvents(text){
   // RRULE展開：今日の前後60日分
   const winStart=new Date(); winStart.setDate(winStart.getDate()-1); winStart.setHours(0,0,0,0);
   const winEnd=new Date(); winEnd.setDate(winEnd.getDate()+60); winEnd.setHours(23,59,59,999);
+  // RECURRENCE-ID付きイベント（特定回の変更）を分離
+  const exceptions=events.filter(e=>e.recurrenceId);
+  const baseEvents=events.filter(e=>!e.recurrenceId);
+  // 例外イベントのキー：uid + 元の日時(toDateString)
+  const exMap=new Map();
+  exceptions.forEach(e=>{if(e.uid&&e.recurrenceId)exMap.set(e.uid+'|'+e.recurrenceId.toDateString(),e);});
   const expanded=[];
-  for(const ev of events){
+  for(const ev of baseEvents){
     if(!ev.rrule||!ev.start){expanded.push(ev);continue;}
     const freq=(ev.rrule.match(/FREQ=([^;]+)/)||[])[1];
     if(!freq){expanded.push(ev);continue;}
@@ -1298,10 +1309,17 @@ function parseIcalEvents(text){
       if(untilDate&&cur>untilDate) break;
       if(count&&n>=count) break;
       if(cur>=winStart&&!exdates.includes(cur.toDateString())){
-        const occ=Object.assign({},ev);
-        occ.start=new Date(cur);
-        occ.end=new Date(cur.getTime()+duration);
-        expanded.push(occ);
+        const excKey=ev.uid?ev.uid+'|'+cur.toDateString():null;
+        const exc=excKey?exMap.get(excKey):null;
+        if(exc){
+          // 変更済みの特定回を使用
+          expanded.push(Object.assign({},exc,{calIdx:ev.calIdx}));
+        } else {
+          const occ=Object.assign({},ev);
+          occ.start=new Date(cur);
+          occ.end=new Date(cur.getTime()+duration);
+          expanded.push(occ);
+        }
         added++;
       }
       const nx=new Date(cur);
