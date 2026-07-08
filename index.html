@@ -3390,6 +3390,8 @@ function gmAddNewProject(){
   const opt=document.createElement('option');
   opt.value=name; opt.textContent=name; opt.selected=true;
   sel.appendChild(opt);
+  // サイドバーを更新（モーダルは tab-gtd の外なので閉じない）
+  renderGTD();
 }
 function gmAddNewCategory(){
   const name=(prompt('新しいカテゴリ名を入力してください')||'').trim();
@@ -3402,6 +3404,8 @@ function gmAddNewCategory(){
   btn.className='gm-dur-btn act'; btn.dataset.gcat=name; btn.textContent=name;
   btn.onclick=()=>btn.classList.toggle('act');
   gmCats.appendChild(btn);
+  // サイドバーを更新（モーダルは tab-gtd の外なので閉じない）
+  renderGTD();
 }
 function openGtdModal(id){
   const t=gtdTask(id); if(!t) return;
@@ -4235,10 +4239,10 @@ function gtdFolderItems(type){
          <span class="gf-del" data-delf="${type}" data-v="${esc(name)}" title="フォルダ削除">✕</span>`
       : '';
     const annualStyle=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
-    const moveCtrl=(inEdit&&!isAnnual&&!isMobile)
+    const moveCtrl=(!isAnnual&&!isMobile)
       ? `<span class="gf-drag-handle" onclick="event.stopPropagation()">⠿⠿</span>`
       : '';
-    return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${inEdit&&!isMobile?'true':'false'}" style="${annualStyle}">
+    return `<div class="gf-item ${act}" data-f="${type}" data-v="${esc(name)}" draggable="${!isAnnual&&!isMobile?'true':'false'}" style="${annualStyle}">
       ${moveCtrl}
       ${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span>
       ${controls}</div>`;
@@ -5091,6 +5095,9 @@ function bindGTD(root){
         }
         _gfDragEl=null; _gfDragType=null;
         save();
+        const _wasOpen=document.getElementById('gtdSide')?.classList.contains('mob-open');
+        renderGTD();
+        if(_wasOpen){document.getElementById('gtdSide')?.classList.add('mob-open');document.getElementById('gtdSideBackdrop')?.classList.add('mob-open');}
       };
       item.addEventListener('touchend',endDrag);
       item.addEventListener('touchcancel',()=>{
