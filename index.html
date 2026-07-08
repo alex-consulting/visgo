@@ -4223,8 +4223,8 @@ function gtdFolderItems(type){
   const inEdit=gfEditMode[type];
   return unsetItem + list.map((name,i)=>{
     const cnt=type==='category'
-      ? D.gtd.tasks.filter(t=>(t.categories||[]).includes(name)).length
-      : D.gtd.tasks.filter(t=>(t.project||"")===name).length;
+      ? D.gtd.tasks.filter(t=>(t.categories||[]).includes(name)&&!t.done).length
+      : D.gtd.tasks.filter(t=>(t.project||"")===name&&!t.done).length;
     const act=(gtdFilter.type===type&&gtdFilter.value===name)?'act':'';
     const isAnnual=(type==='project'&&name===ANNUAL_PROJECT);
     const dot=type==='project'
