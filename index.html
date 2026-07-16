@@ -1784,17 +1784,9 @@ async function syncPull(){
     const remote=await res.json();
     if(!remote||!remote._syncAt) return;
     const localAt=D._syncAt||0, remoteAt=remote._syncAt||0;
-    const localNextId=D.gtd?.nextId||1;
-    const remoteNextId=remote.gtd?.nextId||1;
     if(remoteAt>localAt){
-      // クロックスキュー対策: リモートのタイムスタンプが新しくても、
-      // nextIdがローカルより大幅に古い場合は別デバイスの時計ズレと判定してブロック
-      // （削除は nextId を変えないため、正当な削除操作はここで止まらない）
-      if(remoteNextId<localNextId-3){
-        // クロックスキューの疑い: 適用前にローカルデータを緊急バックアップ
-        console.warn('[VISGO] クロックスキュー疑い: remoteNextId='+remoteNextId+' localNextId='+localNextId+' — 適用前にバックアップ保存');
-        try{ await idbSet('clockSkewBackup_'+Date.now(), JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(e){}
-      }
+      // リモート適用前に常にローカルデータを緊急バックアップ（上書きによるデータ消失防止）
+      try{ await idbSet('syncOverwriteBackup_'+Date.now(), JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(e){}
       await _applyRemoteData(remote);
       setSyncStatus("☁ 最新データ取得・再読込");
       setTimeout(()=>location.reload(),600);
