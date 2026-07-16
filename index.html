@@ -1791,10 +1791,9 @@ async function syncPull(){
       // nextIdがローカルより大幅に古い場合は別デバイスの時計ズレと判定してブロック
       // （削除は nextId を変えないため、正当な削除操作はここで止まらない）
       if(remoteNextId<localNextId-3){
-        setSyncStatus("⚠ タイムスタンプ矛盾—ローカルを保護してサーバー修正");
-        console.warn('[VISGO] syncPullブロック: remoteAt新しいがnextId古い remote='+remoteNextId+' local='+localNextId);
-        syncPushNow(); // ローカルの正しいデータでサーバーを上書き修正
-        return;
+        // クロックスキューの疑い: 適用前にローカルデータを緊急バックアップ
+        console.warn('[VISGO] クロックスキュー疑い: remoteNextId='+remoteNextId+' localNextId='+localNextId+' — 適用前にバックアップ保存');
+        try{ await idbSet('clockSkewBackup_'+Date.now(), JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(e){}
       }
       await _applyRemoteData(remote);
       setSyncStatus("☁ 最新データ取得・再読込");
