@@ -1784,7 +1784,18 @@ async function syncPull(){
     const remote=await res.json();
     if(!remote||!remote._syncAt) return;
     const localAt=D._syncAt||0, remoteAt=remote._syncAt||0;
+    const localNextId=D.gtd?.nextId||1;
+    const remoteNextId=remote.gtd?.nextId||1;
     if(remoteAt>localAt){
+      // クロックスキュー対策: リモートのタイムスタンプが新しくても、
+      // nextIdがローカルより大幅に古い場合は別デバイスの時計ズレと判定してブロック
+      // （削除は nextId を変えないため、正当な削除操作はここで止まらない）
+      if(remoteNextId<localNextId-3){
+        setSyncStatus("⚠ タイムスタンプ矛盾—ローカルを保護してサーバー修正");
+        console.warn('[VISGO] syncPullブロック: remoteAt新しいがnextId古い remote='+remoteNextId+' local='+localNextId);
+        syncPushNow(); // ローカルの正しいデータでサーバーを上書き修正
+        return;
+      }
       await _applyRemoteData(remote);
       setSyncStatus("☁ 最新データ取得・再読込");
       setTimeout(()=>location.reload(),600);
