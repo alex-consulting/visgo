@@ -1288,6 +1288,10 @@ function parseIcalEvents(text){
     const untilDate=untilStr?parseIcalDate(untilStr):null;
     const duration=ev.end?ev.end.getTime()-ev.start.getTime():3600000;
     const exdates=ev.exdates||[];
+    // BYDAY解析（WEEKLY+BYDAYの曜日指定繰り返しに対応）
+    const _byDayRaw=(ev.rrule.match(/BYDAY=([^;]+)/)||[])[1]||'';
+    const _dowMap={SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+    const byDays=_byDayRaw?_byDayRaw.split(',').map(s=>_dowMap[s.replace(/^[+-]?\d+/,'').trim()]).filter(d=>d!==undefined):[];
     let cur=new Date(ev.start); let n=0; let added=0;
     // 大量の過去発生をスキップ（3000回制限に引っかかるバグを防ぐ）
     if(cur<winStart){
@@ -1308,7 +1312,28 @@ function parseIcalEvents(text){
     while(cur<=winEnd&&n-count<3000){
       if(untilDate&&cur>untilDate) break;
       if(count&&n>=count) break;
-      if(cur>=winStart&&!exdates.includes(cur.toDateString())){
+      if(freq==='WEEKLY'&&byDays.length>0){
+        // BYDAY展開：この週サイクルの指定曜日すべてを生成
+        for(const dow of byDays){
+          const diff=(dow-cur.getDay()+7)%7;
+          const occ=new Date(cur);
+          occ.setDate(occ.getDate()+diff);
+          if(occ<ev.start||occ<winStart||occ>winEnd) continue;
+          if(untilDate&&occ>untilDate) continue;
+          if(exdates.includes(occ.toDateString())) continue;
+          const excKey=ev.uid?ev.uid+'|'+occ.toDateString():null;
+          const exc=excKey?exMap.get(excKey):null;
+          if(exc){
+            expanded.push(Object.assign({},exc,{calIdx:ev.calIdx}));
+          } else {
+            const o=Object.assign({},ev);
+            o.start=new Date(occ);
+            o.end=new Date(occ.getTime()+duration);
+            expanded.push(o);
+          }
+          added++;
+        }
+      } else if(cur>=winStart&&!exdates.includes(cur.toDateString())){
         const excKey=ev.uid?ev.uid+'|'+cur.toDateString():null;
         const exc=excKey?exMap.get(excKey):null;
         if(exc){
