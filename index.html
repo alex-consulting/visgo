@@ -2330,11 +2330,16 @@ function renderDreams(){
   function sgCardHtml(sg, d){
     const month=sg.yearMonth?sg.yearMonth+'年':'—';
     const catCls=dreamCatClass(d.category);
-    return `<div class="sg-card${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')" style="display:flex;align-items:center;gap:8px">
-      ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''} 
-      <span class="sg-ym" style="flex:0 0 auto">${month}</span>
-      <span class="sg-text${sg.done?' sg-text-done':''}" style="flex:1;min-width:0">${esc(sg.text)}</span>
-      ${sg.image?`<img src="${sg.image}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex:0 0 auto${sg.done?';opacity:.5':''}" alt="">`:''}
+    const imgHtml=sg.image?`<img src="${sg.image}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex:0 0 auto;margin-top:2px${sg.done?';opacity:.5':''}" alt="">`:''
+    return `<div class="sg-card${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')" style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px">
+        <div style="display:flex;align-items:center;gap:6px">
+          ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''} 
+          <span class="sg-ym" style="flex:0 0 auto">${month}</span>
+        </div>
+        <span class="sg-text${sg.done?' sg-text-done':''}" style="white-space:normal;line-height:1.45">${esc(sg.text)}</span>
+      </div>
+      ${imgHtml}
     </div>`;
   }
 
