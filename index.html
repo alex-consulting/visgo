@@ -4150,10 +4150,14 @@ function _renderFolderEditList(){
   list.innerHTML=_feItems.map((item,i)=>{
     const isAnn=isProj&&item.name===ANNUAL_PROJECT;
     const cdot=isProj?`<span class="fe-cdot" style="background:${item.color||'#cbd5e1'}" onclick="event.stopPropagation();openFeColorPicker(event,${i})" title="色を変更"></span>`:'';
-    const del=isAnn?'<span style="width:19px;flex:0 0 auto"></span>':`<button class="fe-del-btn" onclick="_collectFeInputs();feDeleteItem(${i})" title="削除">✕</button>`;
-    const updn=`<div class="fe-updown"><button onclick="event.stopPropagation();event.preventDefault();_collectFeInputs();feMoveItem(${i},-1)" title="上へ">▲</button><button onclick="event.stopPropagation();event.preventDefault();_collectFeInputs();feMoveItem(${i},1)" title="下へ">▼</button></div>`;
-    return `<div class="fe-item" data-idx="${i}">${updn}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${del}</div>`;
+    const del=isAnn
+      ?'<span style="width:28px;flex:0 0 auto"></span>'
+      :`<button class="fe-del-btn" onclick="event.stopPropagation();_collectFeInputs();feDeleteItem(${i})" title="削除"
+          style="width:28px;height:28px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:18px;font-weight:300;line-height:1;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0">−</button>`;
+    const handle=`<span class="fe-drag" title="ドラッグで並べ替え" style="font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:0 4px;user-select:none;touch-action:none">≡</span>`;
+    return `<div class="fe-item" draggable="true" data-idx="${i}">${del}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${handle}</div>`;
   }).join('');
+  _attachFeDrag();
 }
 function feMoveItem(i,dir){
   const to=i+dir;
@@ -4162,7 +4166,6 @@ function feMoveItem(i,dir){
   _renderFolderEditList();
 }
 function feDeleteItem(i){
-  if(!confirm('「'+_feItems[i].name+'」を削除しますか？')) return;
   _feItems.splice(i,1);
   _renderFolderEditList();
 }
@@ -4273,9 +4276,10 @@ function maybeShowOnboarding(){
 }
 function _attachFeDrag(){
   let dragIdx=null;
-  document.querySelectorAll('#folderEditList .fe-item').forEach((el,i)=>{
+  const items=document.querySelectorAll('#folderEditList .fe-item');
+  items.forEach((el,i)=>{
+    // --- デスクトップ drag ---
     el.addEventListener('dragstart',e=>{
-      // ドラッグハンドルかどうか確認
       if(!e.target.classList.contains('fe-drag')&&!e.target.closest('.fe-drag')){
         e.preventDefault(); return;
       }
@@ -4293,6 +4297,49 @@ function _attachFeDrag(){
       _feItems.splice(i,0,moved);
       dragIdx=null; _renderFolderEditList();
     });
+    // --- タッチ drag（スマホ対応） ---
+    const handle=el.querySelector('.fe-drag');
+    if(!handle) return;
+    let touchDragIdx=null, _placeholder=null;
+    handle.addEventListener('touchstart',e=>{
+      e.stopPropagation();
+      _collectFeInputs();
+      touchDragIdx=i;
+      el.classList.add('fe-dragging');
+      _placeholder=document.createElement('div');
+      _placeholder.style.cssText='height:'+el.offsetHeight+'px;background:var(--fill2);border-radius:8px;border:2px dashed var(--blue);margin-bottom:4px';
+    },{passive:true});
+    handle.addEventListener('touchmove',e=>{
+      e.preventDefault();
+      const touch=e.touches[0];
+      const list=document.getElementById('folderEditList');
+      const targets=[...list.querySelectorAll('.fe-item:not(.fe-dragging)')];
+      let insertBefore=null, overEl=null;
+      for(const t of targets){
+        const r=t.getBoundingClientRect();
+        if(touch.clientY<r.top+r.height/2){ insertBefore=t; break; }
+        overEl=t;
+      }
+      if(insertBefore) list.insertBefore(_placeholder,insertBefore);
+      else if(overEl) overEl.after(_placeholder);
+      else list.appendChild(_placeholder);
+    },{passive:false});
+    handle.addEventListener('touchend',e=>{
+      el.classList.remove('fe-dragging');
+      if(_placeholder&&_placeholder.parentNode){
+        const list=document.getElementById('folderEditList');
+        const allItems=[...list.querySelectorAll('.fe-item')];
+        const toIdx=[...list.children].indexOf(_placeholder);
+        _placeholder.remove();
+        if(touchDragIdx!==null&&toIdx>=0){
+          const moved=_feItems.splice(touchDragIdx,1)[0];
+          const insertAt=toIdx>touchDragIdx?toIdx-1:toIdx;
+          _feItems.splice(Math.max(0,Math.min(insertAt,_feItems.length)),0,moved);
+        }
+      }
+      touchDragIdx=null; _placeholder=null;
+      _renderFolderEditList();
+    },{passive:true});
   });
 }
 
