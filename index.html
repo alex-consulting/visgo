@@ -1567,7 +1567,7 @@ const BACKUP_MAX_DAYS=7;
 
 async function autoBackup(){
   try{
-    const today=new Date().toISOString().slice(0,10);
+    const _d=new Date(); const today=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
     const backups=(await idbGet(BACKUP_IDB_KEY))||[];
     if(backups.length>0&&backups[0].date===today) return; // 今日は取得済み
     const {goalImages,missionImages,...rest}=D;
@@ -1584,7 +1584,7 @@ async function autoBackup(){
 async function manualBackupToDevice(){
   try{
     const now=new Date();
-    const dateLabel=now.toISOString().slice(0,10);
+    const dateLabel=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const timeLabel=now.toTimeString().slice(0,5); // HH:MM
     const backups=(await idbGet(BACKUP_IDB_KEY))||[];
     const {goalImages,missionImages,...rest}=D;
