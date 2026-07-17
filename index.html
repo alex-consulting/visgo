@@ -1601,7 +1601,7 @@ async function manualBackupToDevice(){
     };
     backups.unshift({date:'手動 '+dateLabel+' '+timeLabel,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot,manual:true});
     await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS*3)); // 手動分は最大21件
-    renderAutoBackupList();
+    renderBackupList();
     toast('端末内バックアップに保存しました（'+timeLabel+'）');
   }catch(e){ toast('保存失敗: '+e.message); }
 }
