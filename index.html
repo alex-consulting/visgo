@@ -2353,24 +2353,21 @@ function renderDreams(){
         <span class="dream-title">${esc(d.title)}</span>
       </div>
       ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
-      ${(()=>{const pct=dreamProgress(d);const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];if(!sgs.length) return '';
-        const sgImgs=sgs.filter(s=>s.image);
-        const imgStrip=sgImgs.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${sgImgs.map(s=>`<img src="${s.image}" style="width:40px;height:40px;object-fit:cover;border-radius:7px${s.done?';opacity:.55':''}" title="${esc(s.text)}">`).join('')}</div>`:'';
-        return `
+      ${(()=>{const pct=dreamProgress(d);const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];if(!sgs.length) return '';return `
       <div class="dream-progress-wrap">
         <div class="dream-progress-label"><span>🚩ステップ目標 ${sgs.filter(s=>s.done).length}/${sgs.length}</span><span>${pct}%</span></div>
         <div class="dream-progress-bar"><div class="dream-progress-fill" style="width:${pct}%"></div></div>
-        ${imgStrip}
       </div>`;})()}
     </div>`;
   }
   function sgCardHtml(sg, d){
     const month=sg.yearMonth?sg.yearMonth+'年':'—';
     const catCls=dreamCatClass(d.category);
-    return `<div class="sg-card${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')">
-      ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''}
-      <span class="sg-ym">${month}</span>
-      <span class="sg-text${sg.done?' sg-text-done':''}">${esc(sg.text)}</span>
+    return `<div class="sg-card${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')" style="display:flex;align-items:center;gap:8px">
+      ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''} 
+      <span class="sg-ym" style="flex:0 0 auto">${month}</span>
+      <span class="sg-text${sg.done?' sg-text-done':''}" style="flex:1;min-width:0">${esc(sg.text)}</span>
+      ${sg.image?`<img src="${sg.image}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex:0 0 auto${sg.done?';opacity:.5':''}" alt="">`:''}
     </div>`;
   }
 
