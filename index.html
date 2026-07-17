@@ -540,18 +540,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .rw-create-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#30D158,#34c7a8);color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:700;width:100%;justify-content:center;margin:4px 0 2px}
 .rw-create-btn:hover{opacity:.9}
 #rwBg .gm-dur-btn.rw-sel{background:var(--blue);color:#fff;border-color:var(--blue)}
-/* ---- Demo mode ---- */
-#demoBanner{position:fixed;bottom:0;left:0;right:0;z-index:9000;background:linear-gradient(90deg,#ff6987,#ff9f43);color:#fff;text-align:center;font-size:12px;font-weight:700;padding:4px 12px;padding-bottom:calc(4px + env(safe-area-inset-bottom));letter-spacing:.04em;display:none}
-#demoBanner.show{display:block}
-.demo-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
-.demo-toggle-row span{font-size:13px;color:var(--navy);font-weight:600}
-.demo-switch{position:relative;width:44px;height:26px;flex:0 0 44px}
-.demo-switch input{opacity:0;width:0;height:0}
-.demo-switch-slider{position:absolute;inset:0;background:var(--line);border-radius:13px;cursor:pointer;transition:background .2s}
-.demo-switch-slider::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.demo-switch input:checked+.demo-switch-slider{background:#ff6987}
-.demo-switch input:checked+.demo-switch-slider::before{transform:translateX(18px)}
-/* ---- Today timeline ---- */
 /* ---- Today timeline ---- */
 .tl-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
 .tl-panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--blue);cursor:pointer;user-select:none}
@@ -1002,18 +990,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <div style="margin-top:8px">
         <button onclick="gcalRefresh()" style="font-size:12px;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--sub);cursor:pointer">🔄 Gカレンダーを今すぐ更新</button>
       </div>
-      <div id="demoModeSection" style="display:none">
-      <p class="settings-section">デモモード</p>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
-        サンプルデータで画面をプレビューできます。オンにしている間は保存されず、オフにすると元のデータに戻ります。
-      </div>
-      <div class="demo-toggle-row">
-        <span>🎭 デモモード</span>
-        <label class="demo-switch">
-          <input type="checkbox" id="demoModeCheck" onchange="toggleDemoMode(this.checked)">
-          <span class="demo-switch-slider"></span>
-        </label>
-      </div>
       </div>
       <p class="settings-section">手動バックアップ</p>
       <div class="settings-row">
@@ -1061,7 +1037,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
   🆕 新しいバージョンがあります
   <button onclick="location.reload(true)" style="background:var(--card);color:var(--text);border:none;border-radius:12px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">更新</button>
 </div>
-<div id="demoBanner">🎭 デモモード表示中 — データは保存されません</div>
 <div class="toast" id="toast"></div>
 <div id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg" alt=""></div>
 <div id="gtdModalBg" onclick="if(event.target===this)closeGtdModal()">
@@ -1568,7 +1543,6 @@ let goalImagesReady=false; // IDBからの初回ロード完了前にsave()がgo
 let missionImagesReady=false;
 let dreamImagesReady=false;
 function save(){
-  if(_demoMode){ document.getElementById("saveState").textContent="🎭 デモ中"; return; }
   clearTimeout(saveTimer);
   document.getElementById("saveState").textContent="保存中…";
   // syncPullによる上書きを防ぐためローカルタイムスタンプを即時更新
@@ -1598,7 +1572,6 @@ const BACKUP_IDB_KEY='autoBackups';
 const BACKUP_MAX_DAYS=7;
 
 async function autoBackup(){
-  if(_demoMode) return;
   try{
     const today=new Date().toISOString().slice(0,10);
     const backups=(await idbGet(BACKUP_IDB_KEY))||[];
@@ -1615,7 +1588,6 @@ async function autoBackup(){
 }
 
 async function manualBackupToDevice(){
-  if(_demoMode){ toast('デモ中は保存できません'); return; }
   try{
     const now=new Date();
     const dateLabel=now.toISOString().slice(0,10);
@@ -1716,7 +1688,6 @@ function syncPush(){
 }
 // リモートデータをD・IDB・localStorageに適用する共通処理
 async function _applyRemoteData(remote){
-  if(_demoMode) return; // デモ中はリモートデータを適用しない
   // ── データ劣化チェック ──────────────────────────────────────
   // リモートのタスク数がローカルより大幅に少ない場合は適用をブロック
   const localTaskCount=Array.isArray(D.gtd?.tasks)?D.gtd.tasks.length:0;
@@ -1745,7 +1716,6 @@ async function _applyRemoteData(remote){
   localStorage.setItem(LS_KEY,JSON.stringify(lsData));
 }
 async function syncPushNow(){
-  if(_demoMode) return; // デモ中はサーバーに送信しない
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
   // キャッシュクリア直後（localStorageが空だった起動）はサーバーを上書きしない
   if(!dataLoadedFromStorage){
@@ -1833,7 +1803,6 @@ async function syncPushNow(){
   }catch(e){ D._syncAt=oldSyncAt; setSyncStatus("⚠ 同期失敗"); }
 }
 async function syncPull(){
-  if(_demoMode) return; // デモ中は同期しない
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
   try{
     const res=await fetch(WORKER_URL,{
@@ -1952,7 +1921,6 @@ async function doLogin(){
   updateLoginIdDisplay();
 }
 async function syncNow(){
-  if(_demoMode){ toast("⚠ デモ中は同期できません"); return; }
   if(!getSyncCode()){ setSyncStatus("⚠ ログインが必要です"); return; }
   setSyncStatus("⬆⬇ 同期中…");
   try{
@@ -2828,7 +2796,7 @@ function ssRoutineAdd(){
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
 function openDreamProfile(){
   const fld=(lbl,html)=>`<div class="ss-field"><label class="ss-lbl">${lbl}</label>${html}</div>`;
-  const tog=(lbl,id,val)=>`<div class="ss-field" style="display:flex;align-items:center;justify-content:space-between"><label class="ss-lbl" style="margin:0">${lbl}</label><label class="demo-switch"><input type="checkbox" id="${id}" ${val?'checked':''}><span class="demo-switch-slider"></span></label></div>`;
+  const tog=(lbl,id,val)=>`<div class="ss-field" style="display:flex;align-items:center;justify-content:space-between"><label class="ss-lbl" style="margin:0">${lbl}</label><label style="position:relative;width:44px;height:26px;flex:0 0 44px;display:inline-block"><input type="checkbox" id="${id}" ${val?'checked':''} style="opacity:0;width:0;height:0"><span style="position:absolute;inset:0;background:var(--line);border-radius:13px;cursor:pointer;transition:background .2s" onclick="this.style.background=document.getElementById('${id}').checked?'var(--blue)':'var(--line)'"></span></label></div>`;
   document.getElementById('sheetSecTitle').textContent='基本情報';
   document.getElementById('sheetSecBody').innerHTML=
     fld('生年月日',`<input class="ss-inp" id="ss-birthday" type="date" value="${esc(D.profile.birthday||'')}">`)+
@@ -3630,129 +3598,6 @@ function closeGtdModal(){
   gtdModalId=null;
 }
 
-/* ============ デモモード ============ */
-let _demoMode=false;
-let _realD=null;
-let _realGcalUrls=null;
-const DEMO_DATA={
-  meta:{name:"山田 太郎",writeDate:"2026-01-05",targetDate:"2026-12-31",updateDate:"2026-06-01"},
-  goal:"2026年末までにサブ4でフルマラソンを完走し、家族との時間を大切にしながら年収1000万円を達成する",
-  goalNote:"達成したら家族でハワイ旅行🌺",
-  goalCriteria:[
-    {label:"フルマラソンタイム",targetNum:"4",unit:"時間以内",currentNum:"4.5"},
-    {label:"年収",targetNum:"1000",unit:"万円",currentNum:"720"},
-    {label:"月間走行距離",targetNum:"200",unit:"km",currentNum:"145"}
-  ],
-  zones:["","","",""],
-  service:{family:"毎週末は家族と過ごす時間を確保する",society:"ランニングコミュニティを通じて地域を元気にする"},
-  quad:[
-    {title:"社会・他者（有形）",items:["ランニング教室の開催","地域マラソン大会の企画運営","SNSで走る楽しさを発信"]},
-    {title:"自分（有形）",items:["サブ4達成","年収1000万円","体重65kg以下をキープ"]},
-    {title:"社会・他者（無形）",items:["仲間を励ます存在になる","家族の笑顔を守る"]},
-    {title:"自分（無形）",items:["自己効力感の向上","規律と自由の両立","ポジティブな自己イメージ"]}
-  ],
-  routines:[
-    {id:1,text:"朝5時起き・ランニング30分"},
-    {id:2,text:"読書20分（ビジネス書・自己啓発）"},
-    {id:3,text:"夜の振り返り日記5分"},
-    {id:4,text:"週次レビュー（日曜30分）"}
-  ],
-  nextRoutineId:5,
-  milestones:[],
-  deadlines:[
-    {id:1,month:"2026-03",text:"大阪マラソン出場（ペース確認）",done:true},
-    {id:2,month:"2026-06",text:"中間レビュー・収入目標チェック",done:false},
-    {id:3,month:"2026-11",text:"神戸マラソン出場（本番）",done:false},
-    {id:4,month:"2026-12",text:"年末振り返りと来年計画",done:false}
-  ],
-  nextDeadlineId:5,
-  supports:[
-    {who:"田中コーチ",what:"月2回のランニング指導"},
-    {who:"妻・佐智子",what:"食事管理と精神的サポート"},
-    {who:"",what:""}
-  ],
-  analysis:{
-    rows:["心・メンタル","技・スキル","体・健康","生活"],
-    success:["ポジティブ思考が定着","営業スキル向上","体重3kg減","早起き習慣定着"],
-    failure:["モチベーション波あり","時間管理が課題","",""],
-    problem:["繁忙期に練習が途切れる","収入の波が激しい","",""],
-    solution:["週3回の最低ラインを設定","副収入源を確保する","",""]
-  },
-  goalImages:[],missionImages:[],
-  profile:{birthday:'1985-04-15',lifespan:90},
-  weekly:{},
-  gcalUrls:[],
-  dreams:{
-    nextId:5,
-    missionTitle:"家族と自分の可能性を最大限に引き出す",
-    mission:"毎日の小さな積み重ねで夢を現実にする。家族の笑顔を守りながら、自分自身も成長し続ける存在でいる。",
-    items:[
-      {id:1,title:"GLB（Mercedes）を購入する",category:"Have",note:"黒のGLBに乗って家族でドライブ。2028年目標。",steps:["現在の車を下取り査定","試乗・グレード決定","資金計画を立てる"],stepGoals:["","",""]},
-      {id:2,title:"フルマラソンをサブ4で完走",category:"Do",note:"2026年神戸マラソンで達成する",steps:["月間200kmをコンスタントに走る","10月に30kmレースで感覚確認","レース2週間前はテーパリング"],stepGoals:["","",""]},
-      {id:3,title:"家族でハワイ旅行",category:"Do",note:"マラソン完走後のご褒美。3泊5日。",steps:["パスポート更新","旅行予算を確保","ホテルとフライト予約"],stepGoals:["","",""]},
-      {id:4,title:"書籍を出版する",category:"Do",note:"ランニングと仕事の両立をテーマに",steps:["ブログで実績を作る","出版社にアプローチ","原稿執筆"],stepGoals:["","",""]}
-    ]
-  },
-  gtd:{
-    nextId:20,
-    projects:["🎯年間目標達成","仕事","プライベート"],
-    categories:["緊急","重要","長期"],
-    projectColors:{"仕事":"#5856D6","プライベート":"#30D158"},
-    tasks:[
-      {id:1,text:"神戸マラソンのエントリー",status:"inbox",project:"🎯年間目標達成",categories:["緊急"],deadline:"2026-07-15",important:true,urgent:true,done:false,routine:false,recur:"",dur:"15",created:Date.now()-86400000*3},
-      {id:2,text:"週次レビュー（今週の振り返り）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-22",important:true,urgent:false,done:false,routine:true,recur:"weekly",dur:"30",created:Date.now()-86400000*7,routineItems:[{id:101,text:"今週のランニング距離を記録",done:true},{id:102,text:"収入・支出を確認",done:false},{id:103,text:"来週の計画を立てる",done:false}]},
-      {id:3,text:"Q2収入レポートを作成",status:"inbox",project:"仕事",categories:["重要"],deadline:"2026-06-30",important:true,urgent:false,done:false,routine:false,recur:"",dur:"60",created:Date.now()-86400000*2},
-      {id:4,text:"子供の参観日に参加",status:"inbox",project:"プライベート",categories:[],deadline:"2026-06-20",important:true,urgent:true,done:false,routine:false,recur:"",dur:"",created:Date.now()-86400000},
-      {id:5,text:"新しいランニングシューズを購入",status:"inbox",project:"プライベート",categories:[],deadline:"",important:false,urgent:false,done:false,routine:false,recur:"",dur:"",created:Date.now()},
-      {id:6,text:"クライアントAの提案書作成",status:"inbox",project:"仕事",categories:["緊急","重要"],deadline:"2026-06-19",important:true,urgent:true,done:false,routine:false,recur:"",dur:"60",created:Date.now()-86400000*4},
-      {id:7,text:"ブログ記事「ランニングと仕事の両立」を投稿",status:"inbox",project:"仕事",categories:["長期"],deadline:"2026-06-25",important:false,urgent:false,done:false,routine:false,recur:"",dur:"30",created:Date.now()},
-      {id:8,text:"朝ランニング（今日分）",status:"inbox",project:"🎯年間目標達成",categories:[],deadline:"2026-06-19",important:true,urgent:false,done:true,routine:true,recur:"daily",dur:"30",created:Date.now()-86400000*30}
-    ]
-  },
-  ow:{
-    goal:"2026年末にフルマラソンサブ4・年収1000万円を達成する",
-    themes:["【心】\n自己信頼","【心】\nポジティブ思考","【心】\nストレス管理",
-            "【技】\n営業力UP","【技】\nランニング技術",
-            "【体】\n体力強化","【体】\n栄養管理","【体】\n睡眠の質"],
-    actions:[
-      ["毎日振り返り日記","週次レビュー","メンタルコーチ","","","","",""],
-      ["感謝日記","ポジティブ言葉","","","","","",""],
-      ["瞑想5分","深呼吸","","","","","",""],
-      ["提案書テンプレ","ロープレ練習","クライアント増","","","","",""],
-      ["インターバル走","LSD","フォーム改善","シューズ選び","","","",""],
-      ["週5回ラン","体幹トレーニング","ストレッチ","","","","",""],
-      ["プロテイン摂取","糖質管理","","","","","",""],
-      ["22時就寝","睡眠計測","","","","","",""]
-    ]
-  },
-  _syncAt:0
-};
-
-function toggleDemoMode(on){
-  if(on){
-    if(!confirm("デモモードに切り替えます。現在のデータは一時的に非表示になり、サンプルデータが表示されます。よろしいですか？")) {
-      document.getElementById('demoModeCheck').checked=false; return;
-    }
-    autoBackup(); // デモ前にバックアップ
-    _realD=JSON.parse(JSON.stringify(D));
-    _realGcalUrls=[...gcalUrls];
-    _demoMode=true;
-    D=JSON.parse(JSON.stringify(DEMO_DATA));
-    gcalUrls=[];  // Googleカレンダー予定を非表示
-    document.getElementById('demoBanner').classList.add('show');
-    document.body.classList.add('demo-mode');
-  } else {
-    if(_realD) D=_realD;
-    if(_realGcalUrls) gcalUrls=_realGcalUrls;
-    _realD=null; _realGcalUrls=null;
-    _demoMode=false;
-    document.getElementById('demoBanner').classList.remove('show');
-    document.body.classList.remove('demo-mode');
-  }
-  closeSettings();
-  showTab('sheet');
-  toast(_demoMode?'🎭 デモモード ON':'✅ 実データに戻りました');
-}
 
 /* ============ ルーティンウィザード ============ */
 let rwStep=1;
@@ -5306,10 +5151,6 @@ function bindGTD(root){
 /* ================= 設定モーダル ================= */
 function openSettings(){
   document.getElementById('settingsOverlay').style.display='flex';
-  const demoSec=document.getElementById('demoModeSection');
-  if(demoSec) demoSec.style.display=syncCfg.syncId==='moriyamakoto'?'block':'none';
-  const demoChk=document.getElementById('demoModeCheck');
-  if(demoChk) demoChk.checked=_demoMode;
   gcalRenderUrls();
   renderServerBackupList();
   renderBackupList();
