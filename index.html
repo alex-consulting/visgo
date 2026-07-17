@@ -1017,7 +1017,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       </div>
       <p class="settings-section">手動バックアップ</p>
       <div class="settings-row">
-        <button class="settings-btn" onclick="exportJSON()">📤 保存</button>
+        <button class="settings-btn" onclick="manualBackupToDevice()">📱 端末に保存</button>
+        <button class="settings-btn" onclick="exportJSON()">💾 ファイル出力</button>
         <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 読込</button>
       </div>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
@@ -1612,6 +1613,26 @@ async function autoBackup(){
     backups.unshift({date:today,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot});
     await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS));
   }catch(e){}
+}
+
+async function manualBackupToDevice(){
+  if(_demoMode){ toast('デモ中は保存できません'); return; }
+  try{
+    const now=new Date();
+    const dateLabel=now.toISOString().slice(0,10);
+    const timeLabel=now.toTimeString().slice(0,5); // HH:MM
+    const backups=(await idbGet(BACKUP_IDB_KEY))||[];
+    const {goalImages,missionImages,...rest}=D;
+    const snapshot={
+      ...rest,
+      dreams:{...rest.dreams,
+        items:(rest.dreams?.items||[]).map(({image,...r})=>r)}
+    };
+    backups.unshift({date:'手動 '+dateLabel+' '+timeLabel,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot,manual:true});
+    await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS*3)); // 手動分は最大21件
+    renderAutoBackupList();
+    toast('端末内バックアップに保存しました（'+timeLabel+'）');
+  }catch(e){ toast('保存失敗: '+e.message); }
 }
 
 async function renderServerBackupList(){
