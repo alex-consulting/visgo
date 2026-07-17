@@ -652,8 +652,8 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-del:hover{color:var(--red);background:rgba(255,255,255,.95)}
 .dream-empty{text-align:center;color:var(--sub);padding:40px 0;font-size:14px}
 .dream-mission{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;overflow:hidden}
-.dream-mission-hd{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;cursor:pointer;user-select:none}
-.dream-mission.collapsed .dream-mission-hd{padding:4px 12px}
+.dream-mission-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none}
+.dream-mission.collapsed .dream-mission-hd{padding:5px 14px}
 .dream-mission-hd-left{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--navy);white-space:nowrap}
 .dream-mission-title{font-size:13px;font-weight:600;color:var(--text);flex:1;margin:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dream-mission-title.empty{color:var(--faint);font-weight:400}
@@ -663,9 +663,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dm-img-thumb{height:90px;border-radius:8px;cursor:zoom-in;border:1px solid var(--line)}
 .dm-img-del{position:absolute;top:-5px;right:-5px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0;opacity:0;transition:opacity .15s}
 .dm-img-thumb:hover~.dm-img-del,.dm-img-del:hover{opacity:1}
-.dream-mission-arrow{font-size:18px;color:var(--sub);transition:transform .2s}
+.dream-mission-arrow{font-size:24px;color:var(--sub);transition:transform .2s}
 .dream-mission.collapsed .dream-mission-arrow{transform:rotate(-90deg)}
-.dream-mission-body{padding:0 12px 10px;display:block}
+.dream-mission-body{padding:0 14px 14px;display:block}
 .dream-mission.collapsed .dream-mission-body{display:none}
 .dream-mission-ta{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.7;background:var(--fill);color:var(--text);font-family:inherit;resize:none;overflow:hidden;box-sizing:border-box;min-height:60px}
 .dream-mission-ta:focus{outline:none;border-color:var(--blue);background:var(--card)}
@@ -1017,7 +1017,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       </div>
       <p class="settings-section">手動バックアップ</p>
       <div class="settings-row">
-        <button class="settings-btn" onclick="manualBackupToDevice()">📱 保存</button>
+        <button class="settings-btn" onclick="exportJSON()">📤 保存</button>
         <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 読込</button>
       </div>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
@@ -1288,10 +1288,6 @@ function parseIcalEvents(text){
     const untilDate=untilStr?parseIcalDate(untilStr):null;
     const duration=ev.end?ev.end.getTime()-ev.start.getTime():3600000;
     const exdates=ev.exdates||[];
-    // BYDAY解析（WEEKLY+BYDAYの曜日指定繰り返しに対応）
-    const _byDayRaw=(ev.rrule.match(/BYDAY=([^;]+)/)||[])[1]||'';
-    const _dowMap={SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
-    const byDays=_byDayRaw?_byDayRaw.split(',').map(s=>_dowMap[s.replace(/^[+-]?\d+/,'').trim()]).filter(d=>d!==undefined):[];
     let cur=new Date(ev.start); let n=0; let added=0;
     // 大量の過去発生をスキップ（3000回制限に引っかかるバグを防ぐ）
     if(cur<winStart){
@@ -1312,28 +1308,7 @@ function parseIcalEvents(text){
     while(cur<=winEnd&&n-count<3000){
       if(untilDate&&cur>untilDate) break;
       if(count&&n>=count) break;
-      if(freq==='WEEKLY'&&byDays.length>0){
-        // BYDAY展開：この週サイクルの指定曜日すべてを生成
-        for(const dow of byDays){
-          const diff=(dow-cur.getDay()+7)%7;
-          const occ=new Date(cur);
-          occ.setDate(occ.getDate()+diff);
-          if(occ<ev.start||occ<winStart||occ>winEnd) continue;
-          if(untilDate&&occ>untilDate) continue;
-          if(exdates.includes(occ.toDateString())) continue;
-          const excKey=ev.uid?ev.uid+'|'+occ.toDateString():null;
-          const exc=excKey?exMap.get(excKey):null;
-          if(exc){
-            expanded.push(Object.assign({},exc,{calIdx:ev.calIdx}));
-          } else {
-            const o=Object.assign({},ev);
-            o.start=new Date(occ);
-            o.end=new Date(occ.getTime()+duration);
-            expanded.push(o);
-          }
-          added++;
-        }
-      } else if(cur>=winStart&&!exdates.includes(cur.toDateString())){
+      if(cur>=winStart&&!exdates.includes(cur.toDateString())){
         const excKey=ev.uid?ev.uid+'|'+cur.toDateString():null;
         const exc=excKey?exMap.get(excKey):null;
         if(exc){
@@ -1614,26 +1589,6 @@ async function autoBackup(){
   }catch(e){}
 }
 
-async function manualBackupToDevice(){
-  if(_demoMode){ toast('デモ中は保存できません'); return; }
-  try{
-    const now=new Date();
-    const dateLabel=now.toISOString().slice(0,10);
-    const timeLabel=now.toTimeString().slice(0,5); // HH:MM
-    const backups=(await idbGet(BACKUP_IDB_KEY))||[];
-    const {goalImages,missionImages,...rest}=D;
-    const snapshot={
-      ...rest,
-      dreams:{...rest.dreams,
-        items:(rest.dreams?.items||[]).map(({image,...r})=>r)}
-    };
-    backups.unshift({date:'手動 '+dateLabel+' '+timeLabel,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot,manual:true});
-    await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS*3)); // 手動分は最大21件
-    renderAutoBackupList();
-    toast('端末内バックアップに保存しました（'+timeLabel+'）');
-  }catch(e){ toast('保存失敗: '+e.message); }
-}
-
 async function renderServerBackupList(){
   const el=document.getElementById('serverBackupList'); if(!el) return;
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')){
@@ -1760,45 +1715,6 @@ async function syncPushNow(){
     console.warn('[VISGO] 空データプッシュをブロック: tasks=0, nextId='+pushNextId);
     return;
   }
-  // ── プッシュ前マージ: 他デバイスで追加されたタスク・プロジェクトを統合 ──────────
-  // サーバーのnextIdがローカルより大きければ、知らないタスクが存在する
-  try{
-    const _mergeRes=await fetch(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
-    if(_mergeRes.ok){
-      const _srv=await _mergeRes.json();
-      const _srvNextId=_srv?.gtd?.nextId||1;
-      const _locNextId=D.gtd?.nextId||1;
-      let _merged=false;
-      if(_srvNextId>_locNextId&&Array.isArray(_srv?.gtd?.tasks)){
-        // 自分が知らないIDのタスクをサーバーから取り込む
-        const _localIds=new Set((D.gtd.tasks||[]).map(t=>t.id));
-        const _newTasks=_srv.gtd.tasks.filter(t=>t.id>=_locNextId&&!_localIds.has(t.id));
-        if(_newTasks.length){
-          D.gtd.tasks=[...(D.gtd.tasks||[]),..._newTasks];
-          D.gtd.nextId=_srvNextId;
-          _merged=true;
-          console.log('[VISGO] プッシュ前マージ: '+_newTasks.length+'件のタスクを統合 (nextId '+_locNextId+'→'+_srvNextId+')');
-        }
-      }
-      // プロジェクトのマージ（サーバーにあってローカルにない文字列を追加）
-      if(Array.isArray(_srv?.gtd?.projects)&&Array.isArray(D.gtd?.projects)){
-        const _locProjs=new Set(D.gtd.projects);
-        const _newProjs=_srv.gtd.projects.filter(p=>!_locProjs.has(p));
-        if(_newProjs.length){
-          D.gtd.projects=[...D.gtd.projects,..._newProjs];
-          _merged=true;
-          console.log('[VISGO] プッシュ前マージ: '+_newProjs.length+'件のプロジェクトを統合');
-        }
-      }
-      if(_merged){
-        // マージ内容をlocalStorageに即時反映
-        const _lsMerge=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
-        _lsMerge.gtd=D.gtd;
-        localStorage.setItem(LS_KEY,JSON.stringify(_lsMerge));
-      }
-    }
-  }catch(e){ console.warn('[VISGO] プッシュ前マージ失敗:',e); }
-  // ────────────────────────────────────────────────────────────────────────────
   setSyncStatus("⬆ 同期中…");
   const oldSyncAt=D._syncAt;
   const now=Date.now();
@@ -1844,8 +1760,6 @@ async function syncPull(){
     if(!remote||!remote._syncAt) return;
     const localAt=D._syncAt||0, remoteAt=remote._syncAt||0;
     if(remoteAt>localAt){
-      // リモート適用前に常にローカルデータを緊急バックアップ（上書きによるデータ消失防止）
-      try{ await idbSet('syncOverwriteBackup_'+Date.now(), JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(e){}
       await _applyRemoteData(remote);
       setSyncStatus("☁ 最新データ取得・再読込");
       setTimeout(()=>location.reload(),600);
@@ -2198,17 +2112,8 @@ function renderDmStepGoals(){
         <div class="dm-step-body">
           <input type="text" class="dm-step-text-input${s.done?' dm-step-done-input':''}" value="${esc(s.text)}" placeholder="ステップ目標"
             oninput="dmUpdateStepGoal('${s.id}','text',this.value)">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-            <input type="number" class="dm-step-date" value="${s.yearMonth||''}" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px"
-              onchange="dmUpdateStepGoal('${s.id}','yearMonth',this.value)">
-            ${s.image
-              ? `<div style="position:relative;display:inline-block">
-                   <img src="${s.image}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;display:block;cursor:pointer" onclick="dmPickStepGoalImg('${s.id}')" title="タップで変更">
-                   <button onclick="event.stopPropagation();dmRemoveStepGoalImg('${s.id}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
-                 </div>`
-              : `<button onclick="dmPickStepGoalImg('${s.id}')" style="font-size:12px;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--sub);cursor:pointer;white-space:nowrap">📷</button>`
-            }
-          </div>
+          <input type="number" class="dm-step-date" value="${s.yearMonth||''}" title="目標年" placeholder="年" min="2020" max="2045" style="width:72px"
+            onchange="dmUpdateStepGoal('${s.id}','yearMonth',this.value)">
         </div>
         <button class="dm-step-del" onclick="dmDeleteStepGoal('${s.id}')">✕</button>
       </div>`).join('')
@@ -2258,36 +2163,6 @@ function dmToggleStepGoal(cb,id){
 function dmDeleteStepGoal(id){
   dmStepGoals=dmStepGoals.filter(x=>String(x.id)!==String(id));
   renderDmStepGoals();
-}
-
-let _dmSgImgTargetId=null;
-function dmPickStepGoalImg(id){
-  _dmSgImgTargetId=id;
-  const inp=document.getElementById('dmStepGoalImgInput'); if(inp) inp.click();
-}
-async function dmStepGoalImgChanged(input){
-  const f=input.files[0]; input.value='';
-  if(!f||!_dmSgImgTargetId) return;
-  try{
-    // ステップ目標用：400px以内に圧縮（カード表示はサムネイルサイズ）
-    const url=await new Promise((res,rej)=>{
-      const img=new Image();
-      img.onload=()=>{
-        const MAX=400; let w=img.width,h=img.height;
-        if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
-        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-        cv.getContext('2d').drawImage(img,0,0,w,h);
-        URL.revokeObjectURL(img.src); res(cv.toDataURL('image/jpeg',0.80));
-      };
-      img.onerror=rej; img.src=URL.createObjectURL(f);
-    });
-    const s=dmStepGoals.find(x=>String(x.id)===String(_dmSgImgTargetId));
-    if(s){ s.image=url; renderDmStepGoals(); }
-  }catch(e){ toast('画像の読み込みに失敗しました'); }
-}
-function dmRemoveStepGoalImg(id){
-  const s=dmStepGoals.find(x=>String(x.id)===String(id));
-  if(s){ s.image=null; renderDmStepGoals(); }
 }
 
 function dreamCatClass(cat){
@@ -2353,14 +2228,10 @@ function renderDreams(){
         <span class="dream-title">${esc(d.title)}</span>
       </div>
       ${d.memo?`<div class="dream-memo">🎉 ${esc(d.memo)}</div>`:''}
-      ${(()=>{const pct=dreamProgress(d);const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];if(!sgs.length) return '';
-        const sgImgs=sgs.filter(s=>s.image);
-        const imgStrip=sgImgs.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${sgImgs.map(s=>`<img src="${s.image}" style="width:40px;height:40px;object-fit:cover;border-radius:7px${s.done?';opacity:.55':''}" title="${esc(s.text)}">`).join('')}</div>`:'';
-        return `
+      ${(()=>{const pct=dreamProgress(d);const sgs=Array.isArray(d.stepGoals)?d.stepGoals:[];if(!sgs.length) return '';return `
       <div class="dream-progress-wrap">
         <div class="dream-progress-label"><span>🚩ステップ目標 ${sgs.filter(s=>s.done).length}/${sgs.length}</span><span>${pct}%</span></div>
         <div class="dream-progress-bar"><div class="dream-progress-fill" style="width:${pct}%"></div></div>
-        ${imgStrip}
       </div>`;})()}
     </div>`;
   }
@@ -2490,7 +2361,6 @@ function openDreamModal(id){
     <div class="dm-field">
       <label>🚩 ステップ目標</label>
       <div class="dm-step-list" id="dmStepGoalList"></div>
-      <input type="file" id="dmStepGoalImgInput" accept="image/*" style="display:none" onchange="dmStepGoalImgChanged(this)">
       <div class="dm-step-addrow sg-row">
         <input type="number" id="dmStepGoalMonth" title="目標年" placeholder="年" min="2020" max="2045">
         <input type="text" id="dmStepGoalInput" placeholder="ステップ目標を追加..."
@@ -4194,14 +4064,10 @@ function _renderFolderEditList(){
   list.innerHTML=_feItems.map((item,i)=>{
     const isAnn=isProj&&item.name===ANNUAL_PROJECT;
     const cdot=isProj?`<span class="fe-cdot" style="background:${item.color||'#cbd5e1'}" onclick="event.stopPropagation();openFeColorPicker(event,${i})" title="色を変更"></span>`:'';
-    const del=isAnn
-      ?'<span style="width:28px;flex:0 0 auto"></span>'
-      :`<button class="fe-del-btn" onclick="event.stopPropagation();_collectFeInputs();feDeleteItem(${i})" title="削除"
-          style="width:28px;height:28px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:18px;font-weight:300;line-height:1;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0">−</button>`;
-    const handle=`<span class="fe-drag" title="ドラッグで並べ替え" style="font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:0 4px;user-select:none;touch-action:none">≡</span>`;
-    return `<div class="fe-item" draggable="true" data-idx="${i}">${del}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${handle}</div>`;
+    const del=isAnn?'<span style="width:19px;flex:0 0 auto"></span>':`<button class="fe-del-btn" onclick="_collectFeInputs();feDeleteItem(${i})" title="削除">✕</button>`;
+    const updn=`<div class="fe-updown"><button onclick="event.stopPropagation();event.preventDefault();_collectFeInputs();feMoveItem(${i},-1)" title="上へ">▲</button><button onclick="event.stopPropagation();event.preventDefault();_collectFeInputs();feMoveItem(${i},1)" title="下へ">▼</button></div>`;
+    return `<div class="fe-item" data-idx="${i}">${updn}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${del}</div>`;
   }).join('');
-  _attachFeDrag();
 }
 function feMoveItem(i,dir){
   const to=i+dir;
@@ -4210,6 +4076,7 @@ function feMoveItem(i,dir){
   _renderFolderEditList();
 }
 function feDeleteItem(i){
+  if(!confirm('「'+_feItems[i].name+'」を削除しますか？')) return;
   _feItems.splice(i,1);
   _renderFolderEditList();
 }
@@ -4320,10 +4187,9 @@ function maybeShowOnboarding(){
 }
 function _attachFeDrag(){
   let dragIdx=null;
-  const items=document.querySelectorAll('#folderEditList .fe-item');
-  items.forEach((el,i)=>{
-    // --- デスクトップ drag ---
+  document.querySelectorAll('#folderEditList .fe-item').forEach((el,i)=>{
     el.addEventListener('dragstart',e=>{
+      // ドラッグハンドルかどうか確認
       if(!e.target.classList.contains('fe-drag')&&!e.target.closest('.fe-drag')){
         e.preventDefault(); return;
       }
@@ -4341,49 +4207,6 @@ function _attachFeDrag(){
       _feItems.splice(i,0,moved);
       dragIdx=null; _renderFolderEditList();
     });
-    // --- タッチ drag（スマホ対応） ---
-    const handle=el.querySelector('.fe-drag');
-    if(!handle) return;
-    let touchDragIdx=null, _placeholder=null;
-    handle.addEventListener('touchstart',e=>{
-      e.stopPropagation();
-      _collectFeInputs();
-      touchDragIdx=i;
-      el.classList.add('fe-dragging');
-      _placeholder=document.createElement('div');
-      _placeholder.style.cssText='height:'+el.offsetHeight+'px;background:var(--fill2);border-radius:8px;border:2px dashed var(--blue);margin-bottom:4px';
-    },{passive:true});
-    handle.addEventListener('touchmove',e=>{
-      e.preventDefault();
-      const touch=e.touches[0];
-      const list=document.getElementById('folderEditList');
-      const targets=[...list.querySelectorAll('.fe-item:not(.fe-dragging)')];
-      let insertBefore=null, overEl=null;
-      for(const t of targets){
-        const r=t.getBoundingClientRect();
-        if(touch.clientY<r.top+r.height/2){ insertBefore=t; break; }
-        overEl=t;
-      }
-      if(insertBefore) list.insertBefore(_placeholder,insertBefore);
-      else if(overEl) overEl.after(_placeholder);
-      else list.appendChild(_placeholder);
-    },{passive:false});
-    handle.addEventListener('touchend',e=>{
-      el.classList.remove('fe-dragging');
-      if(_placeholder&&_placeholder.parentNode){
-        const list=document.getElementById('folderEditList');
-        const allItems=[...list.querySelectorAll('.fe-item')];
-        const toIdx=[...list.children].indexOf(_placeholder);
-        _placeholder.remove();
-        if(touchDragIdx!==null&&toIdx>=0){
-          const moved=_feItems.splice(touchDragIdx,1)[0];
-          const insertAt=toIdx>touchDragIdx?toIdx-1:toIdx;
-          _feItems.splice(Math.max(0,Math.min(insertAt,_feItems.length)),0,moved);
-        }
-      }
-      touchDragIdx=null; _placeholder=null;
-      _renderFolderEditList();
-    },{passive:true});
   });
 }
 
