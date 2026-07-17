@@ -1760,6 +1760,45 @@ async function syncPushNow(){
     console.warn('[VISGO] 空データプッシュをブロック: tasks=0, nextId='+pushNextId);
     return;
   }
+  // ── プッシュ前マージ: 他デバイスで追加されたタスク・プロジェクトを統合 ──────────
+  // サーバーのnextIdがローカルより大きければ、知らないタスクが存在する
+  try{
+    const _mergeRes=await fetch(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
+    if(_mergeRes.ok){
+      const _srv=await _mergeRes.json();
+      const _srvNextId=_srv?.gtd?.nextId||1;
+      const _locNextId=D.gtd?.nextId||1;
+      let _merged=false;
+      if(_srvNextId>_locNextId&&Array.isArray(_srv?.gtd?.tasks)){
+        // 自分が知らないIDのタスクをサーバーから取り込む
+        const _localIds=new Set((D.gtd.tasks||[]).map(t=>t.id));
+        const _newTasks=_srv.gtd.tasks.filter(t=>t.id>=_locNextId&&!_localIds.has(t.id));
+        if(_newTasks.length){
+          D.gtd.tasks=[...(D.gtd.tasks||[]),..._newTasks];
+          D.gtd.nextId=_srvNextId;
+          _merged=true;
+          console.log('[VISGO] プッシュ前マージ: '+_newTasks.length+'件のタスクを統合 (nextId '+_locNextId+'→'+_srvNextId+')');
+        }
+      }
+      // プロジェクトのマージ（サーバーにあってローカルにない文字列を追加）
+      if(Array.isArray(_srv?.gtd?.projects)&&Array.isArray(D.gtd?.projects)){
+        const _locProjs=new Set(D.gtd.projects);
+        const _newProjs=_srv.gtd.projects.filter(p=>!_locProjs.has(p));
+        if(_newProjs.length){
+          D.gtd.projects=[...D.gtd.projects,..._newProjs];
+          _merged=true;
+          console.log('[VISGO] プッシュ前マージ: '+_newProjs.length+'件のプロジェクトを統合');
+        }
+      }
+      if(_merged){
+        // マージ内容をlocalStorageに即時反映
+        const _lsMerge=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+        _lsMerge.gtd=D.gtd;
+        localStorage.setItem(LS_KEY,JSON.stringify(_lsMerge));
+      }
+    }
+  }catch(e){ console.warn('[VISGO] プッシュ前マージ失敗:',e); }
+  // ────────────────────────────────────────────────────────────────────────────
   setSyncStatus("⬆ 同期中…");
   const oldSyncAt=D._syncAt;
   const now=Date.now();
