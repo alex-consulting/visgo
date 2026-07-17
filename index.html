@@ -4043,7 +4043,7 @@ function _renderFolderEditList(){
     const del=isAnn
       ?'<span style="width:28px;flex:0 0 auto"></span>'
       :`<button class="fe-del-btn" onclick="event.stopPropagation();_collectFeInputs();feDeleteItem(${i})" title="削除"
-          style="width:28px;height:28px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:18px;font-weight:300;line-height:1;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0">−</button>`;
+          style="width:28px;height:28px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:18px;font-weight:300;line-height:1;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0;opacity:1">−</button>`;
     const handle=`<span class="fe-drag" title="ドラッグで並べ替え" style="font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:0 4px;user-select:none;touch-action:none">≡</span>`;
     return `<div class="fe-item" draggable="true" data-idx="${i}">${del}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${handle}</div>`;
   }).join('');
