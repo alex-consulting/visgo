@@ -1018,7 +1018,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <p class="settings-section">手動バックアップ</p>
       <div class="settings-row">
         <button class="settings-btn" onclick="manualBackupToDevice()">📱 端末に保存</button>
-        <button class="settings-btn" onclick="exportJSON()">💾 ファイル出力</button>
         <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 読込</button>
       </div>
       <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
