@@ -992,7 +992,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       </div>
       <p class="settings-section">バックアップ</p>
       <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
-        毎日1回、この端末のみに自動保存されます。
+        毎朝自動保存されます。
       </div>
       <button class="settings-btn" onclick="manualBackupToDevice()" style="margin-bottom:8px">📱 今すぐ保存</button>
       <div id="autoBackupList"><div style="font-size:12px;color:var(--sub)">読み込み中…</div></div>
@@ -1649,14 +1649,31 @@ async function renderBackupList(){
       el.innerHTML='<div style="font-size:12px;color:var(--sub);padding:4px 0">まだバックアップがありません。次回保存時に自動作成されます。</div>';
       return;
     }
-    el.innerHTML=backups.map((b,i)=>`
+    // 日付をMM/DD形式に変換するヘルパー
+    const fmtDate=(dateStr)=>{
+      if(!dateStr) return dateStr;
+      // "手動 YYYY-MM-DD HH:MM" または "YYYY-MM-DD" 形式を処理
+      return dateStr.replace(/(\d{4})-(\d{2})-(\d{2})/g,(_,y,m,d)=>`${m}/${d}`);
+    };
+    const latestHtml=(b,i)=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)">
         <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${b.date}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${fmtDate(b.date)}</div>
           <div style="font-size:11px;color:var(--sub)">タスク ${b.tasks}件</div>
         </div>
         <button onclick="restoreFromAutoBackup(${i})" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">この日に戻す</button>
-      </div>`).join('');
+      </div>`;
+    const oldHtml=backups.slice(1).map((b,i)=>latestHtml(b,i+1)).join('');
+    el.innerHTML=latestHtml(backups[0],0)+(backups.length>1?`
+      <div id="backupCollapseToggle" onclick="
+        const c=document.getElementById('backupCollapse');
+        const t=document.getElementById('backupCollapseToggle');
+        const open=c.style.display==='none';
+        c.style.display=open?'block':'none';
+        t.textContent=open?'▲ 閉じる':'▼ 過去のバックアップ（'+(backups.length-1)+'件）';
+      " style="font-size:12px;color:var(--blue);cursor:pointer;padding:6px 0;text-align:center">▼ 過去のバックアップ（${backups.length-1}件）</div>
+      <div id="backupCollapse" style="display:none">${oldHtml}</div>
+    `:'');
   }catch(e){
     el.innerHTML='<div style="font-size:12px;color:var(--sub)">読み込みエラー</div>';
   }
