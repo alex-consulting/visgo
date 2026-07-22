@@ -4026,7 +4026,7 @@ function openFolderEditModal(type){
   _feType=type;
   const colors=D.gtd.projectColors||{};
   const src=type==='project'?D.gtd.projects:D.gtd.categories;
-  _feItems=(src||[]).filter(n=>n&&n.trim()).map(name=>({name,originalName:name,color:colors[name]||''}));
+  _feItems=(src||[]).filter(n=>n&&n.trim()&&n!==ANNUAL_PROJECT).map(name=>({name,originalName:name,color:colors[name]||''}));
   _renderFolderEditList();
   document.getElementById('folderEditOverlay').classList.add('show');
 }
