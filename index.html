@@ -2832,7 +2832,6 @@ function routinesToTodo(){
   if(!items.length){alert('ルーティン行動が登録されていません。');return;}
   // プロジェクトがなければ追加
   if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
-  if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
   const today=dateStr(0);
   let task=D.gtd.tasks.find(t=>t.text==='ルーティン行動'&&t.project===ANNUAL_PROJECT);
   if(task){
@@ -2882,7 +2881,6 @@ function deadlinesToTodo(){
   }
   if(!validItems.length){alert('週間期日行動が登録されていません。');return;}
   if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
-  if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
   // 各行動を個別タスクとして追加（既存の同名タスクは上書き）
   validItems.forEach(it=>{
     let task=D.gtd.tasks.find(t=>t.text===it.text&&t.project===ANNUAL_PROJECT&&!t.recur);
@@ -3440,7 +3438,7 @@ function gmRenderRoutineItems(){
   if(!c) return;
   if(!gmRoutineItems.length){c.innerHTML='<div style="font-size:12px;color:var(--faint);padding:4px 0">サブタスクがありません</div>';return;}
   const t=gtdTask(gtdModalId);
-  const isAnn=t&&t.project===ANNUAL_PROJECT;
+  const isAnn=false;
   c.innerHTML=gmRoutineItems.map((it,i)=>`
     <div class="gm-ri-row" draggable="${isAnn?'false':'true'}"
          ondragstart="riDragStart(${i})" ondragover="riDragOver(event,${i})"
@@ -3559,9 +3557,8 @@ function openGtdModal(id){
   // サブタスク
   gmRoutineItems=JSON.parse(JSON.stringify(t.routineItems||[]));
   gmRenderRoutineItems();
-  // 🎯年間目標達成プロジェクトのタスク制御
-  const isAnnualTask=(t.project===ANNUAL_PROJECT);
-  const isRoutineTask=isAnnualTask&&(t.memo||'').includes('ルーティン行動');
+  const isAnnualTask=false;
+  const isRoutineTask=false;
   // ルーティン行動のみロック（テキスト・プロジェクト・メモ・重要度・繰り返し・所要時間・カテゴリ）
   ['gmText','gmProject','gmMemo'].forEach(id=>{
     const el=document.getElementById(id);
@@ -3969,7 +3966,7 @@ function gtdCard(t){
   const q=gtdQuadrant(t);
   const quadBadge=q?`<span class="kquad kquad-${q}">${q}</span>`:'';
   const textDisp=t.text?esc(t.text):`<span style="color:var(--faint)">タスク内容を入力...</span>`;
-  const annualCardStyle=(t.project===ANNUAL_PROJECT)?'border-left:3px solid rgba(255,105,135,.6);':'';
+  const annualCardStyle='';
   const msCb=multiSelectMode?`<input type="checkbox" class="kms-cb" data-id="${t.id}" ${multiSelectedIds.has(String(t.id))?'checked':''}>`:'';
   const msModeClass=multiSelectMode?' kms-mode':'';
   const msSelClass=(multiSelectMode&&multiSelectedIds.has(String(t.id)))?' kms-sel':'';
@@ -4085,11 +4082,6 @@ function saveFolderEdit(){
     const nc={};
     _feItems.forEach(it=>{ if(it.name.trim()&&it.color) nc[it.name.trim()]=it.color; });
     D.gtd.projectColors=nc;
-    // ANNUAL_PROJECTが消えていたら先頭に戻す
-    if(D.gtd.projects.length&&!D.gtd.projects.includes(ANNUAL_PROJECT)
-       &&(D.gtd.tasks||[]).some(t=>t.project===ANNUAL_PROJECT)){
-      D.gtd.projects.unshift(ANNUAL_PROJECT);
-    }
   } else {
     D.gtd.categories=names;
   }
@@ -4749,24 +4741,6 @@ function renderGTD(){
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
           <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
           <div class="gf-item ${gtdFilter.type==='nodeadline'&&gtdView==='kanban'?'act':''}" data-f="nodeadline" data-v="">📭 日時未設定 <span class="gf-cnt">${D.gtd.tasks.filter(t=>!t.deadline&&!t.done).length||''}</span></div>
-          ${(()=>{
-            const allProj=D.gtd.projects||[];
-            const pinned=[ANNUAL_PROJECT].filter(p=>allProj.includes(p));
-            return pinned.map(name=>{
-              const isAnnual=name===ANNUAL_PROJECT;
-              const cnt=D.gtd.tasks.filter(t=>(t.project||'')===name&&!t.done).length;
-              const act=(gtdFilter.type==='project'&&gtdFilter.value===name&&gtdView==='kanban')?'act':'';
-              const style=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
-              const dot=isAnnual?'':` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`;
-              const main=`<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
-              // 年間目標達成の直下にルーティン項目を表示
-              if(isAnnual){
-                const routineItem=''; // ルーティン項目廃止（繰り返し設定で自動判別）
-                return main+routineItem;
-              }
-              return main;
-            }).join('');
-          })()}
           <div style="border-top:1px dashed var(--line);margin:4px 0 2px"></div>
           <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="project">
