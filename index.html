@@ -1767,16 +1767,6 @@ async function syncPushNow(){
           console.log('[VISGO] プッシュ前マージ: '+_newTasks.length+'件のタスクを統合 (nextId '+_locNextId+'→'+_srvNextId+')');
         }
       }
-      // プロジェクトのマージ（サーバーにあってローカルにない文字列を追加）
-      if(Array.isArray(_srv?.gtd?.projects)&&Array.isArray(D.gtd?.projects)){
-        const _locProjs=new Set(D.gtd.projects);
-        const _newProjs=_srv.gtd.projects.filter(p=>!_locProjs.has(p));
-        if(_newProjs.length){
-          D.gtd.projects=[...D.gtd.projects,..._newProjs];
-          _merged=true;
-          console.log('[VISGO] プッシュ前マージ: '+_newProjs.length+'件のプロジェクトを統合');
-        }
-      }
       if(_merged){
         // マージ内容をlocalStorageに即時反映
         const _lsMerge=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
