@@ -673,6 +673,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .sg-card.do{border-left-color:#248A3D}
 .sg-card.be{border-left-color:#AF52DE}
 .sg-card:hover{box-shadow:0 3px 12px rgba(0,122,255,.1)}
+.sg-card.sg-dragging{opacity:.3}
+.sg-card.sg-drag-over{border-top:2px solid var(--blue)}
+.sg-drag-handle{font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:4px 4px;user-select:none;touch-action:none;align-self:center}
+.sg-drag-handle:active{cursor:grabbing}
 .sg-card.sg-done{opacity:.6;background:var(--fill)}
 .sg-text-done{text-decoration:line-through;color:var(--sub)}
 .sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;margin-top:6px}.sg-list+.sg-list{margin-top:4px}
@@ -2265,6 +2269,92 @@ function dmRemoveStepGoalImg(id){
   if(s){ s.image=null; renderDmStepGoals(); }
 }
 
+function _attachSgDrag(){
+  document.querySelectorAll('.sg-list').forEach(list=>{
+    const year=list.dataset.year;
+    let dragEl=null, dragDreamId=null, dragSgId=null;
+    let placeholder=null;
+
+    // ---- デスクトップ drag ----
+    list.querySelectorAll('.sg-card').forEach(card=>{
+      card.addEventListener('dragstart',e=>{
+        if(!e.target.classList.contains('sg-drag-handle')&&!e.target.closest('.sg-drag-handle')){
+          e.preventDefault(); return;
+        }
+        dragEl=card; dragDreamId=card.dataset.dreamId; dragSgId=card.dataset.sgId;
+        setTimeout(()=>card.classList.add('sg-dragging'),0);
+        e.dataTransfer.effectAllowed='move';
+      });
+      card.addEventListener('dragend',()=>card.classList.remove('sg-dragging'));
+      card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('sg-drag-over');});
+      card.addEventListener('dragleave',()=>card.classList.remove('sg-drag-over'));
+      card.addEventListener('drop',e=>{
+        e.preventDefault(); card.classList.remove('sg-drag-over');
+        if(!dragEl||dragEl===card) return;
+        _sgReorder(list, dragEl, card);
+        dragEl=null;
+      });
+    });
+
+    // ---- タッチ drag ----
+    list.querySelectorAll('.sg-drag-handle').forEach(handle=>{
+      const card=handle.closest('.sg-card');
+      handle.addEventListener('touchstart',e=>{
+        e.stopPropagation();
+        dragEl=card;
+        card.classList.add('sg-dragging');
+        placeholder=document.createElement('div');
+        placeholder.style.cssText='height:'+card.offsetHeight+'px;background:var(--fill2);border-radius:10px;border:2px dashed var(--blue);margin-bottom:6px';
+      },{passive:true});
+      handle.addEventListener('touchmove',e=>{
+        e.preventDefault();
+        const touch=e.touches[0];
+        const cards=[...list.querySelectorAll('.sg-card:not(.sg-dragging)')];
+        let insertBefore=null, overEl=null;
+        for(const c of cards){
+          const r=c.getBoundingClientRect();
+          if(touch.clientY<r.top+r.height/2){insertBefore=c;break;}
+          overEl=c;
+        }
+        if(insertBefore) list.insertBefore(placeholder,insertBefore);
+        else if(overEl) overEl.after(placeholder);
+        else list.appendChild(placeholder);
+      },{passive:false});
+      handle.addEventListener('touchend',e=>{
+        card.classList.remove('sg-dragging');
+        if(placeholder&&placeholder.parentNode){
+          const refCard=placeholder.nextElementSibling?.classList.contains('sg-card')
+            ?placeholder.nextElementSibling:null;
+          placeholder.remove();
+          if(refCard) _sgReorder(list, card, refCard);
+          else {list.appendChild(card); _sgSave(list);}
+        }
+        dragEl=null; placeholder=null;
+      },{passive:true});
+    });
+  });
+}
+
+function _sgReorder(list, draggedCard, targetCard){
+  // DOM上で draggedCard を targetCard の前に挿入
+  list.insertBefore(draggedCard, targetCard);
+  _sgSave(list);
+}
+
+function _sgSave(list){
+  // 現在のDOM順序を元に各 sg.order を更新して save()
+  const cards=[...list.querySelectorAll('.sg-card')];
+  cards.forEach((card, idx)=>{
+    const dreamId=card.dataset.dreamId;
+    const sgId=card.dataset.sgId;
+    const dream=(D.dreams.items||[]).find(d=>String(d.id)===String(dreamId));
+    if(!dream) return;
+    const sg=(dream.stepGoals||[]).find(s=>String(s.id)===String(sgId));
+    if(sg) sg.order=idx;
+  });
+  save();
+}
+
 function dreamCatClass(cat){
   return cat==='Have'?'have':cat==='Do'?'do':cat==='Be'?'be':'';
 }
@@ -2336,11 +2426,11 @@ function renderDreams(){
     </div>`;
   }
   function sgCardHtml(sg, d){
-    const month=sg.yearMonth?sg.yearMonth+'年':'—';
     const catCls=dreamCatClass(d.category);
     const imgHtml=sg.image?`<img src="${sg.image}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex:0 0 auto;margin-top:2px${sg.done?';opacity:.5':''}" alt="">`:''
-    return `<div class="sg-card${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')" style="display:flex;align-items:flex-start;gap:10px">
-      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 0">
+    return `<div class="sg-card${sg.done?' sg-done':''}" draggable="true" data-dream-id="${d.id}" data-sg-id="${sg.id}" style="display:flex;align-items:flex-start;gap:10px;cursor:default">
+      <span class="sg-drag-handle" title="ドラッグで並べ替え">≡</span>
+      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 0" onclick="openDreamModal('${d.id}')">
         ${sg.done?'<span style="color:#30D158;font-size:15px;flex:0 0 auto">✓</span>':''} 
         <span class="sg-text${sg.done?' sg-text-done':''}" style="white-space:normal;line-height:1.45;font-size:15px;font-weight:500">${esc(sg.text)}</span>
       </div>
@@ -2415,8 +2505,13 @@ ${imgsHtml}
           // この年のすべてのステップ目標を表示
           const allSgs=groups[y].stepGoals;
           if(!allSgs.length) return '';
-          allSgs.sort((a,b)=>{const ka=a.sg.yearMonth||'9999',kb=b.sg.yearMonth||'9999';return ka<kb?-1:ka>kb?1:0;});
-          return `<div class="sg-list">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
+          allSgs.sort((a,b)=>{
+            const oa=a.sg.order!=null?a.sg.order:9999, ob=b.sg.order!=null?b.sg.order:9999;
+            if(oa!==ob) return oa-ob;
+            const ka=a.sg.yearMonth||'9999',kb=b.sg.yearMonth||'9999';
+            return ka<kb?-1:ka>kb?1:0;
+          });
+          return `<div class="sg-list" data-year="${y}">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
         })();
         return `
       <div class="dream-year-section">
@@ -2430,7 +2525,7 @@ ${imgsHtml}
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
   }
   </div>`;
-  setTimeout(()=>{document.querySelectorAll('.dream-mission-ta').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});},0);
+  setTimeout(()=>{document.querySelectorAll('.dream-mission-ta').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});_attachSgDrag();},0);
 }
 
 function openDreamModal(id){
