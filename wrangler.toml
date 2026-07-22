@@ -1,0 +1,7 @@
+name = "visgo-sync"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "VISGO_KV"
+id = "eba3f534552c43d4baf7f08254d7c23a"
