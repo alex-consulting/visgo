@@ -666,7 +666,9 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-mission-preview{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;cursor:text;min-height:24px}
 .dream-mission-preview.empty{color:var(--faint)}
 .dream-year-section{margin-bottom:22px}
-.dream-year-heading{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 12px;letter-spacing:-.02em}
+.dream-year-heading{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 12px;letter-spacing:-.02em;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
+.dream-year-arrow{font-size:13px;color:var(--sub);transition:transform .2s;display:inline-block}
+.dream-year-heading.dy-collapsed .dream-year-arrow{transform:rotate(-90deg)}
 .dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;aspect-ratio:4/3;object-fit:cover;border-radius:14px 12px 0 0;display:block}
 .sg-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;transition:box-shadow .15s;display:flex;align-items:center;gap:8px}
 .sg-card.have{border-left-color:#0071E3}
@@ -2059,6 +2061,7 @@ let dreamShowSteps=true;
 let dreamEditId=null;
 let dreamMissionCollapsed=true;
 let dreamValueCollapsed=true;
+let dreamYearCollapsed={};  // { year: true/false }
 let dmSteps=[]; // モーダル編集中の一時ステップ配列
 let dmStepGoals=[]; // モーダル編集中のステップ目標配列
 let dmImage=null; // モーダル編集中の画像データURL
@@ -2513,13 +2516,17 @@ ${imgsHtml}
           });
           return `<div class="sg-list" data-year="${y}">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
         })();
+        const _yCollapsed=dreamYearCollapsed[y]===true;
+        const _yLabel=y==='未設定'?'年未設定':(()=>{const b=D.profile&&D.profile.birthday;if(b){const birth=new Date(b);const jan1=new Date(Number(y),0,1);let age=jan1.getFullYear()-birth.getFullYear();if(jan1<new Date(birth.getFullYear()+age,birth.getMonth(),birth.getDate()))age--;return y+'年（'+age+'歳）';}return y+'年';})();
         return `
       <div class="dream-year-section">
-        <div class="dream-year-heading">${y==='未設定'?'年未設定':(()=>{const b=D.profile&&D.profile.birthday;if(b){const birth=new Date(b);const jan1=new Date(Number(y),0,1);let age=jan1.getFullYear()-birth.getFullYear();if(jan1<new Date(birth.getFullYear()+age,birth.getMonth(),birth.getDate()))age--;return y+'年（'+age+'歳）';}return y+'年';})()}</div>
-        <div class="dream-grid">
+        <div class="dream-year-heading${_yCollapsed?' dy-collapsed':''}" onclick="dreamYearCollapsed['${y}']=!dreamYearCollapsed['${y}'];renderDreams()">
+          <span class="dream-year-arrow">▾</span>${_yLabel}
+        </div>
+        ${_yCollapsed?'': `<div class="dream-grid">
           ${dreamsInYear.map(d=>cardHtml(d)).join('')}
         </div>
-        ${nearestSgHtml}
+        ${nearestSgHtml}`}
       </div>`;
       }).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
