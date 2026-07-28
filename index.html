@@ -2365,7 +2365,7 @@ function dreamValueHtml(){
   const collapsed=dreamValueCollapsed?' collapsed':'';
   const titleSpan=`<span class="dream-mission-title${vTitle?'':' empty'}">${esc(vTitle)||'（タイトル未設定）'}</span>`;
   const body=`<input class="dream-mission-title-inp" type="text" placeholder="バリューのタイトル（例：誠実・挑戦・成長）" value="${esc(vTitle)}" oninput="D.dreams.valueTitle=this.value;save()">
-<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.value=this.value;save()">${esc(val)}</textarea>
+<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);D.dreams.value=this.value;save()">${esc(val)}</textarea>
 <div style="margin-top:8px"><button onclick="save();toast('バリューを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
   return `<div class="dream-mission${collapsed}">
     <div class="dream-mission-hd" onclick="dreamValueCollapsed=!dreamValueCollapsed;renderDreams()">
@@ -2484,7 +2484,7 @@ function renderDreams(){
         const imgs=(D.missionImages||[]);
         const imgsHtml=imgs.length?`<div class="dream-mission-imgs">${imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('')}</div>`:'';
         return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="D.dreams.missionTitle=this.value;save();dmSyncMissionTitle(this.value)">
-<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
+<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
 ${imgsHtml}
 <div style="margin-top:8px;display:flex;gap:8px;align-items:center"><button onclick="document.getElementById('dmMissionImgFile').click()" style="border:1px dashed var(--line);background:none;padding:7px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button><input type="file" id="dmMissionImgFile" accept="image/*" multiple style="display:none" onchange="dmMissionAddImgs(this)"><button onclick="save();toast('ミッションを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
       })()}
