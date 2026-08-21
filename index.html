@@ -4179,6 +4179,14 @@ function saveFolderEdit(){
       const orig=it.originalName, nw=it.name.trim();
       if(orig&&nw&&orig!==nw) D.gtd.tasks.forEach(t=>{ if((t.project||'')===orig) t.project=nw; });
     });
+    // 削除されたプロジェクトを使っているタスクのprojectをクリア（再復活防止）
+    const oldProjs=new Set(D.gtd.projects||[]);
+    const newProjsSet=new Set(names);
+    const removed=[...oldProjs].filter(p=>!newProjsSet.has(p));
+    if(removed.length){
+      const removedSet=new Set(removed);
+      D.gtd.tasks.forEach(t=>{ if(t.project&&removedSet.has(t.project)) t.project=''; });
+    }
     D.gtd.projects=names;
     if(!D.gtd.projectColors) D.gtd.projectColors={};
     const nc={};
