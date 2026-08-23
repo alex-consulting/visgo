@@ -1459,7 +1459,6 @@ D.gtd.tasks.forEach(function(t){
     t.categories = (t.category&&t.category!=="") ? [t.category] : [];
     delete t.category;
   }
-  if(t.project&&D.gtd.projects.indexOf(t.project)<0) D.gtd.projects.push(t.project);
   t.categories.forEach(function(c){ if(c&&D.gtd.categories.indexOf(c)<0) D.gtd.categories.push(c); });
 });
 // 重複・空白除去（起動時に一度だけ正規化）
