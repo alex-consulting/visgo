@@ -3943,8 +3943,8 @@ function printSheet(){
     <div class="quads">${D.quad.map(q=>`<div class="qd"><div class="qt">${esc(q.title)}</div><ol class="qol">${q.items.map(it=>`<li>${esc(it)}</li>`).join("")}</ol></div>`).join("")}</div></div>
   <div class="sec"><div class="sttl">ルーティン行動（重要度が高い順）</div>
     <ol>${D.routines.map(r=>`<li>${esc(r.text)}</li>`).join("")}</ol></div>
-  <table class="meta"><tr><th style="text-align:center;width:26%;white-space:normal">支援者</th><th style="text-align:center;background:var(--blue-l);color:var(--navy)">支援内容</th></tr>
-    ${D.supports.map(s=>`<tr><td style="width:26%;font-weight:700;word-break:break-word">${esc(s.who)}</td><td style="word-break:break-word">${esc(s.what)}</td></tr>`).join("")}</table>
+  <div class="sec"><div class="sttl">目標達成のための支援</div><table style="width:100%;border-collapse:collapse"><tr><th style="width:26%;background:#e8f0fc;color:#1a3a6b;border:.5pt solid #8a98ad;padding:1mm 1.6mm;font-weight:700;text-align:left">支援者</th><th style="background:#e8f0fc;color:#1a3a6b;border:.5pt solid #8a98ad;padding:1mm 1.6mm;font-weight:700;text-align:left">支援内容</th></tr>
+    ${D.supports.map(s=>`<tr><td style="width:26%;font-weight:700;word-break:break-word;border:.5pt solid #8a98ad;padding:1mm 1.6mm">${esc(s.who)}</td><td style="word-break:break-word;border:.5pt solid #8a98ad;padding:1mm 1.6mm">${esc(s.what)}</td></tr>`).join("")}</table></div>
   <table class="an"><tr><th></th><th>成功・強みの分析</th><th>失敗・弱みの分析</th></tr>
     ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${esc(a.success[i])}</td><td>${esc(a.failure[i])}</td></tr>`).join("")}</table>
   <table class="an"><tr><th></th><th>予想される問題点</th><th>解決策</th></tr>
@@ -3964,9 +3964,9 @@ function printSheet(){
   .sttl.red{background:#fdecea;color:#b71c1c}
   .srow b{color:#1a3a6b}
   table{border-collapse:collapse;width:100%}
-  .meta{margin-bottom:1.8mm}
+  .meta{margin-bottom:1.8mm;break-inside:avoid;page-break-inside:avoid}
   .meta th,.meta td{border:.5pt solid #8a98ad;padding:1mm 1.6mm;font-size:8pt;text-align:left}
-  .meta th{background:var(--blue-l);color:var(--navy);white-space:nowrap;width:1%}
+  .meta th{background:#e8f0fc;color:#1a3a6b;white-space:nowrap;width:1%}
   .quads{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm}
   .qd{border:.5pt solid #8a98ad;border-radius:1mm;font-size:7pt;line-height:1.4}
   .qd .pre{padding:1mm 1.5mm}
