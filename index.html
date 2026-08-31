@@ -1376,10 +1376,22 @@ async function fetchGcalEvents(){
   for(let i=0;i<gcalUrls.length;i++){
     if(i>0) await new Promise(r=>setTimeout(r,600));
     try{
-      const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(gcalUrls[i]);
-      const res=await fetch(proxyUrl,{cache:'no-store'});
-      if(!res.ok){console.warn('gcal fetch failed',i,res.status);continue;}
-      const text=await res.text();
+      // CORSプロキシを順番に試す（フォールバック対応）
+      const _proxies=[
+        u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+        u=>'https://corsproxy.org/?'+encodeURIComponent(u),
+        u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+      ];
+      let text=null;
+      for(const _pf of _proxies){
+        try{
+          const _r=await Promise.race([fetch(_pf(gcalUrls[i]),{cache:'no-store'}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))]);
+          if(!_r.ok){console.warn('gcal proxy failed',_pf(gcalUrls[i]).slice(0,40),_r.status);continue;}
+          const _t=await _r.text();
+          if(_t.includes('BEGIN:VCALENDAR')){text=_t;break;}
+        }catch(_e){console.warn('gcal proxy error',_e.message);}
+      }
+      if(!text){console.warn('gcal: all proxies failed for url',i);continue;}
       const evs=parseIcalEvents(text);
       evs.forEach(ev=>ev.calIdx=i);
       allEvents.push(...evs);
