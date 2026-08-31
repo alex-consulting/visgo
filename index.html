@@ -506,10 +506,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .ri-mv{background:none;border:1px solid var(--line);border-radius:4px;color:var(--sub);font-size:10px;padding:2px 5px;cursor:pointer;line-height:1;min-width:28px;min-height:22px}
 .ri-mv:active{background:var(--fill)}
 .ri-mv:disabled{opacity:.25;cursor:default}
-.ri-drag-handle{font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:4px 6px;user-select:none;touch-action:none;align-self:center;line-height:1}
-.ri-drag-handle:active{cursor:grabbing}
-.gm-ri-row.ri-dragging{opacity:.3}
-.gm-ri-row.ri-drag-over{border-top:2px solid var(--blue);background:var(--fill2)}
 .gm-ri-del:hover{color:var(--red)}
 .gm-routine-addrow{display:flex;gap:6px;margin-top:8px}
 .gm-routine-addrow input{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card)}
@@ -544,12 +540,6 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .rw-create-btn{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#30D158,#34c7a8);color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:700;width:100%;justify-content:center;margin:4px 0 2px}
 .rw-create-btn:hover{opacity:.9}
 #rwBg .gm-dur-btn.rw-sel{background:var(--blue);color:#fff;border-color:var(--blue)}
-.tog-switch{position:relative;width:44px;height:26px;flex:0 0 44px;display:inline-block}
-.tog-switch input{opacity:0;width:0;height:0;position:absolute}
-.tog-slider{position:absolute;inset:0;background:var(--line);border-radius:13px;cursor:pointer;transition:background .2s}
-.tog-slider::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.tog-switch input:checked+.tog-slider{background:var(--blue)}
-.tog-switch input:checked+.tog-slider::before{transform:translateX(18px)}
 /* ---- Today timeline ---- */
 .tl-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
 .tl-panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--blue);cursor:pointer;user-select:none}
@@ -633,7 +623,7 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-cat.have{background:rgba(0,122,255,.12);color:#0071E3}
 .dream-cat.do{background:var(--green-l);color:#248A3D}
 .dream-cat.be{background:rgba(175,82,222,.12);color:#AF52DE}
-.dream-title{font-size:16px;font-weight:600;color:var(--navy);line-height:1.4;flex:1;word-break:break-all}
+.dream-title{font-size:14px;font-weight:600;color:var(--navy);line-height:1.4;flex:1;word-break:break-all}
 .dream-meta{font-size:11.5px;color:var(--sub);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap}
 .dream-first-step{font-size:12px;color:var(--blue);margin:5px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dream-first-step-done{color:var(--sub);text-decoration:line-through}
@@ -670,26 +660,20 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .dream-mission-preview{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;cursor:text;min-height:24px}
 .dream-mission-preview.empty{color:var(--faint)}
 .dream-year-section{margin-bottom:22px}
-.dream-year-heading{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 12px;letter-spacing:-.02em;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}
-.dream-year-arrow{font-size:13px;color:var(--sub);transition:transform .2s;display:inline-block}
-.dream-year-heading.dy-collapsed .dream-year-arrow{transform:rotate(-90deg)}
+.dream-year-heading{font-size:18px;font-weight:800;color:var(--navy);margin:0 0 12px;letter-spacing:-.02em}
 .dream-card-img{width:calc(100% + 32px);margin:-14px -16px 12px;aspect-ratio:4/3;object-fit:cover;border-radius:14px 12px 0 0;display:block}
-.sg-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;transition:box-shadow .15s;display:flex;align-items:center;gap:8px}
+.sg-card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:10px;padding:8px 12px;cursor:pointer;transition:box-shadow .15s;display:flex;align-items:center;gap:8px}
 .sg-card.have{border-left-color:#0071E3}
 .sg-card.do{border-left-color:#248A3D}
 .sg-card.be{border-left-color:#AF52DE}
 .sg-card:hover{box-shadow:0 3px 12px rgba(0,122,255,.1)}
-.sg-card.sg-dragging{opacity:.3}
-.sg-card.sg-drag-over{border-top:2px solid var(--blue)}
-.sg-drag-handle{font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:4px 4px;user-select:none;touch-action:none;align-self:center}
-.sg-drag-handle:active{cursor:grabbing}
 .sg-card.sg-done{opacity:.6;background:var(--fill)}
 .sg-text-done{text-decoration:line-through;color:var(--sub)}
 .sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;margin-top:6px}.sg-list+.sg-list{margin-top:4px}
 .sg-ym{font-size:11px;font-weight:600;color:var(--blue);flex:0 0 auto}
 .sg-text{font-size:13px;font-weight:400;color:var(--navy);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sg-dream-label{font-size:11px;color:var(--sub);flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
-.dream-memo{font-size:12px;color:var(--sub);margin:4px 0 6px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.dream-memo{font-size:12px;color:var(--sub);margin:4px 0 6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .dm-img-wrap{position:relative}
 .dm-img-preview{width:100%;height:160px;object-fit:cover;border-radius:8px;display:block;cursor:pointer}
 .dm-img-upload{width:100%;height:110px;border:2px dashed var(--line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;color:var(--sub);font-size:13px;background:var(--fill2);transition:border-color .15s,color .15s;box-sizing:border-box}
@@ -1006,11 +990,16 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
       <div style="margin-top:8px">
         <button onclick="gcalRefresh()" style="font-size:12px;padding:5px 12px;border:1px solid var(--line);border-radius:8px;background:var(--fill);color:var(--sub);cursor:pointer">🔄 Gカレンダーを今すぐ更新</button>
       </div>
-      <p class="settings-section">バックアップ</p>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
-        毎朝自動保存されます。
+      <p class="settings-section">手動バックアップ</p>
+      <div class="settings-row">
+        <button class="settings-btn" onclick="manualBackupToDevice()">📱 保存</button>
+        <button class="settings-btn" onclick="document.getElementById('impFile').click()">📥 読込</button>
       </div>
-      <button class="settings-btn" onclick="manualBackupToDevice()" style="margin-bottom:8px">📱 今すぐ保存</button>
+      <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(event);closeSettings()">
+      <p class="settings-section">端末内バックアップ（直近7日）</p>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:8px;line-height:1.6">
+        毎日1回、この端末のみに自動保存されます。
+      </div>
       <div id="autoBackupList"><div style="font-size:12px;color:var(--sub)">読み込み中…</div></div>
       <p class="settings-section">ToDo設定</p>
       <button class="settings-btn" onclick="document.getElementById('nozbeFile').click()">📥 Nozbeから移行</button>
@@ -1376,22 +1365,10 @@ async function fetchGcalEvents(){
   for(let i=0;i<gcalUrls.length;i++){
     if(i>0) await new Promise(r=>setTimeout(r,600));
     try{
-      // CORSプロキシを順番に試す（フォールバック対応）
-      const _proxies=[
-        u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-        u=>'https://corsproxy.org/?'+encodeURIComponent(u),
-        u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
-      ];
-      let text=null;
-      for(const _pf of _proxies){
-        try{
-          const _r=await Promise.race([fetch(_pf(gcalUrls[i]),{cache:'no-store'}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))]);
-          if(!_r.ok){console.warn('gcal proxy failed',_pf(gcalUrls[i]).slice(0,40),_r.status);continue;}
-          const _t=await _r.text();
-          if(_t.includes('BEGIN:VCALENDAR')){text=_t;break;}
-        }catch(_e){console.warn('gcal proxy error',_e.message);}
-      }
-      if(!text){console.warn('gcal: all proxies failed for url',i);continue;}
+      const proxyUrl='https://corsproxy.io/?'+encodeURIComponent(gcalUrls[i]);
+      const res=await fetch(proxyUrl,{cache:'no-store'});
+      if(!res.ok){console.warn('gcal fetch failed',i,res.status);continue;}
+      const text=await res.text();
       const evs=parseIcalEvents(text);
       evs.forEach(ev=>ev.calIdx=i);
       allEvents.push(...evs);
@@ -1475,6 +1452,7 @@ D.gtd.tasks.forEach(function(t){
     t.categories = (t.category&&t.category!=="") ? [t.category] : [];
     delete t.category;
   }
+  if(t.project&&D.gtd.projects.indexOf(t.project)<0) D.gtd.projects.push(t.project);
   t.categories.forEach(function(c){ if(c&&D.gtd.categories.indexOf(c)<0) D.gtd.categories.push(c); });
 });
 // 重複・空白除去（起動時に一度だけ正規化）
@@ -1594,7 +1572,7 @@ const BACKUP_MAX_DAYS=7;
 
 async function autoBackup(){
   try{
-    const _d=new Date(); const today=`${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
+    const today=new Date().toISOString().slice(0,10);
     const backups=(await idbGet(BACKUP_IDB_KEY))||[];
     if(backups.length>0&&backups[0].date===today) return; // 今日は取得済み
     const {goalImages,missionImages,...rest}=D;
@@ -1611,7 +1589,7 @@ async function autoBackup(){
 async function manualBackupToDevice(){
   try{
     const now=new Date();
-    const dateLabel=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const dateLabel=now.toISOString().slice(0,10);
     const timeLabel=now.toTimeString().slice(0,5); // HH:MM
     const backups=(await idbGet(BACKUP_IDB_KEY))||[];
     const {goalImages,missionImages,...rest}=D;
@@ -1676,31 +1654,14 @@ async function renderBackupList(){
       el.innerHTML='<div style="font-size:12px;color:var(--sub);padding:4px 0">まだバックアップがありません。次回保存時に自動作成されます。</div>';
       return;
     }
-    // 日付をMM/DD形式に変換するヘルパー
-    const fmtDate=(dateStr)=>{
-      if(!dateStr) return dateStr;
-      // "手動 YYYY-MM-DD HH:MM" または "YYYY-MM-DD" 形式を処理
-      return dateStr.replace(/(\d{4})-(\d{2})-(\d{2})/g,(_,y,m,d)=>`${m}/${d}`);
-    };
-    const latestHtml=(b,i)=>`
+    el.innerHTML=backups.map((b,i)=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)">
         <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${fmtDate(b.date)}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${b.date}</div>
           <div style="font-size:11px;color:var(--sub)">タスク ${b.tasks}件</div>
         </div>
         <button onclick="restoreFromAutoBackup(${i})" style="font-size:12px;padding:5px 12px;background:var(--blue);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">この日に戻す</button>
-      </div>`;
-    const oldHtml=backups.slice(1).map((b,i)=>latestHtml(b,i+1)).join('');
-    el.innerHTML=latestHtml(backups[0],0)+(backups.length>1?`
-      <div id="backupCollapseToggle" onclick="
-        const c=document.getElementById('backupCollapse');
-        const t=document.getElementById('backupCollapseToggle');
-        const open=c.style.display==='none';
-        c.style.display=open?'block':'none';
-        t.textContent=open?'▲ 閉じる':'▼ 過去のバックアップ（'+(backups.length-1)+'件）';
-      " style="font-size:12px;color:var(--blue);cursor:pointer;padding:6px 0;text-align:center">▼ 過去のバックアップ（${backups.length-1}件）</div>
-      <div id="backupCollapse" style="display:none">${oldHtml}</div>
-    `:'');
+      </div>`).join('');
   }catch(e){
     el.innerHTML='<div style="font-size:12px;color:var(--sub)">読み込みエラー</div>';
   }
@@ -1786,6 +1747,16 @@ async function syncPushNow(){
           D.gtd.nextId=_srvNextId;
           _merged=true;
           console.log('[VISGO] プッシュ前マージ: '+_newTasks.length+'件のタスクを統合 (nextId '+_locNextId+'→'+_srvNextId+')');
+        }
+      }
+      // プロジェクトのマージ（サーバーにあってローカルにない文字列を追加）
+      if(Array.isArray(_srv?.gtd?.projects)&&Array.isArray(D.gtd?.projects)){
+        const _locProjs=new Set(D.gtd.projects);
+        const _newProjs=_srv.gtd.projects.filter(p=>!_locProjs.has(p));
+        if(_newProjs.length){
+          D.gtd.projects=[...D.gtd.projects,..._newProjs];
+          _merged=true;
+          console.log('[VISGO] プッシュ前マージ: '+_newProjs.length+'件のプロジェクトを統合');
         }
       }
       if(_merged){
@@ -2076,7 +2047,6 @@ let dreamShowSteps=true;
 let dreamEditId=null;
 let dreamMissionCollapsed=true;
 let dreamValueCollapsed=true;
-let dreamYearCollapsed={};  // { year: true/false }
 let dmSteps=[]; // モーダル編集中の一時ステップ配列
 let dmStepGoals=[]; // モーダル編集中のステップ目標配列
 let dmImage=null; // モーダル編集中の画像データURL
@@ -2287,92 +2257,6 @@ function dmRemoveStepGoalImg(id){
   if(s){ s.image=null; renderDmStepGoals(); }
 }
 
-function _attachSgDrag(){
-  document.querySelectorAll('.sg-list').forEach(list=>{
-    const year=list.dataset.year;
-    let dragEl=null, dragDreamId=null, dragSgId=null;
-    let placeholder=null;
-
-    // ---- デスクトップ drag ----
-    list.querySelectorAll('.sg-card').forEach(card=>{
-      card.addEventListener('dragstart',e=>{
-        if(!e.target.classList.contains('sg-drag-handle')&&!e.target.closest('.sg-drag-handle')){
-          e.preventDefault(); return;
-        }
-        dragEl=card; dragDreamId=card.dataset.dreamId; dragSgId=card.dataset.sgId;
-        setTimeout(()=>card.classList.add('sg-dragging'),0);
-        e.dataTransfer.effectAllowed='move';
-      });
-      card.addEventListener('dragend',()=>card.classList.remove('sg-dragging'));
-      card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('sg-drag-over');});
-      card.addEventListener('dragleave',()=>card.classList.remove('sg-drag-over'));
-      card.addEventListener('drop',e=>{
-        e.preventDefault(); card.classList.remove('sg-drag-over');
-        if(!dragEl||dragEl===card) return;
-        _sgReorder(list, dragEl, card);
-        dragEl=null;
-      });
-    });
-
-    // ---- タッチ drag ----
-    list.querySelectorAll('.sg-drag-handle').forEach(handle=>{
-      const card=handle.closest('.sg-card');
-      handle.addEventListener('touchstart',e=>{
-        e.stopPropagation();
-        dragEl=card;
-        card.classList.add('sg-dragging');
-        placeholder=document.createElement('div');
-        placeholder.style.cssText='height:'+card.offsetHeight+'px;background:var(--fill2);border-radius:10px;border:2px dashed var(--blue);margin-bottom:6px';
-      },{passive:true});
-      handle.addEventListener('touchmove',e=>{
-        e.preventDefault();
-        const touch=e.touches[0];
-        const cards=[...list.querySelectorAll('.sg-card:not(.sg-dragging)')];
-        let insertBefore=null, overEl=null;
-        for(const c of cards){
-          const r=c.getBoundingClientRect();
-          if(touch.clientY<r.top+r.height/2){insertBefore=c;break;}
-          overEl=c;
-        }
-        if(insertBefore) list.insertBefore(placeholder,insertBefore);
-        else if(overEl) overEl.after(placeholder);
-        else list.appendChild(placeholder);
-      },{passive:false});
-      handle.addEventListener('touchend',e=>{
-        card.classList.remove('sg-dragging');
-        if(placeholder&&placeholder.parentNode){
-          const refCard=placeholder.nextElementSibling?.classList.contains('sg-card')
-            ?placeholder.nextElementSibling:null;
-          placeholder.remove();
-          if(refCard) _sgReorder(list, card, refCard);
-          else {list.appendChild(card); _sgSave(list);}
-        }
-        dragEl=null; placeholder=null;
-      },{passive:true});
-    });
-  });
-}
-
-function _sgReorder(list, draggedCard, targetCard){
-  // DOM上で draggedCard を targetCard の前に挿入
-  list.insertBefore(draggedCard, targetCard);
-  _sgSave(list);
-}
-
-function _sgSave(list){
-  // 現在のDOM順序を元に各 sg.order を更新して save()
-  const cards=[...list.querySelectorAll('.sg-card')];
-  cards.forEach((card, idx)=>{
-    const dreamId=card.dataset.dreamId;
-    const sgId=card.dataset.sgId;
-    const dream=(D.dreams.items||[]).find(d=>String(d.id)===String(dreamId));
-    if(!dream) return;
-    const sg=(dream.stepGoals||[]).find(s=>String(s.id)===String(sgId));
-    if(sg) sg.order=idx;
-  });
-  save();
-}
-
 function dreamCatClass(cat){
   return cat==='Have'?'have':cat==='Do'?'do':cat==='Be'?'be':'';
 }
@@ -2383,7 +2267,7 @@ function dreamValueHtml(){
   const collapsed=dreamValueCollapsed?' collapsed':'';
   const titleSpan=`<span class="dream-mission-title${vTitle?'':' empty'}">${esc(vTitle)||'（タイトル未設定）'}</span>`;
   const body=`<input class="dream-mission-title-inp" type="text" placeholder="バリューのタイトル（例：誠実・挑戦・成長）" value="${esc(vTitle)}" oninput="D.dreams.valueTitle=this.value;save()">
-<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);D.dreams.value=this.value;save()">${esc(val)}</textarea>
+<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.value=this.value;save()">${esc(val)}</textarea>
 <div style="margin-top:8px"><button onclick="save();toast('バリューを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
   return `<div class="dream-mission${collapsed}">
     <div class="dream-mission-hd" onclick="dreamValueCollapsed=!dreamValueCollapsed;renderDreams()">
@@ -2444,13 +2328,16 @@ function renderDreams(){
     </div>`;
   }
   function sgCardHtml(sg, d){
+    const month=sg.yearMonth?sg.yearMonth+'年':'—';
     const catCls=dreamCatClass(d.category);
     const imgHtml=sg.image?`<img src="${sg.image}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex:0 0 auto;margin-top:2px${sg.done?';opacity:.5':''}" alt="">`:''
-    return `<div class="sg-card${sg.done?' sg-done':''}" draggable="true" data-dream-id="${d.id}" data-sg-id="${sg.id}" style="display:flex;align-items:flex-start;gap:10px;cursor:default">
-      <span class="sg-drag-handle" title="ドラッグで並べ替え">≡</span>
-      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 0" onclick="openDreamModal('${d.id}')">
-        ${sg.done?'<span style="color:#30D158;font-size:15px;flex:0 0 auto">✓</span>':''} 
-        <span class="sg-text${sg.done?' sg-text-done':''}" style="white-space:normal;line-height:1.45;font-size:15px;font-weight:500">${esc(sg.text)}</span>
+    return `<div class="sg-card${sg.done?' sg-done':''}" onclick="openDreamModal('${d.id}')" style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px">
+        <div style="display:flex;align-items:center;gap:6px">
+          ${sg.done?'<span style="color:#30D158;font-size:14px;flex:0 0 auto">✓</span>':''} 
+          <span class="sg-ym" style="flex:0 0 auto">${month}</span>
+        </div>
+        <span class="sg-text${sg.done?' sg-text-done':''}" style="white-space:normal;line-height:1.45">${esc(sg.text)}</span>
       </div>
       ${imgHtml}
     </div>`;
@@ -2502,7 +2389,7 @@ function renderDreams(){
         const imgs=(D.missionImages||[]);
         const imgsHtml=imgs.length?`<div class="dream-mission-imgs">${imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('')}</div>`:'';
         return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="D.dreams.missionTitle=this.value;save();dmSyncMissionTitle(this.value)">
-<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
+<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
 ${imgsHtml}
 <div style="margin-top:8px;display:flex;gap:8px;align-items:center"><button onclick="document.getElementById('dmMissionImgFile').click()" style="border:1px dashed var(--line);background:none;padding:7px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button><input type="file" id="dmMissionImgFile" accept="image/*" multiple style="display:none" onchange="dmMissionAddImgs(this)"><button onclick="save();toast('ミッションを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
       })()}
@@ -2523,31 +2410,22 @@ ${imgsHtml}
           // この年のすべてのステップ目標を表示
           const allSgs=groups[y].stepGoals;
           if(!allSgs.length) return '';
-          allSgs.sort((a,b)=>{
-            const oa=a.sg.order!=null?a.sg.order:9999, ob=b.sg.order!=null?b.sg.order:9999;
-            if(oa!==ob) return oa-ob;
-            const ka=a.sg.yearMonth||'9999',kb=b.sg.yearMonth||'9999';
-            return ka<kb?-1:ka>kb?1:0;
-          });
-          return `<div class="sg-list" data-year="${y}">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
+          allSgs.sort((a,b)=>{const ka=a.sg.yearMonth||'9999',kb=b.sg.yearMonth||'9999';return ka<kb?-1:ka>kb?1:0;});
+          return `<div class="sg-list">${allSgs.map(({sg,d})=>sgCardHtml(sg,d)).join('')}</div>`;
         })();
-        const _yCollapsed=dreamYearCollapsed[y]===true;
-        const _yLabel=y==='未設定'?'年未設定':(()=>{const b=D.profile&&D.profile.birthday;if(b){const birth=new Date(b);const jan1=new Date(Number(y),0,1);let age=jan1.getFullYear()-birth.getFullYear();if(jan1<new Date(birth.getFullYear()+age,birth.getMonth(),birth.getDate()))age--;return y+'年（'+age+'歳）';}return y+'年';})();
         return `
       <div class="dream-year-section">
-        <div class="dream-year-heading${_yCollapsed?' dy-collapsed':''}" onclick="dreamYearCollapsed['${y}']=!dreamYearCollapsed['${y}'];renderDreams()">
-          <span class="dream-year-arrow">▾</span>${_yLabel}
-        </div>
-        ${_yCollapsed?'': `<div class="dream-grid">
+        <div class="dream-year-heading">${y==='未設定'?'年未設定':(()=>{const b=D.profile&&D.profile.birthday;if(b){const birth=new Date(b);const jan1=new Date(Number(y),0,1);let age=jan1.getFullYear()-birth.getFullYear();if(jan1<new Date(birth.getFullYear()+age,birth.getMonth(),birth.getDate()))age--;return y+'年（'+age+'歳）';}return y+'年';})()}</div>
+        <div class="dream-grid">
           ${dreamsInYear.map(d=>cardHtml(d)).join('')}
         </div>
-        ${nearestSgHtml}`}
+        ${nearestSgHtml}
       </div>`;
       }).join('')
     : `<div class="dream-empty">夢をまだ登録していません。<br>「＋ 夢を追加」から登録しましょう！</div>`
   }
   </div>`;
-  setTimeout(()=>{document.querySelectorAll('.dream-mission-ta').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});_attachSgDrag();},0);
+  setTimeout(()=>{document.querySelectorAll('.dream-mission-ta').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});},0);
 }
 
 function openDreamModal(id){
@@ -2922,7 +2800,7 @@ function ssRoutineAdd(){
 function closeSheetSec(){document.getElementById('sheetSecModal').classList.remove('show');}
 function openDreamProfile(){
   const fld=(lbl,html)=>`<div class="ss-field"><label class="ss-lbl">${lbl}</label>${html}</div>`;
-  const tog=(lbl,id,val)=>`<div class="ss-field" style="display:flex;align-items:center;justify-content:space-between"><label class="ss-lbl" style="margin:0">${lbl}</label><label class="tog-switch"><input type="checkbox" id="${id}" ${val?'checked':''}><span class="tog-slider"></span></label></div>`;
+  const tog=(lbl,id,val)=>`<div class="ss-field" style="display:flex;align-items:center;justify-content:space-between"><label class="ss-lbl" style="margin:0">${lbl}</label><label style="position:relative;width:44px;height:26px;flex:0 0 44px;display:inline-block"><input type="checkbox" id="${id}" ${val?'checked':''} style="opacity:0;width:0;height:0"><span style="position:absolute;inset:0;background:var(--line);border-radius:13px;cursor:pointer;transition:background .2s" onclick="this.style.background=document.getElementById('${id}').checked?'var(--blue)':'var(--line)'"></span></label></div>`;
   document.getElementById('sheetSecTitle').textContent='基本情報';
   document.getElementById('sheetSecBody').innerHTML=
     fld('生年月日',`<input class="ss-inp" id="ss-birthday" type="date" value="${esc(D.profile.birthday||'')}">`)+
@@ -2949,6 +2827,7 @@ function routinesToTodo(){
   if(!items.length){alert('ルーティン行動が登録されていません。');return;}
   // プロジェクトがなければ追加
   if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
+  if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
   const today=dateStr(0);
   let task=D.gtd.tasks.find(t=>t.text==='ルーティン行動'&&t.project===ANNUAL_PROJECT);
   if(task){
@@ -2998,6 +2877,7 @@ function deadlinesToTodo(){
   }
   if(!validItems.length){alert('週間期日行動が登録されていません。');return;}
   if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
+  if(!D.gtd.projects.includes(ANNUAL_PROJECT)) D.gtd.projects.unshift(ANNUAL_PROJECT);
   // 各行動を個別タスクとして追加（既存の同名タスクは上書き）
   validItems.forEach(it=>{
     let task=D.gtd.tasks.find(t=>t.text===it.text&&t.project===ANNUAL_PROJECT&&!t.recur);
@@ -3555,64 +3435,18 @@ function gmRenderRoutineItems(){
   if(!c) return;
   if(!gmRoutineItems.length){c.innerHTML='<div style="font-size:12px;color:var(--faint);padding:4px 0">サブタスクがありません</div>';return;}
   const t=gtdTask(gtdModalId);
-  const isAnn=false;
+  const isAnn=t&&t.project===ANNUAL_PROJECT;
   c.innerHTML=gmRoutineItems.map((it,i)=>`
-    <div class="gm-ri-row" draggable="${isAnn?'false':'true'}" data-ri-idx="${i}"
+    <div class="gm-ri-row" draggable="${isAnn?'false':'true'}"
          ondragstart="riDragStart(${i})" ondragover="riDragOver(event,${i})"
          ondragleave="riDragLeave(event)" ondrop="riDrop(${i})">
-      <span class="ri-drag-handle" style="${isAnn?'visibility:hidden;pointer-events:none':''}">≡</span>
+      <div class="ri-btns" style="${isAnn?'visibility:hidden;pointer-events:none':''}">
+        <button class="ri-mv" onclick="riMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="ri-mv" onclick="riMove(${i},1)" ${i===gmRoutineItems.length-1?'disabled':''}>▼</button>
+      </div>
       <input type="text" class="gm-ri-input" value="${esc(it.text)}" ${isAnn?'disabled':''} oninput="gmEditRoutineItem('${it.id}',this.value)">
       <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')" style="${isAnn?'display:none':''}">✕</button>
     </div>`).join('');
-  setTimeout(riAttachTouchDrag,0);
-}
-function riAttachTouchDrag(){
-  const list=document.getElementById('gmRoutineList');
-  if(!list) return;
-  let _touchDragEl=null, _touchPlaceholder=null;
-  list.querySelectorAll('.ri-drag-handle').forEach(handle=>{
-    const row=handle.closest('.gm-ri-row');
-    handle.addEventListener('touchstart',e=>{
-      e.stopPropagation();
-      _touchDragEl=row;
-      row.classList.add('ri-dragging');
-      _touchPlaceholder=document.createElement('div');
-      _touchPlaceholder.style.cssText='height:'+row.offsetHeight+'px;background:var(--fill2);border-radius:6px;border:2px dashed var(--blue);margin:2px 0';
-    },{passive:true});
-    handle.addEventListener('touchmove',e=>{
-      e.preventDefault();
-      const touch=e.touches[0];
-      const rows=[...list.querySelectorAll('.gm-ri-row:not(.ri-dragging)')];
-      let insertBefore=null,overEl=null;
-      for(const r of rows){
-        const rect=r.getBoundingClientRect();
-        if(touch.clientY<rect.top+rect.height/2){insertBefore=r;break;}
-        overEl=r;
-      }
-      if(insertBefore) list.insertBefore(_touchPlaceholder,insertBefore);
-      else if(overEl) overEl.after(_touchPlaceholder);
-      else list.appendChild(_touchPlaceholder);
-    },{passive:false});
-    handle.addEventListener('touchend',e=>{
-      if(!_touchDragEl){return;}
-      _touchDragEl.classList.remove('ri-dragging');
-      if(_touchPlaceholder&&_touchPlaceholder.parentNode){
-        const refRow=_touchPlaceholder.nextElementSibling?.classList.contains('gm-ri-row')
-          ?_touchPlaceholder.nextElementSibling:null;
-        const newIdx=refRow?+refRow.dataset.riIdx:gmRoutineItems.length;
-        const curIdx=+_touchDragEl.dataset.riIdx;
-        _touchPlaceholder.remove();
-        if(curIdx!==newIdx){
-          const item=gmRoutineItems.splice(curIdx,1)[0];
-          const insertAt=newIdx>curIdx?newIdx-1:newIdx;
-          gmRoutineItems.splice(insertAt,0,item);
-          gmRenderRoutineItems();
-          riAttachTouchDrag();
-        }
-      }
-      _touchDragEl=null; _touchPlaceholder=null;
-    },{passive:true});
-  });
 }
 function riDragStart(i){_riDragIdx=i;}
 function riDragOver(e,i){e.preventDefault();e.currentTarget.classList.add('drag-over');}
@@ -3720,8 +3554,9 @@ function openGtdModal(id){
   // サブタスク
   gmRoutineItems=JSON.parse(JSON.stringify(t.routineItems||[]));
   gmRenderRoutineItems();
-  const isAnnualTask=false;
-  const isRoutineTask=false;
+  // 🎯年間目標達成プロジェクトのタスク制御
+  const isAnnualTask=(t.project===ANNUAL_PROJECT);
+  const isRoutineTask=isAnnualTask&&(t.memo||'').includes('ルーティン行動');
   // ルーティン行動のみロック（テキスト・プロジェクト・メモ・重要度・繰り返し・所要時間・カテゴリ）
   ['gmText','gmProject','gmMemo'].forEach(id=>{
     const el=document.getElementById(id);
@@ -4005,8 +3840,8 @@ function printSheet(){
     <div class="quads">${D.quad.map(q=>`<div class="qd"><div class="qt">${esc(q.title)}</div><ol class="qol">${q.items.map(it=>`<li>${esc(it)}</li>`).join("")}</ol></div>`).join("")}</div></div>
   <div class="sec"><div class="sttl">ルーティン行動（重要度が高い順）</div>
     <ol>${D.routines.map(r=>`<li>${esc(r.text)}</li>`).join("")}</ol></div>
-  <div class="sec"><div class="sttl">目標達成のための支援</div><table style="width:100%;border-collapse:collapse"><tr><th style="width:26%;background:#e8f0fc;color:#1a3a6b;border:.5pt solid #8a98ad;padding:1mm 1.6mm;font-weight:700;text-align:left">支援者</th><th style="background:#e8f0fc;color:#1a3a6b;border:.5pt solid #8a98ad;padding:1mm 1.6mm;font-weight:700;text-align:left">支援内容</th></tr>
-    ${D.supports.map(s=>`<tr><td style="width:26%;font-weight:700;word-break:break-word;border:.5pt solid #8a98ad;padding:1mm 1.6mm">${esc(s.who)}</td><td style="word-break:break-word;border:.5pt solid #8a98ad;padding:1mm 1.6mm">${esc(s.what)}</td></tr>`).join("")}</table></div>
+  <table class="meta"><tr><th style="text-align:center;width:26%;white-space:normal">支援者</th><th style="text-align:center;background:var(--blue-l);color:var(--navy)">支援内容</th></tr>
+    ${D.supports.map(s=>`<tr><td style="width:26%;font-weight:700;word-break:break-word">${esc(s.who)}</td><td style="word-break:break-word">${esc(s.what)}</td></tr>`).join("")}</table>
   <table class="an"><tr><th></th><th>成功・強みの分析</th><th>失敗・弱みの分析</th></tr>
     ${a.rows.map((r,i)=>`<tr><th>${esc(r)}</th><td>${esc(a.success[i])}</td><td>${esc(a.failure[i])}</td></tr>`).join("")}</table>
   <table class="an"><tr><th></th><th>予想される問題点</th><th>解決策</th></tr>
@@ -4026,9 +3861,9 @@ function printSheet(){
   .sttl.red{background:#fdecea;color:#b71c1c}
   .srow b{color:#1a3a6b}
   table{border-collapse:collapse;width:100%}
-  .meta{margin-bottom:1.8mm;break-inside:avoid;page-break-inside:avoid}
+  .meta{margin-bottom:1.8mm}
   .meta th,.meta td{border:.5pt solid #8a98ad;padding:1mm 1.6mm;font-size:8pt;text-align:left}
-  .meta th{background:#e8f0fc;color:#1a3a6b;white-space:nowrap;width:1%}
+  .meta th{background:var(--blue-l);color:var(--navy);white-space:nowrap;width:1%}
   .quads{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm}
   .qd{border:.5pt solid #8a98ad;border-radius:1mm;font-size:7pt;line-height:1.4}
   .qd .pre{padding:1mm 1.5mm}
@@ -4129,7 +3964,7 @@ function gtdCard(t){
   const q=gtdQuadrant(t);
   const quadBadge=q?`<span class="kquad kquad-${q}">${q}</span>`:'';
   const textDisp=t.text?esc(t.text):`<span style="color:var(--faint)">タスク内容を入力...</span>`;
-  const annualCardStyle='';
+  const annualCardStyle=(t.project===ANNUAL_PROJECT)?'border-left:3px solid rgba(255,105,135,.6);':'';
   const msCb=multiSelectMode?`<input type="checkbox" class="kms-cb" data-id="${t.id}" ${multiSelectedIds.has(String(t.id))?'checked':''}>`:'';
   const msModeClass=multiSelectMode?' kms-mode':'';
   const msSelClass=(multiSelectMode&&multiSelectedIds.has(String(t.id)))?' kms-sel':'';
@@ -4186,7 +4021,7 @@ function openFolderEditModal(type){
   _feType=type;
   const colors=D.gtd.projectColors||{};
   const src=type==='project'?D.gtd.projects:D.gtd.categories;
-  _feItems=(src||[]).filter(n=>n&&n.trim()&&n!==ANNUAL_PROJECT).map(name=>({name,originalName:name,color:colors[name]||''}));
+  _feItems=(src||[]).filter(n=>n&&n.trim()).map(name=>({name,originalName:name,color:colors[name]||''}));
   _renderFolderEditList();
   document.getElementById('folderEditOverlay').classList.add('show');
 }
@@ -4208,7 +4043,7 @@ function _renderFolderEditList(){
     const del=isAnn
       ?'<span style="width:28px;flex:0 0 auto"></span>'
       :`<button class="fe-del-btn" onclick="event.stopPropagation();_collectFeInputs();feDeleteItem(${i})" title="削除"
-          style="width:22px;height:22px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:14px;font-weight:300;line-height:1;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0;opacity:1">−</button>`;
+          style="width:28px;height:28px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:18px;font-weight:300;line-height:1;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0">−</button>`;
     const handle=`<span class="fe-drag" title="ドラッグで並べ替え" style="font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:0 4px;user-select:none;touch-action:none">≡</span>`;
     return `<div class="fe-item" draggable="true" data-idx="${i}">${del}${cdot}<input class="fe-name-input" value="${esc(item.name)}" placeholder="名前"${isAnn?' style="color:var(--sub)"':''}>${handle}</div>`;
   }).join('');
@@ -4240,19 +4075,16 @@ function saveFolderEdit(){
       const orig=it.originalName, nw=it.name.trim();
       if(orig&&nw&&orig!==nw) D.gtd.tasks.forEach(t=>{ if((t.project||'')===orig) t.project=nw; });
     });
-    // 削除されたプロジェクトを使っているタスクのprojectをクリア（再復活防止）
-    const oldProjs=new Set(D.gtd.projects||[]);
-    const newProjsSet=new Set(names);
-    const removed=[...oldProjs].filter(p=>!newProjsSet.has(p));
-    if(removed.length){
-      const removedSet=new Set(removed);
-      D.gtd.tasks.forEach(t=>{ if(t.project&&removedSet.has(t.project)) t.project=''; });
-    }
     D.gtd.projects=names;
     if(!D.gtd.projectColors) D.gtd.projectColors={};
     const nc={};
     _feItems.forEach(it=>{ if(it.name.trim()&&it.color) nc[it.name.trim()]=it.color; });
     D.gtd.projectColors=nc;
+    // ANNUAL_PROJECTが消えていたら先頭に戻す
+    if(D.gtd.projects.length&&!D.gtd.projects.includes(ANNUAL_PROJECT)
+       &&(D.gtd.tasks||[]).some(t=>t.project===ANNUAL_PROJECT)){
+      D.gtd.projects.unshift(ANNUAL_PROJECT);
+    }
   } else {
     D.gtd.categories=names;
   }
@@ -4912,6 +4744,24 @@ function renderGTD(){
           <div class="gf-item gf-all ${!gtdFilter.type&&gtdView==='kanban'?'act':''}" data-f="" data-v="">📋 すべて表示</div>
           <div class="gf-item ${gtdFilter.type==='project'&&gtdFilter.value===''&&gtdView!=='today'?'act':''}" data-f="project" data-v="">📥 Inbox <span class="gf-cnt">${D.gtd.tasks.filter(t=>!(t.project||'')&&!t.done).length||''}</span></div>
           <div class="gf-item ${gtdFilter.type==='nodeadline'&&gtdView==='kanban'?'act':''}" data-f="nodeadline" data-v="">📭 日時未設定 <span class="gf-cnt">${D.gtd.tasks.filter(t=>!t.deadline&&!t.done).length||''}</span></div>
+          ${(()=>{
+            const allProj=D.gtd.projects||[];
+            const pinned=[ANNUAL_PROJECT].filter(p=>allProj.includes(p));
+            return pinned.map(name=>{
+              const isAnnual=name===ANNUAL_PROJECT;
+              const cnt=D.gtd.tasks.filter(t=>(t.project||'')===name&&!t.done).length;
+              const act=(gtdFilter.type==='project'&&gtdFilter.value===name&&gtdView==='kanban')?'act':'';
+              const style=isAnnual?'border-left:4px solid #ff6987;border-radius:0 6px 6px 0;padding-left:6px;':'';
+              const dot=isAnnual?'':` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="openColorPicker(event,'${esc(name)}')" title="色を変更"></span>`;
+              const main=`<div class="gf-item ${act}" data-f="project" data-v="${esc(name)}" style="${style}">${dot}<span class="gf-name">${esc(name)}</span><span class="gf-cnt">${cnt||''}</span></div>`;
+              // 年間目標達成の直下にルーティン項目を表示
+              if(isAnnual){
+                const routineItem=''; // ルーティン項目廃止（繰り返し設定で自動判別）
+                return main+routineItem;
+              }
+              return main;
+            }).join('');
+          })()}
           <div style="border-top:1px dashed var(--line);margin:4px 0 2px"></div>
           <div class="gf-section ${gtdCollapsed.project?'gf-collapsed':''}">
             <div class="gf-h gf-toggle" data-toggle="project">
