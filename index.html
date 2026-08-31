@@ -506,6 +506,10 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 .ri-mv{background:none;border:1px solid var(--line);border-radius:4px;color:var(--sub);font-size:10px;padding:2px 5px;cursor:pointer;line-height:1;min-width:28px;min-height:22px}
 .ri-mv:active{background:var(--fill)}
 .ri-mv:disabled{opacity:.25;cursor:default}
+.ri-drag-handle{font-size:20px;color:var(--sub);cursor:grab;flex:0 0 auto;padding:4px 6px;user-select:none;touch-action:none;align-self:center;line-height:1}
+.ri-drag-handle:active{cursor:grabbing}
+.gm-ri-row.ri-dragging{opacity:.3}
+.gm-ri-row.ri-drag-over{border-top:2px solid var(--blue);background:var(--fill2)}
 .gm-ri-del:hover{color:var(--red)}
 .gm-routine-addrow{display:flex;gap:6px;margin-top:8px}
 .gm-routine-addrow input{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:var(--card)}
@@ -3541,16 +3545,62 @@ function gmRenderRoutineItems(){
   const t=gtdTask(gtdModalId);
   const isAnn=false;
   c.innerHTML=gmRoutineItems.map((it,i)=>`
-    <div class="gm-ri-row" draggable="${isAnn?'false':'true'}"
+    <div class="gm-ri-row" draggable="${isAnn?'false':'true'}" data-ri-idx="${i}"
          ondragstart="riDragStart(${i})" ondragover="riDragOver(event,${i})"
          ondragleave="riDragLeave(event)" ondrop="riDrop(${i})">
-      <div class="ri-btns" style="${isAnn?'visibility:hidden;pointer-events:none':''}">
-        <button class="ri-mv" onclick="riMove(${i},-1)" ${i===0?'disabled':''}>▲</button>
-        <button class="ri-mv" onclick="riMove(${i},1)" ${i===gmRoutineItems.length-1?'disabled':''}>▼</button>
-      </div>
+      <span class="ri-drag-handle" style="${isAnn?'visibility:hidden;pointer-events:none':''}">≡</span>
       <input type="text" class="gm-ri-input" value="${esc(it.text)}" ${isAnn?'disabled':''} oninput="gmEditRoutineItem('${it.id}',this.value)">
       <button class="gm-ri-del" onclick="gmDelRoutineItem('${it.id}')" style="${isAnn?'display:none':''}">✕</button>
     </div>`).join('');
+  setTimeout(riAttachTouchDrag,0);
+}
+function riAttachTouchDrag(){
+  const list=document.getElementById('gmRoutineList');
+  if(!list) return;
+  let _touchDragEl=null, _touchPlaceholder=null;
+  list.querySelectorAll('.ri-drag-handle').forEach(handle=>{
+    const row=handle.closest('.gm-ri-row');
+    handle.addEventListener('touchstart',e=>{
+      e.stopPropagation();
+      _touchDragEl=row;
+      row.classList.add('ri-dragging');
+      _touchPlaceholder=document.createElement('div');
+      _touchPlaceholder.style.cssText='height:'+row.offsetHeight+'px;background:var(--fill2);border-radius:6px;border:2px dashed var(--blue);margin:2px 0';
+    },{passive:true});
+    handle.addEventListener('touchmove',e=>{
+      e.preventDefault();
+      const touch=e.touches[0];
+      const rows=[...list.querySelectorAll('.gm-ri-row:not(.ri-dragging)')];
+      let insertBefore=null,overEl=null;
+      for(const r of rows){
+        const rect=r.getBoundingClientRect();
+        if(touch.clientY<rect.top+rect.height/2){insertBefore=r;break;}
+        overEl=r;
+      }
+      if(insertBefore) list.insertBefore(_touchPlaceholder,insertBefore);
+      else if(overEl) overEl.after(_touchPlaceholder);
+      else list.appendChild(_touchPlaceholder);
+    },{passive:false});
+    handle.addEventListener('touchend',e=>{
+      if(!_touchDragEl){return;}
+      _touchDragEl.classList.remove('ri-dragging');
+      if(_touchPlaceholder&&_touchPlaceholder.parentNode){
+        const refRow=_touchPlaceholder.nextElementSibling?.classList.contains('gm-ri-row')
+          ?_touchPlaceholder.nextElementSibling:null;
+        const newIdx=refRow?+refRow.dataset.riIdx:gmRoutineItems.length;
+        const curIdx=+_touchDragEl.dataset.riIdx;
+        _touchPlaceholder.remove();
+        if(curIdx!==newIdx){
+          const item=gmRoutineItems.splice(curIdx,1)[0];
+          const insertAt=newIdx>curIdx?newIdx-1:newIdx;
+          gmRoutineItems.splice(insertAt,0,item);
+          gmRenderRoutineItems();
+          riAttachTouchDrag();
+        }
+      }
+      _touchDragEl=null; _touchPlaceholder=null;
+    },{passive:true});
+  });
 }
 function riDragStart(i){_riDragIdx=i;}
 function riDragOver(e,i){e.preventDefault();e.currentTarget.classList.add('drag-over');}
