@@ -1060,6 +1060,15 @@ td.dsun .daybtn{border-color:rgba(255,59,48,.35)}td.dsat .daybtn{border-color:rg
 </div>
 <div class="toast" id="toast"></div>
 <div id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg" alt=""></div>
+<div id="confirmDlgBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--card);border-radius:16px;padding:24px 20px;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <p id="confirmDlgMsg" style="margin:0 0 20px;font-size:15px;text-align:center;color:var(--text)"></p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button id="confirmDlgCancel" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--fill);color:var(--sub);font-size:14px;cursor:pointer">キャンセル</button>
+      <button id="confirmDlgOk" style="flex:1;padding:10px;border:none;border-radius:10px;background:#FF3B30;color:#fff;font-size:14px;font-weight:700;cursor:pointer">削除</button>
+    </div>
+  </div>
+</div>
 <div id="gtdModalBg" onclick="if(event.target===this)closeGtdModal()">
   <div id="gtdModal">
     <div class="gm-head">
@@ -2141,6 +2150,16 @@ function toast(msg){
   const t=document.getElementById("toast");
   t.textContent=msg; t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"),1800);
+}
+function showConfirm(msg, onYes, okLabel){
+  const bg=document.getElementById('confirmDlgBg');
+  document.getElementById('confirmDlgMsg').textContent=msg;
+  const okBtn=document.getElementById('confirmDlgOk');
+  okBtn.textContent=okLabel||'削除';
+  bg.style.display='flex';
+  const close=()=>{ bg.style.display='none'; okBtn.onclick=null; document.getElementById('confirmDlgCancel').onclick=null; };
+  okBtn.onclick=()=>{ close(); onYes(); };
+  document.getElementById('confirmDlgCancel').onclick=close;
 }
 function esc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 // 保存値（"2025.1.5" 等）を <input type=date> 用の YYYY-MM-DD に変換
@@ -4751,9 +4770,10 @@ async function injectGcalToTimeline(targetDate){
       // kdel（削除ボタン）も再バインド
       newBody.querySelectorAll('.kdel').forEach(b=>{
         b.onclick=()=>{
-          if(!confirm('このタスクを削除しますか？')) return;
-          D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id));
-          save(); renderGTD();
+          showConfirm('このタスクを削除しますか？', ()=>{
+            D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id));
+            save(); renderGTD();
+          });
         };
       });
     }
@@ -5195,8 +5215,9 @@ function bindGTD(root){
     });
   });
   root.querySelectorAll(".kdel").forEach(b=>b.onclick=()=>{
-    if(!confirm("このタスクを削除しますか？")) return;
-    D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id)); save(); renderGTD();
+    showConfirm("このタスクを削除しますか？", ()=>{
+      D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id)); save(); renderGTD();
+    });
   });
   // セクション折りたたみ
   root.querySelectorAll(".gf-toggle").forEach(h=>{
