@@ -1570,6 +1570,8 @@ function projectColorEmoji(name){
   return '🔴';
 }
 if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
+if(!Array.isArray(D.gtd.deletedProjects)) D.gtd.deletedProjects=[];
+if(!D.gtd.projectRenames||typeof D.gtd.projectRenames!=='object') D.gtd.projectRenames={};
 if(!Array.isArray(D.gtd.categories)) D.gtd.categories=[];
 if(!D.dailyFocus) D.dailyFocus={};
 if(!D.profile) D.profile={birthday:'',lifespan:90};
@@ -1849,8 +1851,30 @@ async function _applyRemoteData(remote){
     console.warn('[VISGO] syncブロック: ローカル'+localTaskCount+'タスク vs リモート0タスク');
     return; // 空データでローカルを上書きしない
   }
+  // ローカルの削除・リネーム記録を退避（同期で上書きされる前に）
+  const _localDeleted=new Set([...(D.gtd?.deletedProjects||[])]);
+  const _localRenames={...(D.gtd?.projectRenames||{})};
   // リモートの並び順を正とする（別デバイスで並べ替えた順を反映するため）
   Object.assign(D,remote);
+  // 削除・リネーム記録をマージ（ローカル記録 + リモート記録の和集合）
+  if(!Array.isArray(D.gtd.deletedProjects)) D.gtd.deletedProjects=[];
+  D.gtd.deletedProjects=[...new Set([...D.gtd.deletedProjects,..._localDeleted])];
+  if(!D.gtd.projectRenames||typeof D.gtd.projectRenames!=='object') D.gtd.projectRenames={};
+  D.gtd.projectRenames={...(D.gtd.projectRenames||{}),..._localRenames};
+  // 削除されたプロジェクトをフィルタ（復活防止）
+  const _delSet=new Set(D.gtd.deletedProjects);
+  if(_delSet.size>0){
+    D.gtd.projects=(D.gtd.projects||[]).filter(p=>!_delSet.has(p));
+    D.gtd.tasks=(D.gtd.tasks||[]).map(t=>t.project&&_delSet.has(t.project)?{...t,project:''}:t);
+  }
+  // リネームを適用（サーバーが古い名前を返した場合に修正）
+  const _ren=D.gtd.projectRenames||{};
+  Object.entries(_ren).forEach(([oldN,newN])=>{
+    if(!oldN||!newN||oldN===newN) return;
+    D.gtd.projects=D.gtd.projects.map(p=>p===oldN?newN:p);
+    D.gtd.tasks=D.gtd.tasks.map(t=>t.project===oldN?{...t,project:newN}:t);
+  });
+  D.gtd.projects=[...new Set((D.gtd.projects||[]).filter(p=>p&&p.trim()))];
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
     // 空配列でIDBを上書きしない（dreamImagesと同じパターン）
@@ -4370,7 +4394,20 @@ function saveFolderEdit(){
     if(removed.length){
       const removedSet=new Set(removed);
       D.gtd.tasks.forEach(t=>{ if(t.project&&removedSet.has(t.project)) t.project=''; });
+      // 削除記録（トゥームストーン）を保存 - 同期で復活しないように
+      if(!Array.isArray(D.gtd.deletedProjects)) D.gtd.deletedProjects=[];
+      D.gtd.deletedProjects=[...new Set([...D.gtd.deletedProjects,...removed])];
     }
+    // リネーム記録を保存 - 同期で古い名前に戻らないように
+    if(!D.gtd.projectRenames) D.gtd.projectRenames={};
+    _feItems.forEach(it=>{
+      const orig=it.originalName,nw=it.name.trim();
+      if(orig&&nw&&orig!==nw){
+        D.gtd.projectRenames[orig]=nw;
+        // 以前A→Bのマッピングがある場合、B→Cにすると{A:C}に更新
+        Object.keys(D.gtd.projectRenames).forEach(k=>{ if(D.gtd.projectRenames[k]===orig) D.gtd.projectRenames[k]=nw; });
+      }
+    });
     D.gtd.projects=names;
     if(!D.gtd.projectColors) D.gtd.projectColors={};
     const nc={};
