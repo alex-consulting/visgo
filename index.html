@@ -1951,7 +1951,7 @@ async function _applyRemoteData(remote){
 }
 
 function pruneOldTombstones(){
-  const CUTOFF=Date.now()-90*24*60*60*1000; // 90日以上前は除去
+  const CUTOFF=Date.now()-7*24*60*60*1000; // 7日以上前は除去
   if(Array.isArray(D.gtd?.deletedTaskIds)&&D.gtd._deletedTaskAt){
     D.gtd.deletedTaskIds=D.gtd.deletedTaskIds.filter(id=>{
       const t=D.gtd._deletedTaskAt[id]||0;
