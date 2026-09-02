@@ -1571,6 +1571,7 @@ function projectColorEmoji(name){
 }
 if(!Array.isArray(D.gtd.projects)) D.gtd.projects=[];
 if(!Array.isArray(D.gtd.deletedProjects)) D.gtd.deletedProjects=[];
+if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
 if(!D.gtd.projectRenames||typeof D.gtd.projectRenames!=='object') D.gtd.projectRenames={};
 if(!Array.isArray(D.gtd.categories)) D.gtd.categories=[];
 if(!D.dailyFocus) D.dailyFocus={};
@@ -1614,6 +1615,7 @@ D.gtd.categories=[...new Set(D.gtd.categories.filter(c=>c&&c.trim()))];
       project: "",
       categories: [],
       created: now,
+      updatedAt: now,
       deadline: data.date || new Date().toISOString().slice(0,10),
       urgent: true,
       important: false,
@@ -1854,6 +1856,7 @@ async function _applyRemoteData(remote){
   // ローカルの削除・リネーム記録を退避（同期で上書きされる前に）
   const _localDeleted=new Set([...(D.gtd?.deletedProjects||[])]);
   const _localRenames={...(D.gtd?.projectRenames||{})};
+  const _localDelTaskIds=new Set([...(D.gtd?.deletedTaskIds||[])].map(String));
   // リモートの並び順を正とする（別デバイスで並べ替えた順を反映するため）
   Object.assign(D,remote);
   // 削除・リネーム記録をマージ（ローカル記録 + リモート記録の和集合）
@@ -1861,6 +1864,9 @@ async function _applyRemoteData(remote){
   D.gtd.deletedProjects=[...new Set([...D.gtd.deletedProjects,..._localDeleted])];
   if(!D.gtd.projectRenames||typeof D.gtd.projectRenames!=='object') D.gtd.projectRenames={};
   D.gtd.projectRenames={...(D.gtd.projectRenames||{}),..._localRenames};
+  // deletedTaskIdsをマージ
+  if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
+  D.gtd.deletedTaskIds=[...new Set([...D.gtd.deletedTaskIds,..._localDelTaskIds].map(String))];
   // 削除されたプロジェクトをフィルタ（復活防止）
   const _delSet=new Set(D.gtd.deletedProjects);
   if(_delSet.size>0){
@@ -1875,6 +1881,11 @@ async function _applyRemoteData(remote){
     D.gtd.tasks=D.gtd.tasks.map(t=>t.project===oldN?{...t,project:newN}:t);
   });
   D.gtd.projects=[...new Set((D.gtd.projects||[]).filter(p=>p&&p.trim()))];
+  // 削除済みタスクIDをフィルタ（復活防止）
+  const _delTaskSet=new Set((D.gtd.deletedTaskIds||[]).map(String));
+  if(_delTaskSet.size>0){
+    D.gtd.tasks=(D.gtd.tasks||[]).filter(t=>!_delTaskSet.has(String(t.id)));
+  }
   if(Array.isArray(remote.gcalUrls)){ gcalUrls=remote.gcalUrls; D.gcalUrls=gcalUrls; }
   try{
     // 空配列でIDBを上書きしない（dreamImagesと同じパターン）
@@ -1913,16 +1924,35 @@ async function syncPushNow(){
       const _srvNextId=_srv?.gtd?.nextId||1;
       const _locNextId=D.gtd?.nextId||1;
       let _merged=false;
-      if(_srvNextId>_locNextId&&Array.isArray(_srv?.gtd?.tasks)){
-        // 自分が知らないIDのタスクをサーバーから取り込む
-        const _localIds=new Set((D.gtd.tasks||[]).map(t=>t.id));
-        const _newTasks=_srv.gtd.tasks.filter(t=>t.id>=_locNextId&&!_localIds.has(t.id));
-        if(_newTasks.length){
-          D.gtd.tasks=[...(D.gtd.tasks||[]),..._newTasks];
-          D.gtd.nextId=_srvNextId;
-          _merged=true;
-          console.log('[VISGO] プッシュ前マージ: '+_newTasks.length+'件のタスクを統合 (nextId '+_locNextId+'→'+_srvNextId+')');
-        }
+      if(Array.isArray(_srv?.gtd?.tasks)){
+        // 競合解決: updatedAt の新しい方を採用（新しいデータが常に優先）
+        const _localDelIds=new Set((D.gtd.deletedTaskIds||[]).map(String));
+        const _srvDelIds=new Set((_srv.gtd.deletedTaskIds||[]).map(String));
+        const _allDelIds=new Set([..._localDelIds,..._srvDelIds]);
+        // タスクをIDでインデックス化
+        const _localMap=new Map((D.gtd.tasks||[]).map(t=>[String(t.id),t]));
+        const _srvMap=new Map((_srv.gtd.tasks||[]).map(t=>[String(t.id),t]));
+        const _allIds=new Set([..._localMap.keys(),..._srvMap.keys()]);
+        const _merged_tasks=[];
+        _allIds.forEach(id=>{
+          if(_allDelIds.has(id)) return; // どちらかで削除済みならスキップ
+          const _lTask=_localMap.get(id);
+          const _sTask=_srvMap.get(id);
+          if(_lTask&&_sTask){
+            // 両デバイスに存在 → updatedAt が新しい方を採用
+            const _lTime=_lTask.updatedAt||_lTask.created||0;
+            const _sTime=_sTask.updatedAt||_sTask.created||0;
+            _merged_tasks.push(_lTime>=_sTime?_lTask:_sTask);
+          } else {
+            _merged_tasks.push(_lTask||_sTask);
+          }
+        });
+        // deletedTaskIdsをマージ
+        D.gtd.deletedTaskIds=[...new Set([...(D.gtd.deletedTaskIds||[]),...(_srv.gtd.deletedTaskIds||[])].map(String))];
+        D.gtd.tasks=_merged_tasks;
+        D.gtd.nextId=Math.max(_srvNextId,_locNextId);
+        _merged=true;
+        console.log('[VISGO] プッシュ前マージ(updatedAt競合解決): '+_merged_tasks.length+'件 (削除済:'+_allDelIds.size+'件)');
       }
       if(_merged){
         // マージ内容をlocalStorageに即時反映
@@ -2374,7 +2404,7 @@ function dreamActionsToTodo(dreamId){
       id:D.gtd.nextId++,text:s.text.trim(),done:false,
       project:'',category:'',priority:'',
       deadline:s.startDate||'',recur:'',memo:'夢リスト: '+d.title,
-      createdAt:new Date().toISOString()
+      createdAt:new Date().toISOString(),updatedAt:Date.now()
     });
     added++;
   });
@@ -3111,6 +3141,7 @@ function routinesToTodo(){
       project:ANNUAL_PROJECT,
       categories:[],
       created:Date.now(),
+      updatedAt:Date.now(),
       deadline:today,
       recur:'daily',
       important:true,
@@ -3159,6 +3190,7 @@ function deadlinesToTodo(){
         project:ANNUAL_PROJECT,
         categories:[],
         created:Date.now(),
+        updatedAt:Date.now(),
         deadline:it.deadline||'',
         recur:'',
         important:true,
@@ -3905,6 +3937,7 @@ function saveGtdModal(){
   t.important=document.getElementById("gmImportant").checked;
   t.routine=!!(t.recur);  // 繰り返し設定があれば自動的にルーティン
   t.routineItems=JSON.parse(JSON.stringify(gmRoutineItems));
+  t.updatedAt=Date.now();
   save(); renderGTD();
   closeGtdModal();
 }
@@ -4039,6 +4072,7 @@ function rwCreate(){
     project:'',
     categories:[],
     created:Date.now(),
+    updatedAt:Date.now(),
     recur:rwData.recur||'daily',
     dur:rwData.dur||'',
     deadline:rwData.startDate||'',
@@ -4058,6 +4092,7 @@ function duplicateGtdTask(){
   copy.deadline=dateStr(1);
   copy.done=false;
   copy.created=Date.now();
+  copy.updatedAt=Date.now();
   if(Array.isArray(copy.routineItems)) copy.routineItems.forEach(it=>it.done=false);
   D.gtd.tasks.push(copy);
   save(); renderGTD();
@@ -4784,7 +4819,7 @@ async function injectGcalToTimeline(targetDate){
         cb.addEventListener('click',e=>e.stopPropagation());
         cb.addEventListener('change',()=>{
           const t=gtdTask(cb.dataset.id); if(!t) return;
-          t.done=cb.checked;
+          t.done=cb.checked; t.updatedAt=Date.now();
           if(cb.checked&&t.recur) advanceRecurDeadline(t);
           save(); renderGTD();
         });
@@ -4808,6 +4843,8 @@ async function injectGcalToTimeline(targetDate){
       newBody.querySelectorAll('.kdel').forEach(b=>{
         b.onclick=()=>{
           showConfirm('このタスクを削除しますか？', ()=>{
+            if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
+            D.gtd.deletedTaskIds.push(String(b.dataset.id));
             D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id));
             save(); renderGTD();
           });
@@ -5153,7 +5190,7 @@ function renderGTD(){
 function gtdAdd(){
   const cap=document.getElementById("gtdCapture");
   const v=cap.value.trim(); if(!v) return;
-  const task={id:D.gtd.nextId++, text:v, status:"inbox", project:"", categories:[], deadline:"", recur:"", done:false, routineItems:[], created:Date.now()};
+  const task={id:D.gtd.nextId++, text:v, status:"inbox", project:"", categories:[], deadline:"", recur:"", done:false, routineItems:[], created:Date.now(), updatedAt:Date.now()};
   if(gtdView==='today') task.deadline=dateStr(0);
   else if(gtdView==='tomorrow') task.deadline=dateStr(1);
   if(gtdFilter.type==='project'&&gtdFilter.value) task.project=gtdFilter.value;
@@ -5246,13 +5283,15 @@ function bindGTD(root){
     cb.addEventListener("click",e=>e.stopPropagation());
     cb.addEventListener("change",()=>{
       const t=gtdTask(cb.dataset.id); if(!t) return;
-      t.done=cb.checked;
+      t.done=cb.checked; t.updatedAt=Date.now();
       if(cb.checked&&t.recur) advanceRecurDeadline(t);
       save(); renderGTD();
     });
   });
   root.querySelectorAll(".kdel").forEach(b=>b.onclick=()=>{
     showConfirm("このタスクを削除しますか？", ()=>{
+      if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
+      D.gtd.deletedTaskIds.push(String(b.dataset.id));
       D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id)); save(); renderGTD();
     });
   });
