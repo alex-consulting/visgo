@@ -1193,6 +1193,7 @@ const DEFAULT_DATA = {
   },
   ow:{
     _updatedAt:0,
+    _cellTs:{goal:0,themes:[0,0,0,0,0,0,0,0],actions:[[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]]},
     goal:"",
     themes:["【心】\nテーマ1","【心】\nテーマ2","【心】\nテーマ3",
             "【技】\nテーマ4","【技】\nテーマ5",
@@ -1861,8 +1862,9 @@ async function _applyRemoteData(remote){
   const _localDelTaskIds=new Set([...(D.gtd?.deletedTaskIds||[])].map(String));
   // ow/dreamsのローカル状態を退避
   const _localOw=D.ow?JSON.parse(JSON.stringify(D.ow)):null;
-  const _localDreamsItems=[...(D.dreams?.items||[])].map(x=>JSON.parse(JSON.stringify(x)));
-  const _localDreamsDeletedIds=new Set([...(D.dreams?.deletedIds||[])].map(String));
+  const _localDreams=D.dreams?JSON.parse(JSON.stringify(D.dreams)):null;
+  const _localDreamsItems=_localDreams?.items||[];
+  const _localDreamsDeletedIds=new Set((_localDreams?.deletedIds||[]).map(String));
   // リモートの並び順を正とする（別デバイスで並べ替えた順を反映するため）
   Object.assign(D,remote);
   // 削除・リネーム記録をマージ（ローカル記録 + リモート記録の和集合）
@@ -1892,9 +1894,31 @@ async function _applyRemoteData(remote){
   if(_delTaskSet.size>0){
     D.gtd.tasks=(D.gtd.tasks||[]).filter(t=>!_delTaskSet.has(String(t.id)));
   }
-  // OW64: updatedAtが新しい方を採用
-  if(_localOw&&(_localOw._updatedAt||0)>(D.ow?._updatedAt||0)){
-    D.ow=_localOw;
+  // OW64: セル単位で競合解決（updatedAt比較）
+  if(_localOw&&D.ow){
+    const _lCts=_localOw._cellTs||{goal:0,themes:Array(8).fill(0),actions:Array(8).fill(null).map(()=>Array(8).fill(0))};
+    const _sCts=D.ow._cellTs||{goal:0,themes:Array(8).fill(0),actions:Array(8).fill(null).map(()=>Array(8).fill(0))};
+    if(!D.ow._cellTs) D.ow._cellTs=JSON.parse(JSON.stringify(_sCts));
+    if((_lCts.goal||0)>=(_sCts.goal||0)){ D.ow.goal=_localOw.goal; D.ow._cellTs.goal=_lCts.goal||0; }
+    for(let _i=0;_i<8;_i++){
+      if((_lCts.themes[_i]||0)>=(_sCts.themes[_i]||0)){ D.ow.themes[_i]=_localOw.themes[_i]; D.ow._cellTs.themes[_i]=_lCts.themes[_i]||0; }
+      for(let _j=0;_j<8;_j++){
+        const _lt=((_lCts.actions[_i]||[])[_j]||0), _st=((_sCts.actions[_i]||[])[_j]||0);
+        if(_lt>=_st){ if(!D.ow._cellTs.actions[_i]) D.ow._cellTs.actions[_i]=Array(8).fill(0); D.ow.actions[_i][_j]=_localOw.actions[_i][_j]; D.ow._cellTs.actions[_i][_j]=_lt; }
+      }
+    }
+    D.ow._updatedAt=Math.max(_localOw._updatedAt||0,D.ow._updatedAt||0);
+  } else if(_localOw&&(_localOw._updatedAt||0)>(D.ow?._updatedAt||0)){ D.ow=_localOw; }
+  // dreams mission/value: updatedAtが新しい方を採用
+  if(_localDreams&&D.dreams){
+    if((_localDreams._missionUpdatedAt||0)>(D.dreams._missionUpdatedAt||0)){
+      D.dreams.mission=_localDreams.mission; D.dreams.missionTitle=_localDreams.missionTitle;
+      D.dreams._missionUpdatedAt=_localDreams._missionUpdatedAt;
+    }
+    if((_localDreams._valueUpdatedAt||0)>(D.dreams._valueUpdatedAt||0)){
+      D.dreams.value=_localDreams.value; D.dreams.valueTitle=_localDreams.valueTitle;
+      D.dreams._valueUpdatedAt=_localDreams._valueUpdatedAt;
+    }
   }
   // 夢リスト: per-item競合解決 + tombstoneマージ
   const _allDreamsDeletedIds=new Set([...((D.dreams?.deletedIds||[]).map(String)),..._localDreamsDeletedIds]);
@@ -1924,6 +1948,24 @@ async function _applyRemoteData(remote){
   const {goalImages,missionImages,...rest}=D;
   const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
   localStorage.setItem(LS_KEY,JSON.stringify(lsData));
+}
+
+function pruneOldTombstones(){
+  const CUTOFF=Date.now()-90*24*60*60*1000; // 90日以上前は除去
+  if(Array.isArray(D.gtd?.deletedTaskIds)&&D.gtd._deletedTaskAt){
+    D.gtd.deletedTaskIds=D.gtd.deletedTaskIds.filter(id=>{
+      const t=D.gtd._deletedTaskAt[id]||0;
+      if(t>0&&t<CUTOFF){ delete D.gtd._deletedTaskAt[id]; return false; }
+      return true;
+    });
+  }
+  if(Array.isArray(D.dreams?.deletedIds)&&D.dreams._deletedAt){
+    D.dreams.deletedIds=D.dreams.deletedIds.filter(id=>{
+      const t=D.dreams._deletedAt[id]||0;
+      if(t>0&&t<CUTOFF){ delete D.dreams._deletedAt[id]; return false; }
+      return true;
+    });
+  }
 }
 async function syncPushNow(){
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
@@ -1976,9 +2018,29 @@ async function syncPushNow(){
         D.gtd.deletedTaskIds=[...new Set([...(D.gtd.deletedTaskIds||[]),...(_srv.gtd.deletedTaskIds||[])].map(String))];
         D.gtd.tasks=_merged_tasks;
         D.gtd.nextId=Math.max(_srvNextId,_locNextId);
-        // OW64: updatedAtが新しい方を採用
-        if(_srv.ow&&(_srv.ow._updatedAt||0)>(D.ow?._updatedAt||0)){
-          D.ow=_srv.ow;
+        // OW64: セル単位でサーバーとマージ
+        if(_srv.ow&&D.ow){
+          const _sC=_srv.ow._cellTs||{goal:0,themes:Array(8).fill(0),actions:Array(8).fill(null).map(()=>Array(8).fill(0))};
+          const _lC=D.ow._cellTs||{goal:0,themes:Array(8).fill(0),actions:Array(8).fill(null).map(()=>Array(8).fill(0))};
+          if((_sC.goal||0)>(_lC.goal||0)){ D.ow.goal=_srv.ow.goal; if(!D.ow._cellTs) D.ow._cellTs=JSON.parse(JSON.stringify(_lC)); D.ow._cellTs.goal=_sC.goal; }
+          for(let _i=0;_i<8;_i++){
+            if((_sC.themes[_i]||0)>(_lC.themes[_i]||0)){ D.ow.themes[_i]=_srv.ow.themes[_i]; D.ow._cellTs.themes[_i]=_sC.themes[_i]; }
+            for(let _j=0;_j<8;_j++){
+              if(((_sC.actions[_i]||[])[_j]||0)>((_lC.actions[_i]||[])[_j]||0)){ if(!D.ow._cellTs.actions[_i]) D.ow._cellTs.actions[_i]=Array(8).fill(0); D.ow.actions[_i][_j]=_srv.ow.actions[_i][_j]; D.ow._cellTs.actions[_i][_j]=(_sC.actions[_i]||[])[_j]; }
+            }
+          }
+          D.ow._updatedAt=Math.max(_srv.ow._updatedAt||0,D.ow._updatedAt||0);
+        } else if(_srv.ow&&(_srv.ow._updatedAt||0)>(D.ow?._updatedAt||0)){ D.ow=_srv.ow; }
+        // dreams mission/value: サーバーが新しければ採用
+        if(_srv.dreams&&D.dreams){
+          if((_srv.dreams._missionUpdatedAt||0)>(D.dreams._missionUpdatedAt||0)){
+            D.dreams.mission=_srv.dreams.mission; D.dreams.missionTitle=_srv.dreams.missionTitle;
+            D.dreams._missionUpdatedAt=_srv.dreams._missionUpdatedAt;
+          }
+          if((_srv.dreams._valueUpdatedAt||0)>(D.dreams._valueUpdatedAt||0)){
+            D.dreams.value=_srv.dreams.value; D.dreams.valueTitle=_srv.dreams.valueTitle;
+            D.dreams._valueUpdatedAt=_srv.dreams._valueUpdatedAt;
+          }
         }
         // 夢リスト: per-item競合解決
         if(Array.isArray(_srv.dreams?.items)){
@@ -2039,8 +2101,10 @@ async function syncPushNow(){
     const lsRaw=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
     lsRaw._syncAt=now;
     localStorage.setItem(LS_KEY,JSON.stringify(lsRaw));
+    D._pendingPush=false;
+    pruneOldTombstones();
     setSyncStatus("☁ 同期済み");
-  }catch(e){ D._syncAt=oldSyncAt; setSyncStatus("⚠ 同期失敗"); }
+  }catch(e){ D._syncAt=oldSyncAt; setSyncStatus("⚠ 同期失敗"); D._pendingPush=true; setTimeout(()=>{ if(D._pendingPush) syncPushNow(); },30000); }
 }
 async function syncPull(){
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
@@ -2604,8 +2668,8 @@ function dreamValueHtml(){
   const val=D.dreams.value||'';
   const collapsed=dreamValueCollapsed?' collapsed':'';
   const titleSpan=`<span class="dream-mission-title${vTitle?'':' empty'}">${esc(vTitle)||'（タイトル未設定）'}</span>`;
-  const body=`<input class="dream-mission-title-inp" type="text" placeholder="バリューのタイトル（例：誠実・挑戦・成長）" value="${esc(vTitle)}" oninput="D.dreams.valueTitle=this.value;save()">
-<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);D.dreams.value=this.value;save()">${esc(val)}</textarea>
+  const body=`<input class="dream-mission-title-inp" type="text" placeholder="バリューのタイトル（例：誠実・挑戦・成長）" value="${esc(vTitle)}" oninput="dmSetValueTitle(this.value)">
+<textarea class="dream-mission-ta" placeholder="あなたの価値観・大切にしていることを記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);dmSetValue(this.value)">${esc(val)}</textarea>
 <div style="margin-top:8px"><button onclick="save();toast('バリューを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
   return `<div class="dream-mission${collapsed}">
     <div class="dream-mission-hd" onclick="dreamValueCollapsed=!dreamValueCollapsed;renderDreams()">
@@ -2723,8 +2787,8 @@ function renderDreams(){
         const mTitle=D.dreams.missionTitle||'';
         const imgs=(D.missionImages||[]);
         const imgsHtml=imgs.length?`<div class="dream-mission-imgs">${imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('')}</div>`:'';
-        return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="D.dreams.missionTitle=this.value;save();dmSyncMissionTitle(this.value)">
-<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);D.dreams.mission=this.value;save()">${esc(mission)}</textarea>
+        return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="dmSetMissionTitle(this.value)">
+<textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);dmSetMission(this.value)">${esc(mission)}</textarea>
 ${imgsHtml}
 <div style="margin-top:8px;display:flex;gap:8px;align-items:center"><button onclick="document.getElementById('dmMissionImgFile').click()" style="border:1px dashed var(--line);background:none;padding:7px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button><input type="file" id="dmMissionImgFile" accept="image/*" multiple style="display:none" onchange="dmMissionAddImgs(this)"><button onclick="save();toast('ミッションを保存しました')" style="padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">保存</button></div>`;
       })()}
@@ -2880,6 +2944,10 @@ function saveDream(){
   save(); closeDreamModal(); renderDreams();
 }
 
+function dmSetMissionTitle(v){D.dreams.missionTitle=v;D.dreams._missionUpdatedAt=Date.now();save();dmSyncMissionTitle(v);}
+function dmSetMission(v){D.dreams.mission=v;D.dreams._missionUpdatedAt=Date.now();save();}
+function dmSetValueTitle(v){D.dreams.valueTitle=v;D.dreams._valueUpdatedAt=Date.now();save();}
+function dmSetValue(v){D.dreams.value=v;D.dreams._valueUpdatedAt=Date.now();save();}
 function dmSyncMissionTitle(val){
   const sp=document.querySelector('.dream-mission-title');
   if(!sp) return;
@@ -2922,18 +2990,22 @@ async function dmMissionAddImgs(input){
 }
 function deleteDreamFromModal(){
   if(!dreamEditId) return;
-  if(!confirm('この夢を削除しますか？')) return;
-  if(!Array.isArray(D.dreams.deletedIds)) D.dreams.deletedIds=[];
-  D.dreams.deletedIds.push(String(dreamEditId));
-  D.dreams.items=(D.dreams.items||[]).filter(x=>String(x.id)!==String(dreamEditId));
-  save(); closeDreamModal(); renderDreams();
+  showConfirm('この夢を削除しますか？', ()=>{
+    if(!Array.isArray(D.dreams.deletedIds)) D.dreams.deletedIds=[];
+    D.dreams.deletedIds.push(String(dreamEditId));
+    if(!D.dreams._deletedAt) D.dreams._deletedAt={}; D.dreams._deletedAt[String(dreamEditId)]=Date.now();
+    D.dreams.items=(D.dreams.items||[]).filter(x=>String(x.id)!==String(dreamEditId));
+    save(); closeDreamModal(); renderDreams();
+  });
 }
 function deleteDream(id){
-  if(!confirm('この夢を削除しますか？')) return;
-  if(!Array.isArray(D.dreams.deletedIds)) D.dreams.deletedIds=[];
-  D.dreams.deletedIds.push(String(id));
-  D.dreams.items=(D.dreams.items||[]).filter(x=>String(x.id)!==String(id));
-  save(); renderDreams();
+  showConfirm('この夢を削除しますか？', ()=>{
+    if(!Array.isArray(D.dreams.deletedIds)) D.dreams.deletedIds=[];
+    D.dreams.deletedIds.push(String(id));
+    if(!D.dreams._deletedAt) D.dreams._deletedAt={}; D.dreams._deletedAt[String(id)]=Date.now();
+    D.dreams.items=(D.dreams.items||[]).filter(x=>String(x.id)!==String(id));
+    save(); renderDreams();
+  });
 }
 function closeDreamModal(){
   document.getElementById('dreamModalOverlay').style.display='none';
@@ -3749,10 +3821,12 @@ function modalSave(){
   if(!modalCtx) return;
   const v=document.getElementById("modalTa").value.trim();
   if(modalCtx.kind==="ow"){
-    if(modalCtx.type==="goal") D.ow.goal=v;
-    else if(modalCtx.type==="theme") D.ow.themes[modalCtx.themeIdx]=v;
-    else D.ow.actions[modalCtx.themeIdx][modalCtx.actIdx]=v;
-    D.ow._updatedAt=Date.now();
+    if(!D.ow._cellTs) D.ow._cellTs={goal:0,themes:Array(8).fill(0),actions:Array(8).fill(null).map(()=>Array(8).fill(0))};
+    const _cts=D.ow._cellTs, _now=Date.now();
+    if(modalCtx.type==="goal"){ D.ow.goal=v; _cts.goal=_now; }
+    else if(modalCtx.type==="theme"){ D.ow.themes[modalCtx.themeIdx]=v; _cts.themes[modalCtx.themeIdx]=_now; }
+    else{ D.ow.actions[modalCtx.themeIdx][modalCtx.actIdx]=v; (_cts.actions[modalCtx.themeIdx]=_cts.actions[modalCtx.themeIdx]||Array(8).fill(0))[modalCtx.actIdx]=_now; }
+    D.ow._updatedAt=_now;
     save(); renderOW();
   }
   closeModal();
@@ -4896,7 +4970,8 @@ async function injectGcalToTimeline(targetDate){
         b.onclick=()=>{
           showConfirm('このタスクを削除しますか？', ()=>{
             if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
-            D.gtd.deletedTaskIds.push(String(b.dataset.id));
+            if(!D.gtd._deletedTaskAt) D.gtd._deletedTaskAt={};
+            D.gtd.deletedTaskIds.push(String(b.dataset.id)); D.gtd._deletedTaskAt[String(b.dataset.id)]=Date.now();
             D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id));
             save(); renderGTD();
           });
@@ -5343,7 +5418,8 @@ function bindGTD(root){
   root.querySelectorAll(".kdel").forEach(b=>b.onclick=()=>{
     showConfirm("このタスクを削除しますか？", ()=>{
       if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
-      D.gtd.deletedTaskIds.push(String(b.dataset.id));
+      if(!D.gtd._deletedTaskAt) D.gtd._deletedTaskAt={};
+      D.gtd.deletedTaskIds.push(String(b.dataset.id)); D.gtd._deletedTaskAt[String(b.dataset.id)]=Date.now();
       D.gtd.tasks=D.gtd.tasks.filter(t=>String(t.id)!==String(b.dataset.id)); save(); renderGTD();
     });
   });
