@@ -1233,11 +1233,37 @@ function gcalLoadToken(){
     if(s&&s.expiry>Date.now()+60000){gcalOAuthToken=s.token;}else{gcalOAuthToken=null;}
   }catch(e){gcalOAuthToken=null;}
 }
-function gcalSaveToken(token,expiresIn){
-  localStorage.setItem(GCAL_TOKEN_LS,JSON.stringify({token,expiry:Date.now()+(expiresIn||3600)*1000}));
-  gcalOAuthToken=token;
+let _gcalRefreshTimer=null;
+function gcalScheduleRefresh(expiresIn){
+  if(_gcalRefreshTimer) clearTimeout(_gcalRefreshTimer);
+  const delay=Math.max((expiresIn-300)*1000,60000); // 期限5分前、最短1分後
+  _gcalRefreshTimer=setTimeout(gcalSilentRefresh,delay);
 }
-function gcalClearToken(){localStorage.removeItem(GCAL_TOKEN_LS);gcalOAuthToken=null;}
+function gcalSilentRefresh(){
+  if(!D.gcalClientId) return;
+  if(typeof google==='undefined'||!google.accounts) return;
+  try{
+    google.accounts.oauth2.initTokenClient({
+      client_id:D.gcalClientId,
+      scope:'https://www.googleapis.com/auth/calendar.readonly',
+      prompt:'', // サイレント再取得（ユーザー操作不要）
+      callback:(resp)=>{
+        if(resp.error){ console.warn('[VISGO] gcal silent refresh failed:',resp.error); return; }
+        gcalSaveToken(resp.access_token,resp.expires_in);
+        gcalScheduleRefresh(resp.expires_in||3600);
+        gcalRenderAuthStatus();
+        console.log('[VISGO] gcal token refreshed silently');
+      }
+    }).requestAccessToken({prompt:''});
+  }catch(e){ console.warn('[VISGO] gcal silent refresh error:',e); }
+}
+function gcalSaveToken(token,expiresIn){
+  const _ei=expiresIn||3600;
+  localStorage.setItem(GCAL_TOKEN_LS,JSON.stringify({token,expiry:Date.now()+_ei*1000}));
+  gcalOAuthToken=token;
+  gcalScheduleRefresh(_ei);
+}
+function gcalClearToken(){localStorage.removeItem(GCAL_TOKEN_LS);gcalOAuthToken=null;if(_gcalRefreshTimer){clearTimeout(_gcalRefreshTimer);_gcalRefreshTimer=null;}}
 function gcalSaveClientId(){
   const v=(document.getElementById('gcalClientIdInput')?.value||'').trim();
   D.gcalClientId=v; save();
@@ -1550,6 +1576,20 @@ D.goalCriteria.forEach(c=>{if(!('targetNum' in c)){c.targetNum=c.value||'';}if(!
   D.gcalUrls=[]; gcalUrls=[];
 })();
 gcalLoadToken(); // トークン復元
+// トークン期限切れの場合、GISロード後にサイレント再取得を試みる
+(()=>{
+  const _s=JSON.parse(localStorage.getItem(GCAL_TOKEN_LS)||'null');
+  if(_s&&_s.expiry<=Date.now()+60000&&D.gcalClientId){
+    // 期限切れ or まもなく切れる → GISロード後にサイレントリフレッシュ
+    const _tryRefresh=()=>{
+      if(typeof google!=='undefined'&&google.accounts){ gcalSilentRefresh(); }
+      else { setTimeout(_tryRefresh,1000); }
+    };
+    setTimeout(_tryRefresh,2000); // ページロード完了待ち
+  } else if(_s&&_s.expiry>Date.now()+60000){
+    gcalScheduleRefresh(Math.floor((_s.expiry-Date.now())/1000));
+  }
+})()
 if(!D.gtd.projectColors) D.gtd.projectColors={}; // プロジェクトカラー
 function projectColorEmoji(name){
   const hex=(D.gtd&&D.gtd.projectColors&&D.gtd.projectColors[name])||'';
