@@ -3951,8 +3951,7 @@ function riAttachTouchDrag(){
           const item=gmRoutineItems.splice(curIdx,1)[0];
           const insertAt=newIdx>curIdx?newIdx-1:newIdx;
           gmRoutineItems.splice(insertAt,0,item);
-          gmRenderRoutineItems();
-          riAttachTouchDrag();
+          gmRenderRoutineItems(); // setTimeout内でriAttachTouchDragが呼ばれる
         }
       }
       _touchDragEl=null; _touchPlaceholder=null;
@@ -3965,10 +3964,14 @@ function riDragLeave(e){e.currentTarget.classList.remove('drag-over');}
 function riDrop(i){
   document.querySelectorAll('.gm-ri-row.drag-over').forEach(el=>el.classList.remove('drag-over'));
   if(_riDragIdx===null||_riDragIdx===i){_riDragIdx=null;return;}
-  const item=gmRoutineItems.splice(_riDragIdx,1)[0];
-  gmRoutineItems.splice(i,0,item);
+  const _from=_riDragIdx, _to=i;
   _riDragIdx=null;
-  gmRenderRoutineItems();
+  // ドラッグイベント完了後にDOM更新（ブラウザのdrag状態をリセットさせるため）
+  setTimeout(()=>{
+    const item=gmRoutineItems.splice(_from,1)[0];
+    gmRoutineItems.splice(_to,0,item);
+    gmRenderRoutineItems();
+  },0);
 }
 function gmEditRoutineItem(id,val){
   const it=gmRoutineItems.find(x=>String(x.id)===String(id));
