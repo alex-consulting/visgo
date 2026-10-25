@@ -2966,8 +2966,9 @@ function dmMissionRenderImgs(){
     wrap.innerHTML='';
   }
 }
-function dmMissionDelImg(i){
+async function dmMissionDelImg(i){
   D.missionImages.splice(i,1);
+  try{ await idbSet('missionImages', D.missionImages); }catch(e){}
   save();
   dmMissionRenderImgs();
 }
