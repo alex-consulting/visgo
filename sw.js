@@ -1,6 +1,6 @@
 // VISGO Service Worker
 // バージョンを変更するとPWAキャッシュが自動更新されます
-const CACHE_VERSION = 'visgo-v3.2.0';
+const CACHE_VERSION = 'visgo-v3.2.1';
 const CACHE_URLS = [
   './index.html',
   './apple-touch-icon.png'
@@ -27,12 +27,18 @@ self.addEventListener('activate', e => {
 // フェッチ: ナビゲーションはネットワーク優先（常に最新を取得）、失敗時はキャッシュ
 self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate') {
+    // キャッシュキーからクエリ・ハッシュを除く（旧QRの ?sid=..&spw=.. など資格情報をキャッシュに残さない）
+    const cleanUrl = new URL(e.request.url);
+    cleanUrl.search = '';
+    cleanUrl.hash = '';
     e.respondWith(
       fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_VERSION).then(c => c.put(e.request, clone));
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_VERSION).then(c => c.put(cleanUrl.href, clone));
+        }
         return res;
-      }).catch(() => caches.match(e.request))
+      }).catch(() => caches.match(cleanUrl.href))
     );
   } else {
     e.respondWith(

@@ -1476,6 +1476,27 @@ const GCAL_COLORS=[
   {border:'#AF52DE',bg:'rgba(175,82,222,.10)',time:'#8a3ab0'},
   {border:'#FF3B30',bg:'rgba(255,59,48,.10)',time:'#c42020'},
 ];
+// fetchにタイムアウトを付ける。通信が止まっても同期やUIが固まったままにならない。
+// タイマーは本文の読み込み完了後も有効（ヘッダー受信後に止まる通信も打ち切る）。完了後のabortは無害。
+function fetchWithTimeout(url,options,timeoutMs){
+  const ctrl=new AbortController();
+  setTimeout(()=>ctrl.abort(),timeoutMs||30000);
+  return fetch(url,Object.assign({},options,{signal:ctrl.signal}));
+}
+// iCal取得: 自前のWorker(/ical-proxy)経由のみ。秘密トークン入りのカレンダーURLを第三者の公開プロキシへ渡さない
+async function fetchIcalViaWorker(icalUrl){
+  const code=getSyncCode();
+  if(!code) return null; // 未ログイン時は取得しない
+  try{
+    const res=await fetchWithTimeout(WORKER_URL+'/ical-proxy',{headers:{'X-Sync-Code':code,'X-Ical-Url':icalUrl},cache:'no-store'},8000);
+    if(!res.ok){ console.warn('[VISGO] ical-proxy HTTP',res.status); return null; }
+    const text=await res.text();
+    return text.includes('BEGIN:VCALENDAR')?text:null;
+  }catch(e){
+    console.warn('[VISGO] ical-proxy error',e&&e.name);
+    return null;
+  }
+}
 async function fetchGcalEvents(){
   gcalLoadToken();
   if(Date.now()-_gcalCache.fetchedAt<5*60*1000) return _gcalCache.data;
@@ -1486,12 +1507,12 @@ async function fetchGcalEvents(){
       const timeMin=new Date(now-24*60*60*1000).toISOString();
       const timeMax=new Date(now.getTime()+60*24*60*60*1000).toISOString();
       const hdrs={Authorization:'Bearer '+gcalOAuthToken};
-      const calRes=await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList',{headers:hdrs});
+      const calRes=await fetchWithTimeout('https://www.googleapis.com/calendar/v3/users/me/calendarList',{headers:hdrs});
       if(calRes.status===401){gcalClearToken();return await fetchGcalEvents();}
       const calList=await calRes.json();
       const allEvents=[];
       for(const cal of calList.items||[]){
-        const evRes=await fetch(
+        const evRes=await fetchWithTimeout(
           'https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(cal.id)+
           '/events?timeMin='+encodeURIComponent(timeMin)+'&timeMax='+encodeURIComponent(timeMax)+
           '&singleEvents=true&orderBy=startTime&maxResults=250',
@@ -1516,20 +1537,7 @@ async function fetchGcalEvents(){
   for(let i=0;i<gcalUrls.length;i++){
     if(i>0) await new Promise(r=>setTimeout(r,600));
     try{
-      const _proxies=[
-        u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-        u=>'https://corsproxy.org/?'+encodeURIComponent(u),
-        u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
-      ];
-      let text=null;
-      for(const _pf of _proxies){
-        try{
-          const _r=await Promise.race([fetch(_pf(gcalUrls[i]),{cache:'no-store'}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))]);
-          if(!_r.ok) continue;
-          const _t=await _r.text();
-          if(_t.includes('BEGIN:VCALENDAR')){text=_t;break;}
-        }catch(_e){}
-      }
+      const text=await fetchIcalViaWorker(gcalUrls[i]);
       if(!text) continue;
       const evs=parseIcalEvents(text);
       evs.forEach(ev=>ev.calIdx=i);
@@ -1764,7 +1772,7 @@ async function autoBackup(){
     };
     backups.unshift({date:today,ts:Date.now(),tasks:D.gtd?.tasks?.length||0,data:snapshot});
     await idbSet(BACKUP_IDB_KEY,backups.slice(0,BACKUP_MAX_DAYS));
-  }catch(e){}
+  }catch(e){console.warn('[VISGO] 自動バックアップの保存に失敗:',e);}
 }
 
 async function manualBackupToDevice(){
@@ -1792,7 +1800,7 @@ async function renderServerBackupList(){
     el.innerHTML='<div style="font-size:12px;color:var(--sub)">同期設定が必要です</div>'; return;
   }
   try{
-    const res=await fetch(WORKER_URL+'?history=1',{headers:{'X-Sync-Code':getSyncCode()}});
+    const res=await fetchWithTimeout(WORKER_URL+'?history=1',{headers:{'X-Sync-Code':getSyncCode()}});
     if(!res.ok) throw new Error();
     const dates=await res.json();
     if(!dates.length){
@@ -1812,7 +1820,7 @@ async function renderServerBackupList(){
 async function restoreFromServerBackup(bucket){
   if(!confirm(`このバックアップからデータを復旧しますか？\n現在のデータは上書きされます。`)) return;
   try{
-    const res=await fetch(WORKER_URL+'?restore='+bucket,{headers:{'X-Sync-Code':getSyncCode()}});
+    const res=await fetchWithTimeout(WORKER_URL+'?restore='+bucket,{headers:{'X-Sync-Code':getSyncCode()}});
     if(!res.ok) throw new Error('バックアップが見つかりません');
     const remote=await res.json();
     if(!remote||!remote._syncAt) throw new Error('データが空です');
@@ -1984,7 +1992,7 @@ async function _applyRemoteData(remote){
     (remote.dreams?.items||[]).forEach(d=>{ if(d.image) dreamImgs[String(d.id)]=d.image; });
     // リモートに画像がある場合のみ上書き（空でローカルIDBを消さないように）
     if(Object.keys(dreamImgs).length>0) await idbSet("dreamImages",dreamImgs);
-  }catch(e){}
+  }catch(e){console.warn('[VISGO] 夢画像のIDB保存に失敗:',e);}
   const {goalImages,missionImages,...rest}=D;
   const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
   localStorage.setItem(LS_KEY,JSON.stringify(lsData));
@@ -2025,7 +2033,17 @@ async function syncPushNow(){
   // ── プッシュ前マージ: 他デバイスで追加されたタスク・プロジェクトを統合 ──────────
   // サーバーのnextIdがローカルより大きければ、知らないタスクが存在する
   try{
-    const _mergeRes=await fetch(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
+    let _mergeRes;
+    try{
+      _mergeRes=await fetchWithTimeout(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
+    }catch(fe){
+      // サーバーの状態を確認できないまま全体を上書きすると、他端末の変更を消すおそれがある。中止して再試行する
+      console.warn('[VISGO] プッシュ前の取得に失敗。上書きせず再試行します:',fe&&fe.name);
+      setSyncStatus("⚠ 同期失敗（再試行待ち）");
+      D._pendingPush=true;
+      setTimeout(()=>{ if(D._pendingPush) syncPushNow(); },30000);
+      return;
+    }
     if(_mergeRes.ok){
       const _srv=await _mergeRes.json();
       const _srvNextId=_srv?.gtd?.nextId||1;
@@ -2119,8 +2137,8 @@ async function syncPushNow(){
     // 画像（goalImages・dream images）を含めて送信
     // IDBロード前にsave()が走った場合、missionImages/goalImagesが[]のままになるのを防ぐ
     const payload={...D, dreams:{...D.dreams, items:(D.dreams?.items||[]).map(d=>({...d}))}};
-    if(!payload.goalImages?.length){try{payload.goalImages=await idbGet("goalImages")||[];}catch(e){}}
-    if(!payload.missionImages?.length){try{payload.missionImages=await idbGet("missionImages")||[];}catch(e){}}
+    if(!payload.goalImages?.length){try{payload.goalImages=await idbGet("goalImages")||[];}catch(e){console.warn('[VISGO] goalImagesのIDB読込に失敗:',e);}}
+    if(!payload.missionImages?.length){try{payload.missionImages=await idbGet("missionImages")||[];}catch(e){console.warn('[VISGO] missionImagesのIDB読込に失敗:',e);}}
     // 夢カード画像: IDBから復元して各dreamにマージ
     try{
       const dreamImgs=await idbGet("dreamImages");
@@ -2130,8 +2148,8 @@ async function syncPushNow(){
           return d;
         });
       }
-    }catch(e){}
-    const res=await fetch(WORKER_URL,{
+    }catch(e){console.warn('[VISGO] 夢画像のマージに失敗:',e);}
+    const res=await fetchWithTimeout(WORKER_URL,{
       method:"PUT",
       headers:{"Content-Type":"application/json","X-Sync-Code":getSyncCode()},
       body:JSON.stringify(payload)
@@ -2149,7 +2167,7 @@ async function syncPushNow(){
 async function syncPull(){
   if(!getSyncCode()||WORKER_URL.includes('CHANGEME')) return;
   try{
-    const res=await fetch(WORKER_URL,{
+    const res=await fetchWithTimeout(WORKER_URL,{
       headers:{"X-Sync-Code":getSyncCode()}
     });
     if(!res.ok) return;
@@ -2158,12 +2176,12 @@ async function syncPull(){
     const localAt=D._syncAt||0, remoteAt=remote._syncAt||0;
     if(remoteAt>localAt){
       // リモート適用前に常にローカルデータを緊急バックアップ（上書きによるデータ消失防止）
-      try{ await idbSet('syncOverwriteBackup_'+Date.now(), JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(e){}
+      try{ await idbSet('syncOverwriteBackup_'+Date.now(), JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(e){console.warn('[VISGO] 同期前の緊急バックアップに失敗:',e);}
       await _applyRemoteData(remote);
       setSyncStatus("☁ 最新データ取得・再読込");
       setTimeout(()=>location.reload(),600);
     } else { setSyncStatus("☁ 最新"); }
-  }catch(e){}
+  }catch(e){console.warn('[VISGO] syncPull失敗:',e);}
 }
 function setSyncStatus(msg){
   const el=document.getElementById("syncStatus");
@@ -2189,16 +2207,33 @@ function doLogout(){
 const LOGIN_SESSION_KEY='visgo_login_at';
 const LOGIN_TTL=7*24*60*60*1000; // 7日間
 // QRコードからのURL自動ログイン
+// QRには #sid=..&spw=.. を使う（フラグメントはサーバー・Referer・Service Workerのキャッシュに残らない）。
+// 旧形式 ?sid=..&spw=.. も、既発行のQRのために受け付ける。
+function readUrlLogin(hash,search){
+  const fromHash=new URLSearchParams(String(hash||'').replace(/^#/,''));
+  const fromQuery=new URLSearchParams(search||'');
+  const sid=fromHash.get('sid')||fromQuery.get('sid');
+  const spw=fromHash.get('spw')||fromQuery.get('spw');
+  return (sid&&spw)?{sid,spw}:null;
+}
+function buildLoginUrl(base,sid,spw){
+  return base+'#sid='+encodeURIComponent(sid)+'&spw='+encodeURIComponent(spw);
+}
 (()=>{
-  const p=new URLSearchParams(location.search);
-  const sid=p.get('sid'), spw=p.get('spw');
-  if(sid&&spw){
-    syncCfg={syncId:sid,syncPassword:spw};
-    localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
-    localStorage.setItem(LOGIN_SESSION_KEY,Date.now());
-    // URLパラメータを除去してリロード
-    history.replaceState({},'',location.pathname);
+  const cred=readUrlLogin(location.hash,location.search);
+  if(!cred) return;
+  // 資格情報を最優先でURLから除去（履歴・共有・スクリーンショットに残さない）
+  history.replaceState({},'',location.pathname);
+  const hasAccount=!!(syncCfg.syncId&&syncCfg.syncPassword);
+  const sameAccount=hasAccount&&syncCfg.syncId===cred.sid&&syncCfg.syncPassword===cred.spw;
+  if(hasAccount&&!sameAccount){
+    // 別アカウントへ黙って切り替えない（悪意あるリンクでデータを別アカウントへ送らせる攻撃の防止）
+    setTimeout(()=>{ if(typeof toast==='function') toast('別のアカウントのQRです。切り替えるには先に設定からログアウトしてください'); },800);
+    return;
   }
+  syncCfg={syncId:cred.sid,syncPassword:cred.spw};
+  localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
+  localStorage.setItem(LOGIN_SESSION_KEY,Date.now());
 })();
 function checkLogin(){
   // セッションが有効なら（7日以内）スキップ
@@ -2234,7 +2269,7 @@ async function doLogin(){
   localStorage.setItem(SYNC_KEY,JSON.stringify(syncCfg));
   if(!WORKER_URL.includes('CHANGEME')){
     try{
-      const res=await fetch(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
+      const res=await fetchWithTimeout(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
       if(res.ok){
         const remote=await res.json();
         if(remote&&remote._syncAt){
@@ -2253,7 +2288,7 @@ async function doLogin(){
           }
         }
       }
-    }catch(e){}
+    }catch(e){console.warn('[VISGO] ログイン時の同期取得に失敗:',e);}
     if(dataLoadedFromStorage) await syncPushNow();
   }
   const stayChecked=document.getElementById('loginStayChecked');
@@ -2268,7 +2303,7 @@ async function syncNow(){
   if(!getSyncCode()){ setSyncStatus("⚠ ログインが必要です"); return; }
   setSyncStatus("⬆⬇ 同期中…");
   try{
-    const res=await fetch(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
+    const res=await fetchWithTimeout(WORKER_URL,{headers:{"X-Sync-Code":getSyncCode()}});
     if(res.ok){
       const remote=await res.json();
       if(remote&&remote._syncAt&&(!D._syncAt||remote._syncAt>D._syncAt)){
@@ -2277,7 +2312,7 @@ async function syncNow(){
         setTimeout(()=>location.reload(),600); return;
       }
     }
-  }catch(e){}
+  }catch(e){console.warn('[VISGO] 手動同期の取得に失敗:',e);}
   await syncPushNow();
 }
 function openSyncModal(){
@@ -2304,7 +2339,7 @@ async function syncModalSave(){
   st.textContent="サーバーを確認中…";
   document.getElementById("syncConflict").style.display="none";
   try{
-    const res=await fetch(WORKER_URL,{headers:{"X-Sync-Code":code}});
+    const res=await fetchWithTimeout(WORKER_URL,{headers:{"X-Sync-Code":code}});
     if(res.ok){
       const remote=await res.json();
       if(remote&&remote._syncAt){
@@ -2326,7 +2361,7 @@ async function syncModalSave(){
         }
       }
     }
-  }catch(e){}
+  }catch(e){console.warn('[VISGO] 同期サーバーの確認に失敗:',e);}
   // サーバー未使用 → ローカルをアップロード
   await syncPushNow();
   st.textContent="✓ 設定完了・同期しました";
@@ -2365,7 +2400,17 @@ function showConfirm(msg, onYes, okLabel){
   okBtn.onclick=()=>{ close(); onYes(); };
   document.getElementById('confirmDlgCancel').onclick=close;
 }
-function esc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function esc(s){return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+// インライン onclick 等の JS 文字列リテラル('...')に値を埋め込む専用。先にJSエスケープ、次にHTMLエスケープ（逆順は不可）
+function escJs(s){return esc(String(s??"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n").replace(/\u2028/g,"\\u2028").replace(/\u2029/g,"\\u2029"));}
+// <img src="..."> に埋め込む画像URL。data:image(base64) と https だけ許可し、それ以外は透明1pxに置換する
+// （同期・復元データ経由の属性注入や javascript: URL の防止）。巨大なdata URLに esc() を通さないため専用関数にしている
+function imgSrc(v){
+  const s=String(v??'');
+  if(/^data:image\/(?:png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(s)) return s;
+  if(/^https:\/\/[^\s"'<>]+$/.test(s)) return esc(s);
+  return 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+}
 // 保存値（"2025.1.5" 等）を <input type=date> 用の YYYY-MM-DD に変換
 function toDateInput(v){
   if(!v) return "";
@@ -2413,7 +2458,7 @@ function renderDmImgWrap(){
     <input type="file" id="dmImgInput" accept="image/*" style="display:none" onchange="dmHandleImg(this)">
     ${dmImage
       ? `<div style="position:relative">
-           <img class="dm-img-preview" src="${dmImage}" alt="" onclick="document.getElementById('dmImgInput').click()" title="クリックして変更">
+           <img class="dm-img-preview" src="${imgSrc(dmImage)}" alt="" onclick="document.getElementById('dmImgInput').click()" title="クリックして変更">
            <button class="dm-img-clear" onclick="dmClearImage()">✕</button>
            <button class="dm-img-change" onclick="document.getElementById('dmImgInput').click()">変更</button>
          </div>`
@@ -2526,7 +2571,7 @@ function renderDmStepGoals(){
               onchange="dmUpdateStepGoal('${s.id}','yearMonth',this.value)">
             ${s.image
               ? `<div style="position:relative;display:inline-block">
-                   <img src="${s.image}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;display:block;cursor:pointer" onclick="dmPickStepGoalImg('${s.id}')" title="タップで変更">
+                   <img src="${imgSrc(s.image)}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;display:block;cursor:pointer" onclick="dmPickStepGoalImg('${s.id}')" title="タップで変更">
                    <button onclick="event.stopPropagation();dmRemoveStepGoalImg('${s.id}')" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1">✕</button>
                  </div>`
               : `<button onclick="dmPickStepGoalImg('${s.id}')" style="font-size:12px;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:var(--fill);color:var(--sub);cursor:pointer;white-space:nowrap">📷</button>`
@@ -2757,7 +2802,7 @@ function renderDreams(){
   function cardHtml(d){
     const catCls=dreamCatClass(d.category);
     return `<div class="dream-card" onclick="openDreamModal('${d.id}')">
-      ${d.image?`<img class="dream-card-img" src="${d.image}" alt="">`:'' }
+      ${d.image?`<img class="dream-card-img" src="${imgSrc(d.image)}" alt="">`:'' }
       <div class="dream-card-top">
         <span class="dream-title">${esc(d.title)}</span>
       </div>
@@ -2771,7 +2816,7 @@ function renderDreams(){
   }
   function sgCardHtml(sg, d){
     const catCls=dreamCatClass(d.category);
-    const imgHtml=sg.image?`<img src="${sg.image}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex:0 0 auto;margin-top:2px${sg.done?';opacity:.5':''}" alt="">`:''
+    const imgHtml=sg.image?`<img src="${imgSrc(sg.image)}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex:0 0 auto;margin-top:2px${sg.done?';opacity:.5':''}" alt="">`:''
     return `<div class="sg-card${sg.done?' sg-done':''}" draggable="true" data-dream-id="${d.id}" data-sg-id="${sg.id}" style="display:flex;align-items:flex-start;gap:10px;cursor:default">
       <span class="sg-drag-handle" title="ドラッグで並べ替え">≡</span>
       <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 0" onclick="openDreamModal('${d.id}')">
@@ -2826,7 +2871,7 @@ function renderDreams(){
         const mission=D.dreams.mission||'';
         const mTitle=D.dreams.missionTitle||'';
         const imgs=(D.missionImages||[]);
-        const imgsHtml=imgs.length?`<div class="dream-mission-imgs">${imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('')}</div>`:'';
+        const imgsHtml=imgs.length?`<div class="dream-mission-imgs">${imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${imgSrc(src)}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('')}</div>`:'';
         return `<input class="dream-mission-title-inp" id="dreamMissionTitleInp" type="text" placeholder="ミッションのタイトル（例：家族の笑顔を守る）" value="${esc(mTitle)}" oninput="dmSetMissionTitle(this.value)">
 <textarea class="dream-mission-ta" id="dreamMissionTa" placeholder="あなたのミッション・使命・存在意義を記入してください…" oninput="const _sy=window.scrollY;this.style.height='auto';this.style.height=this.scrollHeight+'px';window.scrollTo(0,_sy);dmSetMission(this.value)">${esc(mission)}</textarea>
 ${imgsHtml}
@@ -3001,14 +3046,14 @@ function dmMissionRenderImgs(){
   if(!wrap){renderDreams();return;}
   const parent=wrap.parentNode;
   if(imgs.length){
-    wrap.innerHTML=imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${src}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('');
+    wrap.innerHTML=imgs.map((src,i)=>`<div style="position:relative;display:inline-block"><img src="${imgSrc(src)}" class="dm-img-thumb" onclick="dmMissionZoom(${i})"><button onclick="dmMissionDelImg(${i})" class="dm-img-del">✕</button></div>`).join('');
   } else {
     wrap.innerHTML='';
   }
 }
 async function dmMissionDelImg(i){
   D.missionImages.splice(i,1);
-  try{ await idbSet('missionImages', D.missionImages); }catch(e){}
+  try{ await idbSet('missionImages', D.missionImages); }catch(e){console.warn('[VISGO] missionImagesのIDB保存に失敗:',e);}
   save();
   dmMissionRenderImgs();
 }
@@ -3025,7 +3070,7 @@ async function dmMissionAddImgs(input){
       D.missionImages.push(url);
     }catch(e){ alert("画像の読み込みに失敗しました: "+f.name); }
   }
-  try{ await idbSet("missionImages", D.missionImages); }catch(e){}
+  try{ await idbSet("missionImages", D.missionImages); }catch(e){console.warn('[VISGO] missionImagesのIDB保存に失敗:',e);}
   save();
   dmMissionRenderImgs();
 }
@@ -3200,7 +3245,7 @@ function gcSetCurrent(el){
 }
 function ssGoalRenderImgs(){
   const wrap=document.getElementById('ssGoalImgWrap'); if(!wrap) return;
-  wrap.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${(D.goalImages||[]).map((src,i)=>`<div style="position:relative"><img src="${src}" style="height:80px;border-radius:8px;cursor:pointer" onclick="ssGoalZoom(${i})"><button onclick="ssGoalDel(${i})" style="position:absolute;top:-4px;right:-4px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">✕</button></div>`).join('')}</div><button onclick="document.getElementById('ssGoalImgFile').click()" style="border:1px dashed var(--line);background:none;padding:8px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button>`;
+  wrap.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${(D.goalImages||[]).map((src,i)=>`<div style="position:relative"><img src="${imgSrc(src)}" style="height:80px;border-radius:8px;cursor:pointer" onclick="ssGoalZoom(${i})"><button onclick="ssGoalDel(${i})" style="position:absolute;top:-4px;right:-4px;background:#FF3B30;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">✕</button></div>`).join('')}</div><button onclick="document.getElementById('ssGoalImgFile').click()" style="border:1px dashed var(--line);background:none;padding:8px 14px;border-radius:8px;color:var(--sub);cursor:pointer;font-size:13px">＋ 画像を追加</button>`;
 }
 function ssGoalDel(i){
   D.goalImages.splice(i,1);
@@ -3441,7 +3486,7 @@ function renderSheetEdit(){
     </div>`).join('')}</div>
     <button class="add" data-act="addGc">＋ 条件を追加</button>
     <div class="gimgs">${D.goalImages.map((src,i)=>`
-      <div class="gimg"><img src="${src}" data-gzoom="${i}" alt="目標イメージ${i+1}">
+      <div class="gimg"><img src="${imgSrc(src)}" data-gzoom="${i}" alt="目標イメージ${i+1}">
       <button class="gx" data-act="delImg" data-i="${i}" title="削除">✕</button></div>`).join("")}
       <button class="gadd" onclick="document.getElementById('goalImgFile').click()">＋<br>画像を追加</button>
     </div>
@@ -3587,7 +3632,7 @@ function renderSheetView(){
       <div class="vgoal-main">${nl2br(D.goal)||"—"}</div>
       ${D.goalNote?`<div style="margin-top:8px"><span style="font-size:11px;color:var(--sub);font-weight:600;letter-spacing:.05em">ご褒美・補足</span><div class="vgoal-note">${nl2br(D.goalNote)}</div></div>`:""}
       ${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).length?`<div style="margin-top:12px"><div style="display:inline-block;background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:5px;margin-bottom:8px;letter-spacing:.04em">達成条件（項目・数字）</div><div style="display:flex;flex-direction:column;gap:6px">${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).map(c=>`<div style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><span style="font-weight:700;color:var(--navy)">${esc(c.label)}</span><span style="color:var(--sub)">：</span><span style="color:var(--navy)">${esc(c.targetNum)}${esc(c.unit)}</span></div>`).join('')}</div></div>`:''}
-      ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${src}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
+      ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map((src,i)=>`<img src="${imgSrc(src)}" data-gzoom="${i}" alt="目標イメージ">`).join("")}</div>`:""}
     </div>
     <div class="vsec"><h3>経過目標と進捗</h3>
       ${(()=>{const gc=(D.goalCriteria||[]).filter(c=>c.label||c.targetNum);if(!gc.length)return '<p class="vempty">達成条件を登録すると進捗が表示されます</p>';return gc.map((c,i)=>{const tgt=+c.targetNum||0;const cur=+c.currentNum||0;const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;const col=pct>=100?'#30D158':'var(--blue)';return `<div class="gc-progress-row" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:13px;font-weight:600;color:var(--navy)">${esc(c.label)}</span><span style="font-size:12px;color:var(--sub)">目標: ${esc(c.targetNum)}${esc(c.unit)}</span></div><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:12px;color:var(--sub);flex:0 0 auto">現在</span><input type="number" data-gci="${i}" oninput="gcSetCurrent(this)" value="${esc(c.currentNum||'')}" style="width:72px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px;background:var(--fill);color:var(--navy);text-align:right"><span style="font-size:12px;color:var(--sub)">${esc(c.unit)}</span><span class="gc-pct" style="font-size:13px;font-weight:700;color:${col};margin-left:auto">${pct}%</span></div><div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden"><div class="gc-bar" style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .3s"></div></div></div>`;}).join('');})()}
@@ -4348,7 +4393,7 @@ function printSheet(){
   <div class="sec goalsec"><div class="sttl red">達成目標</div>
     <div class="goal">${esc(D.goal)}</div>${pre(D.goalNote)}
     ${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).length?`<div style="margin-top:6px">${(D.goalCriteria||[]).filter(c=>c.label||c.targetNum).map(c=>{const tgt=+c.targetNum||0;const cur=+c.currentNum||0;const pct=tgt?Math.min(100,Math.round(cur/tgt*100)):0;return `<div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:8pt;margin-bottom:2px"><span>${esc(c.label)}</span><span>${esc(c.currentNum||'0')}/${esc(c.targetNum)}${esc(c.unit)}&nbsp;<b>${pct}%</b></span></div><div style="height:4px;background:#e3e9f2;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pct>=100?'#30D158':'#2563c4'};border-radius:2px"></div></div></div>`;}).join('')}</div>`:''}
-    ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map(src=>`<img src="${src}">`).join("")}</div>`:""}</div>
+    ${D.goalImages.length?`<div class="gimgs">${D.goalImages.map(src=>`<img src="${imgSrc(src)}">`).join("")}</div>`:""}</div>
   <div class="sec"><div class="sttl">経過目標と進捗</div>
     <div class="ms">${D.milestones.map(m=>`<div class="msbox ${(m.pct||0)>=100?'done100':''}"><div class="msd">${esc(m.date)}　達成${m.pct||0}%</div>${pre(m.text)}<div class="pbar"><div style="width:${Math.max(0,Math.min(100,m.pct||0))}%"></div></div></div>`).join("")}</div></div>
   <div class="sec"><div class="sttl">週間期日行動（発生期日順）</div>
@@ -4514,8 +4559,8 @@ const PROJECT_PALETTE=['#ef4444','#f97316','#f59e0b','#22c55e','#14b8a6','#3b82f
 function openColorPicker(e,name){
   e.stopPropagation();
   const popup=document.getElementById('colorPickerPopup');
-  popup.innerHTML=PROJECT_PALETTE.map(c=>`<div class="cp-dot" style="background:${c}" onclick="event.stopPropagation();setProjectColor('${esc(name)}','${c}')"></div>`).join('')
-    +`<div class="cp-dot" style="background:var(--fill);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--sub)" onclick="event.stopPropagation();setProjectColor('${esc(name)}','')">✕</div>`;
+  popup.innerHTML=PROJECT_PALETTE.map(c=>`<div class="cp-dot" style="background:${c}" onclick="event.stopPropagation();setProjectColor('${escJs(name)}','${c}')"></div>`).join('')
+    +`<div class="cp-dot" style="background:var(--fill);font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--sub)" onclick="event.stopPropagation();setProjectColor('${escJs(name)}','')">✕</div>`;
   const r=e.target.getBoundingClientRect();
   popup.style.left=Math.min(r.left,window.innerWidth-180)+'px';
   popup.style.top=(r.bottom+6)+'px';
@@ -4788,7 +4833,7 @@ function gtdFolderItems(type){
     const act=(gtdFilter.type===type&&gtdFilter.value===name)?'act':'';
     const isAnnual=(type==='project'&&name===ANNUAL_PROJECT);
     const dot=type==='project'
-      ? ` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="${inEdit?`openColorPicker(event,'${esc(name)}')`:'event.stopPropagation()'}" title="${inEdit?'色を変更':''}"></span>`
+      ? ` <span class="gf-color-dot" style="background:${(D.gtd.projectColors||{})[name]||'#cbd5e1'}" onclick="${inEdit?`openColorPicker(event,'${escJs(name)}')`:'event.stopPropagation()'}" title="${inEdit?'色を変更':''}"></span>`
       : '';
     const controls=(inEdit&&!isAnnual)
       ? `<span class="gf-ren" data-renf="${type}" data-v="${esc(name)}" title="名前を変更">✏</span>
@@ -5688,7 +5733,7 @@ function openSettings(){
     qrSec.style.display='block';
     const qrEl=document.getElementById('qrCanvas');
     qrEl.innerHTML='';
-    const url=location.origin+location.pathname+'?sid='+encodeURIComponent(syncCfg.syncId)+'&spw='+encodeURIComponent(syncCfg.syncPassword);
+    const url=buildLoginUrl(location.origin+location.pathname,syncCfg.syncId,syncCfg.syncPassword);
     new QRCode(qrEl,{text:url,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
   } else if(qrSec){
     qrSec.style.display='none';
@@ -5729,14 +5774,14 @@ function gcalDelUrl(i){
 /* ================= 入出力 ================= */
 async function exportJSON(){
   // IDBから確実に画像を取り出してから書き出す
-  try{if(!D.goalImages?.length) D.goalImages=await idbGet("goalImages")||[];}catch(e){}
-  try{if(!D.missionImages?.length) D.missionImages=await idbGet("missionImages")||[];}catch(e){}
+  try{if(!D.goalImages?.length) D.goalImages=await idbGet("goalImages")||[];}catch(e){console.warn('[VISGO] goalImagesのIDB読込に失敗:',e);}
+  try{if(!D.missionImages?.length) D.missionImages=await idbGet("missionImages")||[];}catch(e){console.warn('[VISGO] missionImagesのIDB読込に失敗:',e);}
   try{
     const dImgs=await idbGet("dreamImages");
     if(dImgs&&typeof dImgs==='object'){
       (D.dreams?.items||[]).forEach(d=>{if(!d.image&&dImgs[String(d.id)])d.image=dImgs[String(d.id)];});
     }
-  }catch(e){}
+  }catch(e){console.warn('[VISGO] 夢画像のIDB読込に失敗:',e);}
   const blob=new Blob([JSON.stringify(D,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -6003,7 +6048,7 @@ document.getElementById("saveState").textContent = localStorage.getItem(LS_KEY) 
     const {goalImages,missionImages,...rest}=D;
     const lsData={...rest,dreams:{...rest.dreams,items:(rest.dreams?.items||[]).map(({image,...r})=>r)}};
     localStorage.setItem(LS_KEY,JSON.stringify(lsData));
-  }catch(e){}
+  }catch(e){console.error('[VISGO] localStorageへの保存に失敗（容量超過の可能性）:',e);}
   // ログイン確認
   checkLogin();
   updateLoginIdDisplay();
