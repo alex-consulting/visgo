@@ -1908,6 +1908,9 @@ async function _applyRemoteData(remote){
   const _localDeleted=new Set([...(D.gtd?.deletedProjects||[])]);
   const _localRenames={...(D.gtd?.projectRenames||{})};
   const _localDelTaskIds=new Set([...(D.gtd?.deletedTaskIds||[])].map(String));
+  // GTDタスクのローカル状態を退避（pull時にローカルのみのタスクが消えないように）
+  const _localTasks=D.gtd?.tasks?JSON.parse(JSON.stringify(D.gtd.tasks)):[];
+  const _localNextId=D.gtd?.nextId||1;
   // ow/dreamsのローカル状態を退避
   const _localOw=D.ow?JSON.parse(JSON.stringify(D.ow)):null;
   const _localDreams=D.dreams?JSON.parse(JSON.stringify(D.dreams)):null;
@@ -1923,13 +1926,33 @@ async function _applyRemoteData(remote){
   // deletedTaskIdsをマージ
   if(!Array.isArray(D.gtd.deletedTaskIds)) D.gtd.deletedTaskIds=[];
   D.gtd.deletedTaskIds=[...new Set([...D.gtd.deletedTaskIds,..._localDelTaskIds].map(String))];
-  // 削除されたプロジェクトをフィルタ（復活防止）
+  // GTDタスク: per-item競合解決（ローカルにしか存在しないタスクを失わないように）
+  // ※ プロジェクト削除/リネームはマージ後に適用（ローカルのみのタスクにも確実に反映させるため）
+  const _delTaskSet=new Set((D.gtd.deletedTaskIds||[]).map(String));
+  {
+    const _srvTaskMap=new Map((D.gtd.tasks||[]).map(t=>[String(t.id),t]));
+    const _locTaskMap=new Map(_localTasks.map(t=>[String(t.id),t]));
+    const _allTaskIds=new Set([..._srvTaskMap.keys(),..._locTaskMap.keys()]);
+    const _mergedTasks=[];
+    _allTaskIds.forEach(id=>{
+      if(_delTaskSet.has(id)) return;
+      const _l=_locTaskMap.get(id), _s=_srvTaskMap.get(id);
+      if(_l&&_s){
+        const _lTime=_l.updatedAt||_l.created||0, _sTime=_s.updatedAt||_s.created||0;
+        _mergedTasks.push(_lTime>=_sTime?_l:_s);
+      } else { _mergedTasks.push(_l||_s); }
+    });
+    D.gtd.tasks=_mergedTasks;
+    D.gtd.nextId=Math.max(D.gtd.nextId||1,_localNextId);
+    console.log('[VISGO] _applyRemoteData タスクマージ: '+_mergedTasks.length+'件 (削除済:'+_delTaskSet.size+'件, ローカル:'+_localTasks.length+'件, サーバー:'+_srvTaskMap.size+'件)');
+  }
+  // 削除されたプロジェクトをフィルタ（マージ後に適用してローカルのみのタスクにも反映）
   const _delSet=new Set(D.gtd.deletedProjects);
   if(_delSet.size>0){
     D.gtd.projects=(D.gtd.projects||[]).filter(p=>!_delSet.has(p));
     D.gtd.tasks=(D.gtd.tasks||[]).map(t=>t.project&&_delSet.has(t.project)?{...t,project:''}:t);
   }
-  // リネームを適用（サーバーが古い名前を返した場合に修正）
+  // リネームを適用（マージ後に適用してローカルのみのタスクにも反映）
   const _ren=D.gtd.projectRenames||{};
   Object.entries(_ren).forEach(([oldN,newN])=>{
     if(!oldN||!newN||oldN===newN) return;
@@ -1937,11 +1960,6 @@ async function _applyRemoteData(remote){
     D.gtd.tasks=D.gtd.tasks.map(t=>t.project===oldN?{...t,project:newN}:t);
   });
   D.gtd.projects=[...new Set((D.gtd.projects||[]).filter(p=>p&&p.trim()))];
-  // 削除済みタスクIDをフィルタ（復活防止）
-  const _delTaskSet=new Set((D.gtd.deletedTaskIds||[]).map(String));
-  if(_delTaskSet.size>0){
-    D.gtd.tasks=(D.gtd.tasks||[]).filter(t=>!_delTaskSet.has(String(t.id)));
-  }
   // OW64: セル単位で競合解決（updatedAt比較）
   if(_localOw&&D.ow){
     const _lCts=_localOw._cellTs||{goal:0,themes:Array(8).fill(0),actions:Array(8).fill(null).map(()=>Array(8).fill(0))};
